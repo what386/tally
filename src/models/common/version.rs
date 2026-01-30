@@ -1,5 +1,4 @@
 use std::fmt;
-
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 
@@ -34,26 +33,21 @@ impl Version {
         if self.is_prerelease != other.is_prerelease {
             return !self.is_prerelease;
         }
-
         false
     }
 
     pub fn parse(s: &str) -> Result<Self> {
         if s.trim().is_empty() {
-            bail!("Cannot parse empty version",);
+            bail!("Cannot parse empty version");
         }
-
         let parts: Vec<&str> = s.split('.').collect();
-
         if parts.is_empty() || parts.len() > 3 {
-            bail!("Invalid version format",);
+            bail!("Invalid version format");
         }
-
         let major = match parts[0].parse::<u32>() {
             Ok(v) => v,
             Err(_) => bail!("Invalid major"),
         };
-
         let minor = if parts.len() > 1 {
             match parts[1].parse::<u32>() {
                 Ok(v) => v,
@@ -62,7 +56,6 @@ impl Version {
         } else {
             0
         };
-
         let patch = if parts.len() > 2 {
             match parts[2].parse::<u32>() {
                 Ok(v) => v,
@@ -71,7 +64,6 @@ impl Version {
         } else {
             0
         };
-
         Ok(Version::new(major, minor, patch, false))
     }
 
@@ -88,8 +80,6 @@ impl Version {
             std::cmp::Ordering::Equal => {}
             ord => return ord,
         }
-
-        // Stable releases are "greater than" prereleases for the same version
         match (self.is_prerelease, other.is_prerelease) {
             (false, true) => std::cmp::Ordering::Greater,
             (true, false) => std::cmp::Ordering::Less,
@@ -108,7 +98,6 @@ impl fmt::Display for Version {
     }
 }
 
-// Implement PartialOrd and Ord for proper comparison
 impl PartialOrd for Version {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))

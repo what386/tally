@@ -1,23 +1,24 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-
-use crate::models::{enums::Priority, version::Version};
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Changelog {
-    pub version_from: Version,
-    pub version_to: Version,
-    pub date: DateTime<Utc>,
-    pub changes: Vec<Change>,
-}
+use crate::models::{common::Priority, tasks::Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Change {
     pub description: String,
     pub priority: Priority,
     pub tags: Vec<String>,
-
+    pub commit: Option<String>,
     pub completed_at: DateTime<Utc>,
-    pub completed_at_version: Option<Version>,
-    pub completed_at_commit: Option<String>,
+}
+
+impl From<&Task> for Change {
+    fn from(task: &Task) -> Self {
+        Self {
+            description: task.description.clone(),
+            priority: task.priority,
+            tags: task.tags.clone(),
+            commit: task.completed_at_commit.clone(),
+            completed_at: task.completed_at_time.unwrap_or_else(Utc::now),
+        }
+    }
 }

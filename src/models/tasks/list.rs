@@ -1,5 +1,6 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use crate::models::{common::Version, tasks::Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -12,6 +13,24 @@ pub struct List {
 }
 
 impl List {
+    /// Create a new empty list
+    pub fn new(project_name: impl Into<String>, project_version: Version) -> Self {
+        let now = Utc::now();
+        Self {
+            project_name: project_name.into(),
+            project_version,
+            created_at: now,
+            modified_at: now,
+            tasks: Vec::new(),
+        }
+    }
+
+    /// Add a task to the list
+    pub fn add_task(&mut self, task: Task) {
+        self.tasks.push(task);
+        self.modified_at = Utc::now();
+    }
+
     /// Get all tasks for a specific version
     pub fn tasks_for_version(&self, version: &Version) -> Vec<&Task> {
         self.tasks
@@ -47,8 +66,8 @@ impl List {
     }
 
     /// Get all tasks grouped by version
-    pub fn tasks_by_version(&self) -> std::collections::BTreeMap<Version, Vec<&Task>> {
-        let mut map = std::collections::BTreeMap::new();
+    pub fn tasks_by_version(&self) -> BTreeMap<Version, Vec<&Task>> {
+        let mut map = BTreeMap::new();
 
         for task in &self.tasks {
             if let Some(version) = &task.completed_at_version {
