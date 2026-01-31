@@ -142,15 +142,11 @@ pub enum Commands {
         EXAMPLES:\n  \
         tally scan\n  \
         tally scan --auto\n  \
-        tally scan --threshold 0.65 --dry-run")]
+        tally scan --dry-run")]
     Scan {
         /// Automatically mark matches as done without prompting
         #[arg(long, default_value_t = false)]
         auto: bool,
-
-        /// Fuzzy match confidence threshold (0.0-1.0)
-        #[arg(long, value_parser = parse_threshold, default_value_t = 0.85)]
-        threshold: f64,
 
         /// Show suggested matches without modifying TODO.md
         #[arg(long, default_value_t = false)]
@@ -215,16 +211,4 @@ pub enum ConfigAction {
         EXAMPLE:\n  \
         tally config list")]
     List,
-}
-
-fn parse_threshold(s: &str) -> Result<f64, String> {
-    let val: f64 = s
-        .parse()
-        .map_err(|_| format!("'{}' is not a valid number", s))?;
-
-    if !(0.0..=1.0).contains(&val) {
-        return Err(format!("threshold must be between 0.0 and 1.0, got {}", val));
-    }
-
-    Ok(val)
 }

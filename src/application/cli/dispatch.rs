@@ -13,7 +13,7 @@ impl Cli {
             Commands::List { tags, priority, json } => commands::cmd_list(tags, priority, json),
             Commands::Release { version, dry_run, summary } => commands::cmd_release(version, dry_run, summary),
             Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
-            Commands::Scan { auto, threshold, dry_run } => commands::cmd_scan(auto, threshold, dry_run),
+            Commands::Scan { auto, dry_run } => commands::cmd_scan(auto, dry_run),
             Commands::Edit => commands::cmd_edit(),
             Commands::Config { action } => match action {
                 ConfigAction::List => commands::cmd_config_list(),
