@@ -37,6 +37,7 @@ pub fn cmd_init() -> Result<()> {
     // Install git hooks if in a git repository
     match git::install_hooks() {
         Ok(()) => {
+
             println!("✓ Installed git hooks");
             println!();
             println!("Git integration enabled:");
