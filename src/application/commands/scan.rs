@@ -1,4 +1,5 @@
 use anyhow::Result;
+use chrono::{DateTime, TimeZone, Utc};
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::process::Command;
@@ -10,17 +11,17 @@ use crate::services::storage::task_storage::ListStorage;
 struct Commit {
     hash: String,
     done_items: Vec<String>,
+    date: DateTime<Utc>,
 }
 
-pub fn cmd_scan(auto: bool, threshold: f64, dry_run: bool) -> Result<()> {
-
+pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
     let output = Command::new("git")
         .args(&[
             "log",
-            "--pretty=format:%h%x1f%B%x1e",
+            "--pretty=format:%h%x1f%ct%x1f%B%x1e",
             "-n",
             "50",
         ])
@@ -43,30 +44,28 @@ pub fn cmd_scan(auto: bool, threshold: f64, dry_run: bool) -> Result<()> {
             continue;
         }
 
-        let mut best_match: Option<(String, f64, String)> = None;
+        let mut best_match: Option<(String, i64, String)> = None;
 
         for commit in &commits {
+            if commit.date < task.created_at_time {
+                    continue;
+            }
+
             for done in &commit.done_items {
                 if let Some(score) =
                     matcher.fuzzy_match(&task.description, done)
                 {
-                    let score = score as f64;
+                    let is_better = best_match
+                        .as_ref()
+                        .map(|(_, best, _)| score > *best)
+                        .unwrap_or(true);
 
-                    let min_score = threshold * 200.0;
-
-                    if score >= min_score {
-                        let is_better = best_match
-                            .as_ref()
-                            .map(|(_, best, _)| score > *best)
-                            .unwrap_or(true);
-
-                        if is_better {
-                            best_match = Some((
-                                commit.hash.clone(),
-                                score,
-                                done.clone(),
-                            ));
-                        }
+                    if is_better {
+                        best_match = Some((
+                            commit.hash.clone(),
+                            score,
+                            done.clone(),
+                        ));
                     }
                 }
             }
@@ -115,10 +114,7 @@ pub fn cmd_scan(auto: bool, threshold: f64, dry_run: bool) -> Result<()> {
     }
 
     if matches_found == 0 {
-        println!(
-            "No matches found above {:.0}% threshold.",
-            threshold * 100.0
-        );
+        println!("No matches found.");
     }
 
     Ok(())
@@ -128,18 +124,26 @@ fn parse_commits(input: &str) -> Vec<Commit> {
     let mut commits = Vec::new();
 
     for record in input.split('\x1e') {
-        if record.trim().is_empty() {
+        let record = record.trim();
+        if record.is_empty() {
             continue;
         }
 
-        let mut parts = record.splitn(2, '\x1f');
+        let mut parts = record.splitn(3, '\x1f'); // 3 parts: hash, timestamp, body
+
         let hash = parts.next().unwrap().to_string();
-        let body = parts.next().unwrap_or("");
+        let timestamp_str = parts.next().unwrap_or("0");
+        let body = parts.next().unwrap_or("").trim();
+
+        let ts: i64 = timestamp_str.parse().unwrap_or(0);
+        let date: DateTime<Utc> = Utc.timestamp_opt(ts, 0)
+            .single()
+            .unwrap_or_else(|| Utc.timestamp_opt(0, 0).unwrap());
 
         let done_items = extract_done_items(body);
 
         if !done_items.is_empty() {
-            commits.push(Commit { hash, done_items });
+            commits.push(Commit { hash, done_items, date });
         }
     }
 

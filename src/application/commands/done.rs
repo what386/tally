@@ -35,20 +35,17 @@ pub fn cmd_done(
         Some((index, score)) => {
             let task = &tasks[index];
 
-            // Normalize score to percentage (skim scores are typically 0-100+)
-            let score_pct = (score as f64).min(100.0);
-
             // Require at least 50% match
-            if score_pct < 50.0 {
-                return Err(anyhow::anyhow!(
-                    "Best match too low ({:.0}%): '{}'",
-                    score_pct,
-                    task.description
-                ));
-            }
+            //if score < threshold {
+            //    return Err(anyhow::anyhow!(
+            //        "Best match too low ({:.0}%): '{}'",
+            //        score,
+            //        task.description
+            //    ));
+            //}
 
             if dry_run {
-                println!("Would mark as done (match: {:.0}%):", score_pct);
+                println!("Would mark as done (score: {:.0}):", score);
                 println!("  [x] {}", task.description);
                 if let Some(ref commit_hash) = commit {
                     println!("      @completed_commit {}", commit_hash);
@@ -66,8 +63,8 @@ pub fn cmd_done(
                 None
             };
 
-            // Complete the task
-            storage.complete_task(index, version_obj)?;
+            // occurs early because evil borrow semantics
+            println!("Marked as done: {}", task.description);
 
             // Add commit hash if provided
             if let Some(commit_hash) = commit {
@@ -77,7 +74,8 @@ pub fn cmd_done(
                 storage.save_list()?;
             }
 
-            println!("✓ Marked as done");
+            storage.complete_task(index, version_obj)?;
+
 
             Ok(())
         }
