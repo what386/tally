@@ -37,33 +37,32 @@ impl Version {
     }
 
     pub fn parse(s: &str) -> Result<Self> {
-        if s.trim().is_empty() {
+        let s = s.trim();
+        if s.is_empty() {
             bail!("Cannot parse empty version");
         }
+
+        let s = s.strip_prefix('v')
+            .or_else(|| s.strip_prefix('V'))
+            .unwrap_or(s);
+
         let parts: Vec<&str> = s.split('.').collect();
         if parts.is_empty() || parts.len() > 3 {
             bail!("Invalid version format");
         }
-        let major = match parts[0].parse::<u32>() {
-            Ok(v) => v,
-            Err(_) => bail!("Invalid major"),
-        };
+
+        let major = parts[0].parse::<u32>().map_err(|_| anyhow::anyhow!("Invalid major"))?;
         let minor = if parts.len() > 1 {
-            match parts[1].parse::<u32>() {
-                Ok(v) => v,
-                Err(_) => bail!("Invalid minor"),
-            }
+            parts[1].parse::<u32>().map_err(|_| anyhow::anyhow!("Invalid minor"))?
         } else {
             0
         };
         let patch = if parts.len() > 2 {
-            match parts[2].parse::<u32>() {
-                Ok(v) => v,
-                Err(_) => bail!("Invalid patch"),
-            }
+            parts[2].parse::<u32>().map_err(|_| anyhow::anyhow!("Invalid patch"))?
         } else {
             0
         };
+
         Ok(Version::new(major, minor, patch, false))
     }
 
