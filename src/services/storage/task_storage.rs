@@ -3,7 +3,7 @@ use std::fs;
 use anyhow::{Result, anyhow};
 use crate::models::tasks::{List, Task};
 use crate::models::common::{Priority, Version};
-use crate::serializers::todo_serializer;
+use crate::services::serializers::todo_serializer;
 
 pub struct ListStorage {
     todo_list: List,
