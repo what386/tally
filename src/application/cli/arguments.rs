@@ -34,8 +34,8 @@ pub enum Commands {
         description: String,
 
         /// Priority level for the task
-        #[arg(short, long, value_enum)]
-        priority: Option<Priority>,
+        #[arg(short, long, value_enum, default_value_t = Priority::Medium)]
+        priority: Priority,
 
         /// Comma-separated tags (e.g., bug,frontend)
         #[arg(short, long, value_delimiter = ',')]
@@ -73,26 +73,13 @@ pub enum Commands {
 
     /// Display tasks
     #[command(long_about = "Display tasks with optional filtering and formatting.\n\n\
-        View all tasks, or filter by completion status, tags, or priority. \
-        Output as human-readable text or JSON.\n\n\
+        View all tasks, or filter by tags or priority. \
+        Output as human-readable text or raw JSON.\n\n\
         EXAMPLES:\n  \
         dotxt list\n  \
-        dotxt list --undone\n  \
         dotxt list --tags bug,parser --priority high\n  \
-        dotxt list --done --json")]
+        dotxt list --json")]
     List {
-        /// Show all tasks (done and undone)
-        #[arg(long, conflicts_with_all = ["done", "undone"])]
-        all: bool,
-
-        /// Show only completed tasks
-        #[arg(long, conflicts_with_all = ["all", "undone"])]
-        done: bool,
-
-        /// Show only incomplete tasks
-        #[arg(long, conflicts_with_all = ["all", "done"])]
-        undone: bool,
-
         /// Filter by tags (comma-separated)
         #[arg(short, long, value_delimiter = ',')]
         tags: Option<Vec<String>>,
@@ -129,8 +116,7 @@ pub enum Commands {
 
     /// Generate a changelog
     #[command(long_about = "Generate a changelog from completed tasks.\n\n\
-        Create a changelog for a version range or all versions. Optionally write \
-        to CHANGELOG.md or use a custom template.\n\n\
+        Create a changelog for a version range or until the current version.\n\n\
         EXAMPLES:\n  \
         dotxt changelog\n  \
         dotxt changelog --from v0.7.2\n  \
@@ -174,28 +160,6 @@ pub enum Commands {
         EXAMPLE:\n  \
         dotxt edit")]
     Edit,
-
-    /// Archive old tasks
-    #[command(long_about = "Archive old completed tasks to keep TODO.md clean.\n\n\
-        Move old or released tasks to an archive file. Use filters to control \
-        which tasks get archived.\n\n\
-        EXAMPLES:\n  \
-        dotxt prune\n  \
-        dotxt prune --older-than 90d\n  \
-        dotxt prune --released-only --dry-run")]
-    Prune {
-        /// Archive tasks older than specified duration (e.g., 30d, 90d)
-        #[arg(long)]
-        older_than: Option<String>,
-
-        /// Only archive tasks that have a version assigned
-        #[arg(long, default_value_t = false)]
-        released_only: bool,
-
-        /// Show what would be archived without modifying files
-        #[arg(long, default_value_t = false)]
-        dry_run: bool,
-    },
 
     /// Manage preferences
     #[command(long_about = "View and modify dotxt configuration.\n\n\
