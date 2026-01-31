@@ -1,22 +1,22 @@
 use anyhow::Result;
 
 use crate::application::cli::arguments::{Cli, Commands, ConfigAction};
-use crate::application::features;
+use crate::application::commands::{self, cmd_config_get};
 
 impl Cli {
-    pub async fn run(self) -> Result<()> {
+    pub fn run(self) -> Result<()> {
         match self.command {
-            Commands::Add { description, priority, tags, dry_run } => unimplemented!("add"),
-            Commands::Done { description, commit, version, dry_run } => unimplemented!("done"),
-            Commands::List { tags, priority, json } => unimplemented!("list"),
-            Commands::Release { version, dry_run, summary } => unimplemented!("release"),
-            Commands::Changelog { from, to } => unimplemented!("changelog"),
-            Commands::Scan { auto, threshold, dry_run } => unimplemented!("scan"),
-            Commands::Edit => unimplemented!("edit"),
+            Commands::Add { description, priority, tags, dry_run } => commands::cmd_add(description, priority, tags, dry_run),
+            Commands::Done { description, commit, version, dry_run } => commands::cmd_done(description, commit, version, dry_run),
+            Commands::List { tags, priority, json } => commands::cmd_list(tags, priority, json),
+            Commands::Release { version, dry_run, summary } => commands::cmd_release(version, dry_run, summary),
+            Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
+            Commands::Scan { auto, threshold, dry_run } => commands::cmd_scan(auto, threshold, dry_run),
+            Commands::Edit => commands::cmd_edit(),
             Commands::Config { action } => match action {
-                ConfigAction::List => unimplemented!("config-list"),
-                ConfigAction::Set { key, value } => unimplemented!("config-set"),
-                ConfigAction::Get { key } => unimplemented!("config-get"),
+                ConfigAction::List => commands::cmd_config_list(),
+                ConfigAction::Set { key, value } => commands::cmd_config_set(key, value),
+                ConfigAction::Get { key } => cmd_config_get(key),
             }
         }
     }

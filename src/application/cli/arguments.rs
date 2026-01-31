@@ -1,17 +1,19 @@
 use clap::{Parser, Subcommand, ValueEnum};
 
+use crate::models::common::Priority;
+
 #[derive(Parser)]
-#[command(name = "dotxt")]
+#[command(name = "tally")]
 #[command(about = "A task management tool for TODO.md files")]
 #[command(
-    long_about = "dotxt is a command-line task manager that uses TODO.md as its storage format.\n\n\
+    long_about = "tally is a command-line task manager that uses TODO.md as its storage format.\n\n\
     Track tasks, generate changelogs, and integrate with git commits for automatic \
     task completion detection.\n\n\
     EXAMPLES:\n  \
-    dotxt add \"Fix parsing error\" --priority high --tags bug,parser\n  \
-    dotxt done \"Fix parsing error\" --commit abc123f\n  \
-    dotxt list --undone --tags bug\n  \
-    dotxt release v0.2.3 --summary"
+    tally add \"Fix parsing error\" --priority high --tags bug,parser\n  \
+    tally done \"Fix parsing error\" --commit abc123f\n  \
+    tally list --undone --tags bug\n  \
+    tally release v0.2.3 --summary"
 )]
 #[command(version)]
 pub struct Cli {
@@ -26,9 +28,9 @@ pub enum Commands {
         Creates a task with optional priority and tags. Use --dry-run to preview \
         the task before adding it.\n\n\
         EXAMPLES:\n  \
-        dotxt add \"Fix parsing error in format.rs\"\n  \
-        dotxt add \"Implement new feature\" --priority high --tags feature,backend\n  \
-        dotxt add \"Update docs\" --dry-run")]
+        tally add \"Fix parsing error in format.rs\"\n  \
+        tally add \"Implement new feature\" --priority high --tags feature,backend\n  \
+        tally add \"Update docs\" --dry-run")]
     Add {
         /// Text of the task to add
         description: String,
@@ -51,9 +53,9 @@ pub enum Commands {
         Fuzzy-matches the description against existing tasks and marks the match \
         as done. Optionally associate a git commit or version.\n\n\
         EXAMPLES:\n  \
-        dotxt done \"Fix parsing error\"\n  \
-        dotxt done \"parsing error\" --commit abc123f\n  \
-        dotxt done \"Fix bug\" --version v0.2.3 --dry-run")]
+        tally done \"Fix parsing error\"\n  \
+        tally done \"parsing error\" --commit abc123f\n  \
+        tally done \"Fix bug\" --version v0.2.3 --dry-run")]
     Done {
         /// Text to fuzzy-match against existing tasks
         description: String,
@@ -76,9 +78,9 @@ pub enum Commands {
         View all tasks, or filter by tags or priority. \
         Output as human-readable text or raw JSON.\n\n\
         EXAMPLES:\n  \
-        dotxt list\n  \
-        dotxt list --tags bug,parser --priority high\n  \
-        dotxt list --json")]
+        tally list\n  \
+        tally list --tags bug,parser --priority high\n  \
+        tally list --json")]
     List {
         /// Filter by tags (comma-separated)
         #[arg(short, long, value_delimiter = ',')]
@@ -98,9 +100,9 @@ pub enum Commands {
         Useful for release management - tags all completed tasks with the specified \
         version identifier.\n\n\
         EXAMPLES:\n  \
-        dotxt release v0.2.3\n  \
-        dotxt release v1.0.0 --summary\n  \
-        dotxt release v0.2.4 --dry-run")]
+        tally release v0.2.3\n  \
+        tally release v1.0.0 --summary\n  \
+        tally release v0.2.4 --dry-run")]
     Release {
         /// Version string to assign (e.g., v0.2.3)
         version: String,
@@ -118,9 +120,9 @@ pub enum Commands {
     #[command(long_about = "Generate a changelog from completed tasks.\n\n\
         Create a changelog for a version range or until the current version.\n\n\
         EXAMPLES:\n  \
-        dotxt changelog\n  \
-        dotxt changelog --from v0.7.2\n  \
-        dotxt changelog --from v0.2.2 --to v0.2.3")]
+        tally changelog\n  \
+        tally changelog --from v0.7.2\n  \
+        tally changelog --from v0.2.2 --to v0.2.3")]
     Changelog {
         /// Start version/date range
         #[arg(long)]
@@ -136,9 +138,9 @@ pub enum Commands {
         Uses fuzzy matching to find tasks that may have been completed based on \
         commit messages. Can run automatically or prompt for confirmation.\n\n\
         EXAMPLES:\n  \
-        dotxt scan\n  \
-        dotxt scan --auto\n  \
-        dotxt scan --threshold 0.65 --dry-run")]
+        tally scan\n  \
+        tally scan --auto\n  \
+        tally scan --threshold 0.65 --dry-run")]
     Scan {
         /// Automatically mark matches as done without prompting
         #[arg(long, default_value_t = false)]
@@ -158,17 +160,17 @@ pub enum Commands {
         Uses the editor specified in config or falls back to $EDITOR environment \
         variable, then common editors like vim, nano, etc.\n\n\
         EXAMPLE:\n  \
-        dotxt edit")]
+        tally edit")]
     Edit,
 
     /// Manage preferences
-    #[command(long_about = "View and modify dotxt configuration.\n\n\
-        Configuration is stored in .dotxt/config.toml and includes settings like \
+    #[command(long_about = "View and modify tally configuration.\n\n\
+        Configuration is stored in .tally/config.toml and includes settings like \
         default priority, editor preferences, and changelog templates.\n\n\
         EXAMPLES:\n  \
-        dotxt config set default_priority medium\n  \
-        dotxt config get changelog_template\n  \
-        dotxt config list")]
+        tally config set default_priority medium\n  \
+        tally config get changelog_template\n  \
+        tally config list")]
     Config {
         #[command(subcommand)]
         action: ConfigAction,
@@ -180,10 +182,10 @@ pub enum ConfigAction {
     /// Set a configuration value
     #[command(long_about = "Set one or more configuration values.\n\n\
         Use dot notation for nested keys if needed. Values are stored in \
-        .dotxt/config.toml.\n\n\
+        .tally/config.toml.\n\n\
         EXAMPLES:\n  \
-        dotxt config set default_priority medium\n  \
-        dotxt config set editor vim")]
+        tally config set default_priority medium\n  \
+        tally config set editor vim")]
     Set {
         /// Configuration key
         key: String,
@@ -196,8 +198,8 @@ pub enum ConfigAction {
     #[command(long_about = "Retrieve a configuration value.\n\n\
         Displays the current value for the specified configuration key.\n\n\
         EXAMPLES:\n  \
-        dotxt config get default_priority\n  \
-        dotxt config get changelog_template")]
+        tally config get default_priority\n  \
+        tally config get changelog_template")]
     Get {
         /// Configuration key to retrieve
         key: String,
@@ -207,15 +209,8 @@ pub enum ConfigAction {
     #[command(long_about = "Display all configuration settings.\n\n\
         Shows all current configuration keys and their values.\n\n\
         EXAMPLE:\n  \
-        dotxt config list")]
+        tally config list")]
     List,
-}
-
-#[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum Priority {
-    High,
-    Medium,
-    Low,
 }
 
 fn parse_threshold(s: &str) -> Result<f64, String> {
