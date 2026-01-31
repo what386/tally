@@ -4,14 +4,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// Embedded git hook scripts
-pub struct GitHooks;
-
-impl GitHooks {
-    pub const PRE_COMMIT: &'static str = include_str!("../hooks/pre-commit");
-    pub const POST_COMMIT: &'static str = include_str!("../hooks/post-commit");
-    pub const PRE_PUSH: &'static str = include_str!("../hooks/pre-push");
-    pub const PREPARE_COMMIT_MSG: &'static str = include_str!("../hooks/prepare-commit-msg");
-}
+pub const PRE_COMMIT: &'static str = include_str!("../hooks/pre-commit");
+pub const POST_COMMIT: &'static str = include_str!("../hooks/post-commit");
+pub const PRE_PUSH: &'static str = include_str!("../hooks/pre-push");
+pub const PREPARE_COMMIT_MSG: &'static str = include_str!("../hooks/prepare-commit-msg");
 
 /// Find the .git directory
 fn find_git_dir() -> Result<PathBuf> {
@@ -34,10 +30,10 @@ pub fn install_hooks() -> Result<()> {
 
     fs::create_dir_all(&hooks_dir)?;
 
-    install_hook(&hooks_dir, "pre-commit", GitHooks::PRE_COMMIT)?;
-    install_hook(&hooks_dir, "post-commit", GitHooks::POST_COMMIT)?;
-    install_hook(&hooks_dir, "pre-push", GitHooks::PRE_PUSH)?;
-    install_hook(&hooks_dir, "prepare-commit-msg", GitHooks::PREPARE_COMMIT_MSG)?;
+    install_hook(&hooks_dir, "pre-commit", PRE_COMMIT)?;
+    install_hook(&hooks_dir, "post-commit", POST_COMMIT)?;
+    install_hook(&hooks_dir, "pre-push", PRE_PUSH)?;
+    install_hook(&hooks_dir, "prepare-commit-msg", PREPARE_COMMIT_MSG)?;
 
     Ok(())
 }
@@ -127,14 +123,14 @@ pub fn update_hooks() -> Result<()> {
 
     // Only update if already installed
     if !hooks_installed()? {
-        return Err(anyhow!("Hooks not installed. Run 'tally hooks install' first."));
+        return Err(anyhow!("Hooks not installed."));
     }
 
     // Rewrite without backing up (already tally hooks)
-    fs::write(hooks_dir.join("pre-commit"), GitHooks::PRE_COMMIT)?;
-    fs::write(hooks_dir.join("post-commit"), GitHooks::POST_COMMIT)?;
-    fs::write(hooks_dir.join("pre-push"), GitHooks::PRE_PUSH)?;
-    fs::write(hooks_dir.join("prepare-commit-msg"), GitHooks::PREPARE_COMMIT_MSG)?;
+    fs::write(hooks_dir.join("pre-commit"), PRE_COMMIT)?;
+    fs::write(hooks_dir.join("post-commit"), POST_COMMIT)?;
+    fs::write(hooks_dir.join("pre-push"), PRE_PUSH)?;
+    fs::write(hooks_dir.join("prepare-commit-msg"), PREPARE_COMMIT_MSG)?;
 
     #[cfg(unix)]
     {
