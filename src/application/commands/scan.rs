@@ -2,84 +2,99 @@ use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::process::Command;
+
 use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
 
-pub fn cmd_scan(
-    auto: bool,
-    threshold: f64,
-    dry_run: bool,
-) -> Result<()> {
+#[derive(Debug)]
+struct Commit {
+    hash: String,
+    done_items: Vec<String>,
+}
+
+pub fn cmd_scan(auto: bool, threshold: f64, dry_run: bool) -> Result<()> {
+
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
-    // Get recent commit messages
     let output = Command::new("git")
-        .args(&["log", "--pretty=%h|%s", "-n", "50"])
+        .args(&[
+            "log",
+            "--pretty=format:%h%x1f%B%x1e",
+            "-n",
+            "50",
+        ])
         .current_dir(&paths.root)
         .output()?;
 
     if !output.status.success() {
-        return Err(anyhow::anyhow!("Failed to read git log"));
+        anyhow::bail!("failed to read git log");
     }
 
-    let commits = String::from_utf8(output.stdout)?;
-    let matcher = SkimMatcherV2::default();
+    let raw = String::from_utf8(output.stdout)?;
+    let commits = parse_commits(&raw);
 
+    let matcher = SkimMatcherV2::default();
     let mut matches_found = 0;
-    let mut completed_indices = Vec::new();
+    let mut completed = Vec::new();
 
     for (idx, task) in storage.tasks().iter().enumerate() {
         if task.completed {
             continue;
         }
 
-        // Find best matching commit
-        let mut best_commit: Option<(String, String, f64)> = None;
+        let mut best_match: Option<(String, f64, String)> = None;
 
-        for line in commits.lines() {
-            let parts: Vec<&str> = line.splitn(2, '|').collect();
-            if parts.len() != 2 {
-                continue;
-            }
+        for commit in &commits {
+            for done in &commit.done_items {
+                if let Some(score) =
+                    matcher.fuzzy_match(&task.description, done)
+                {
+                    let score = score as f64;
 
-            let (hash, message) = (parts[0], parts[1]);
+                    let min_score = threshold * 200.0;
 
-            if let Some(score) = matcher.fuzzy_match(message, &task.description) {
-                let score_pct = (score as f64).min(100.0);
+                    if score >= min_score {
+                        let is_better = best_match
+                            .as_ref()
+                            .map(|(_, best, _)| score > *best)
+                            .unwrap_or(true);
 
-                if score_pct >= threshold * 100.0 {
-                    if best_commit.is_none() || score_pct > best_commit.as_ref().unwrap().2 {
-                        best_commit = Some((hash.to_string(), message.to_string(), score_pct));
+                        if is_better {
+                            best_match = Some((
+                                commit.hash.clone(),
+                                score,
+                                done.clone(),
+                            ));
+                        }
                     }
                 }
             }
         }
 
-        if let Some((hash, message, score)) = best_commit {
+        if let Some((hash, score, done_line)) = best_match {
             matches_found += 1;
 
-            println!("Match found ({:.0}%):", score);
-            println!("  Task:   {}", task.description);
-            println!("  Commit: {} - {}", hash, message);
+            println!("Match found (score: {}):", score);
+            println!("  Task: {}", task.description);
+            println!("  Done: {}", done_line);
+            println!("  Commit: {}", hash);
 
             if dry_run {
                 println!("  (dry-run: would mark as done)");
             } else if auto {
-                // Auto-complete
-                println!("  → Marking as done");
-                completed_indices.push((idx, hash.clone()));
+                completed.push((idx, hash));
             } else {
-                // Prompt user
-                print!("  Mark as done? [y/N]: ");
                 use std::io::{self, Write};
+
+                print!("  Mark as done? [y/N]: ");
                 io::stdout().flush()?;
 
                 let mut input = String::new();
                 io::stdin().read_line(&mut input)?;
 
                 if input.trim().eq_ignore_ascii_case("y") {
-                    completed_indices.push((idx, hash.clone()));
+                    completed.push((idx, hash));
                 } else {
                     println!("  → Skipped");
                 }
@@ -89,9 +104,8 @@ pub fn cmd_scan(
         }
     }
 
-    // Complete the tasks
     if !dry_run {
-        for (idx, hash) in completed_indices {
+        for (idx, hash) in completed {
             storage.complete_task(idx, None)?;
             if let Some(task) = storage.tasks_mut().get_mut(idx) {
                 task.completed_at_commit = Some(hash);
@@ -101,8 +115,69 @@ pub fn cmd_scan(
     }
 
     if matches_found == 0 {
-        println!("No matches found above {:.0}% threshold.", threshold * 100.0);
+        println!(
+            "No matches found above {:.0}% threshold.",
+            threshold * 100.0
+        );
     }
 
     Ok(())
+}
+
+fn parse_commits(input: &str) -> Vec<Commit> {
+    let mut commits = Vec::new();
+
+    for record in input.split('\x1e') {
+        if record.trim().is_empty() {
+            continue;
+        }
+
+        let mut parts = record.splitn(2, '\x1f');
+        let hash = parts.next().unwrap().to_string();
+        let body = parts.next().unwrap_or("");
+
+        let done_items = extract_done_items(body);
+
+        if !done_items.is_empty() {
+            commits.push(Commit { hash, done_items });
+        }
+    }
+
+    commits
+}
+
+fn extract_done_items(message: &str) -> Vec<String> {
+    let mut items = Vec::new();
+    let mut in_done = false;
+
+    for line in message.lines() {
+        let trimmed = line.trim();
+
+        if trimmed.eq_ignore_ascii_case("done:") {
+            in_done = true;
+            continue;
+        }
+
+        if in_done {
+            if trimmed.is_empty() {
+                break;
+            }
+
+            // Stop at next section header
+            if trimmed.ends_with(':') {
+                break;
+            }
+
+            let cleaned = trimmed
+                .trim_start_matches(['-', '*'])
+                .trim()
+                .to_string();
+
+            if !cleaned.is_empty() {
+                items.push(cleaned);
+            }
+        }
+    }
+
+    items
 }
