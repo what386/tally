@@ -1,11 +1,11 @@
+use crate::models::{
+    changes::Change,
+    common::{Priority, Version},
+    tasks::Task,
+};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use crate::models::{
-    common::{Priority, Version},
-    tasks::Task,
-    changes::Change,
-};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Release {

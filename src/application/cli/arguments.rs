@@ -76,13 +76,15 @@ pub enum Commands {
     },
 
     /// Display tasks
-    #[command(long_about = "Display tasks with optional filtering and formatting.\n\n\
+    #[command(
+        long_about = "Display tasks with optional filtering and formatting.\n\n\
         View all tasks, or filter by tags or priority. \
         Output as human-readable text or raw JSON.\n\n\
         EXAMPLES:\n  \
         tally list\n  \
         tally list --tags bug,parser --priority high\n  \
-        tally list --json")]
+        tally list --json"
+    )]
     List {
         /// Filter by tags (comma-separated)
         #[arg(short, long, value_delimiter = ',')]
@@ -98,13 +100,15 @@ pub enum Commands {
     },
 
     /// Assign version to completed tasks
-    #[command(long_about = "Assign a version to all completed tasks without a version.\n\n\
+    #[command(
+        long_about = "Assign a version to all completed tasks without a version.\n\n\
         Useful for release management - tags all completed tasks with the specified \
         version identifier.\n\n\
         EXAMPLES:\n  \
         tally release v0.2.3\n  \
         tally release v1.0.0 --summary\n  \
-        tally release v0.2.4 --dry-run")]
+        tally release v0.2.4 --dry-run"
+    )]
     Release {
         /// Version string to assign (e.g., v0.2.3)
         version: String,
@@ -136,13 +140,15 @@ pub enum Commands {
     },
 
     /// Detect completed tasks from git commits
-    #[command(long_about = "Scan git commit messages to automatically detect completed tasks.\n\n\
+    #[command(
+        long_about = "Scan git commit messages to automatically detect completed tasks.\n\n\
         Uses fuzzy matching to find tasks that may have been completed based on \
         commit messages. Can run automatically or prompt for confirmation.\n\n\
         EXAMPLES:\n  \
         tally scan\n  \
         tally scan --auto\n  \
-        tally scan --dry-run")]
+        tally scan --dry-run"
+    )]
     Scan {
         /// Automatically mark matches as done without prompting
         #[arg(long, default_value_t = false)]
@@ -173,8 +179,6 @@ pub enum Commands {
         #[command(subcommand)]
         action: ConfigAction,
     },
-
-
 }
 
 #[derive(Subcommand)]

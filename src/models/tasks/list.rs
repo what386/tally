@@ -1,7 +1,7 @@
+use crate::models::{common::Version, tasks::Task};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use crate::models::{common::Version, tasks::Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct List {

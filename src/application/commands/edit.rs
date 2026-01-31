@@ -1,6 +1,6 @@
+use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use std::process::Command;
-use crate::utils::project_paths::ProjectPaths;
 
 pub fn cmd_edit() -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
@@ -18,9 +18,7 @@ pub fn cmd_edit() -> Result<()> {
             "vim".to_string()
         });
 
-    let status = Command::new(editor)
-        .arg(&paths.todo_file)
-        .status()?;
+    let status = Command::new(editor).arg(&paths.todo_file).status()?;
 
     if !status.success() {
         return Err(anyhow::anyhow!("Editor exited with non-zero status"));

@@ -1,13 +1,9 @@
-use anyhow::Result;
-use crate::utils::project_paths::ProjectPaths;
-use crate::services::storage::task_storage::ListStorage;
 use crate::models::common::Version;
+use crate::services::storage::task_storage::ListStorage;
+use crate::utils::project_paths::ProjectPaths;
+use anyhow::Result;
 
-pub fn cmd_release(
-    version_str: String,
-    dry_run: bool,
-    summary: bool,
-) -> Result<()> {
+pub fn cmd_release(version_str: String, dry_run: bool, summary: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
@@ -15,7 +11,8 @@ pub fn cmd_release(
     let version = Version::parse(&version_str)?;
 
     // Count unversioned completed tasks
-    let unversioned: Vec<_> = storage.tasks()
+    let unversioned: Vec<_> = storage
+        .tasks()
         .iter()
         .filter(|t| t.completed && t.completed_at_version.is_none())
         .collect();
@@ -26,7 +23,11 @@ pub fn cmd_release(
     }
 
     if dry_run {
-        println!("Would assign version {} to {} task(s):", version, unversioned.len());
+        println!(
+            "Would assign version {} to {} task(s):",
+            version,
+            unversioned.len()
+        );
         for task in unversioned {
             println!("  [x] {}", task.description);
         }

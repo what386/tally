@@ -1,6 +1,6 @@
-use std::fmt;
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
+use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Version {

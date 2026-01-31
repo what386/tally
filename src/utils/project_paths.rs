@@ -14,11 +14,14 @@ pub fn find_project_root() -> Result<PathBuf> {
         // Try to move to parent directory
         match current.parent() {
             Some(parent) => current = parent.to_path_buf(),
-            None => return Err(anyhow!("No .tally/ directory found. use 'tally init' to create a new one")),
+            None => {
+                return Err(anyhow!(
+                    "No .tally/ directory found. use 'tally init' to create a new one"
+                ));
+            }
         }
     }
 }
-
 
 pub struct ProjectPaths {
     pub todo_file: PathBuf,
@@ -52,7 +55,10 @@ impl ProjectPaths {
         let hooks_dir = tally_dir.join("hooks");
 
         if tally_dir.exists() {
-            return Err(anyhow!("Project already initialized at {}", tally_dir.display()));
+            return Err(anyhow!(
+                "Project already initialized at {}",
+                tally_dir.display()
+            ));
         }
 
         std::fs::create_dir_all(&tally_dir)?;
@@ -66,6 +72,5 @@ impl ProjectPaths {
             tally_dir,
             root,
         })
-
     }
 }

@@ -4,8 +4,8 @@ use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::process::Command;
 
-use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
+use crate::utils::project_paths::ProjectPaths;
 
 #[derive(Debug)]
 struct Commit {
@@ -19,12 +19,7 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
     let output = Command::new("git")
-        .args(&[
-            "log",
-            "--pretty=format:%h%x1f%ct%x1f%B%x1e",
-            "-n",
-            "50",
-        ])
+        .args(&["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
         .current_dir(&paths.root)
         .output()?;
 
@@ -48,24 +43,18 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
 
         for commit in &commits {
             if commit.date < task.created_at_time {
-                    continue;
+                continue;
             }
 
             for done in &commit.done_items {
-                if let Some(score) =
-                    matcher.fuzzy_match(&task.description, done)
-                {
+                if let Some(score) = matcher.fuzzy_match(&task.description, done) {
                     let is_better = best_match
                         .as_ref()
                         .map(|(_, best, _)| score > *best)
                         .unwrap_or(true);
 
                     if is_better {
-                        best_match = Some((
-                            commit.hash.clone(),
-                            score,
-                            done.clone(),
-                        ));
+                        best_match = Some((commit.hash.clone(), score, done.clone()));
                     }
                 }
             }
@@ -136,14 +125,19 @@ fn parse_commits(input: &str) -> Vec<Commit> {
         let body = parts.next().unwrap_or("").trim();
 
         let ts: i64 = timestamp_str.parse().unwrap_or(0);
-        let date: DateTime<Utc> = Utc.timestamp_opt(ts, 0)
+        let date: DateTime<Utc> = Utc
+            .timestamp_opt(ts, 0)
             .single()
             .unwrap_or_else(|| Utc.timestamp_opt(0, 0).unwrap());
 
         let done_items = extract_done_items(body);
 
         if !done_items.is_empty() {
-            commits.push(Commit { hash, done_items, date });
+            commits.push(Commit {
+                hash,
+                done_items,
+                date,
+            });
         }
     }
 
@@ -172,10 +166,7 @@ fn extract_done_items(message: &str) -> Vec<String> {
                 break;
             }
 
-            let cleaned = trimmed
-                .trim_start_matches(['-', '*'])
-                .trim()
-                .to_string();
+            let cleaned = trimmed.trim_start_matches(['-', '*']).trim().to_string();
 
             if !cleaned.is_empty() {
                 items.push(cleaned);

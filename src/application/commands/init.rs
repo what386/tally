@@ -1,9 +1,9 @@
-use anyhow::Result;
-use crate::utils::project_paths::ProjectPaths;
-use crate::models::tasks::List;
 use crate::models::common::Version;
-use crate::services::serializers::todo_serializer;
+use crate::models::tasks::List;
 use crate::services::git;
+use crate::services::serializers::todo_serializer;
+use crate::utils::project_paths::ProjectPaths;
+use anyhow::Result;
 
 pub fn cmd_init() -> Result<()> {
     let current_dir = std::env::current_dir()?;
@@ -37,7 +37,6 @@ pub fn cmd_init() -> Result<()> {
     // Install git hooks if in a git repository
     match git::install_hooks() {
         Ok(()) => {
-
             println!("✓ Installed git hooks");
             println!();
             println!("Git integration enabled:");

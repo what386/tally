@@ -1,9 +1,9 @@
-use std::path::{Path, PathBuf};
-use std::fs;
-use anyhow::{Result, anyhow};
-use crate::models::tasks::{List, Task};
 use crate::models::common::{Priority, Version};
+use crate::models::tasks::{List, Task};
 use crate::services::serializers::todo_serializer;
+use anyhow::{Result, anyhow};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 pub struct ListStorage {
     todo_list: List,
@@ -42,8 +42,7 @@ impl ListStorage {
     pub fn save_list(&self) -> Result<()> {
         // Ensure parent directory exists
         if let Some(parent) = self.list_file.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|e| anyhow!("Failed to create directory: {}", e))?;
+            fs::create_dir_all(parent).map_err(|e| anyhow!("Failed to create directory: {}", e))?;
         }
 
         let content = todo_serializer::serialize(&self.todo_list);
@@ -175,7 +174,8 @@ impl ListStorage {
 
     /// Get tasks filtered by completion status
     pub fn tasks_by_status(&self, completed: bool) -> Vec<&Task> {
-        self.todo_list.tasks
+        self.todo_list
+            .tasks
             .iter()
             .filter(|t| t.completed == completed)
             .collect()
@@ -183,7 +183,8 @@ impl ListStorage {
 
     /// Get tasks filtered by priority
     pub fn tasks_by_priority(&self, priority: Priority) -> Vec<&Task> {
-        self.todo_list.tasks
+        self.todo_list
+            .tasks
             .iter()
             .filter(|t| t.priority == priority)
             .collect()
@@ -191,7 +192,8 @@ impl ListStorage {
 
     /// Get tasks filtered by tag
     pub fn tasks_by_tag(&self, tag: &str) -> Vec<&Task> {
-        self.todo_list.tasks
+        self.todo_list
+            .tasks
             .iter()
             .filter(|t| t.tags.contains(&tag.to_string()))
             .collect()
@@ -275,7 +277,8 @@ impl ListStorage {
     /// Search tasks by description pattern
     pub fn search_tasks(&self, pattern: &str) -> Vec<&Task> {
         let pattern_lower = pattern.to_lowercase();
-        self.todo_list.tasks
+        self.todo_list
+            .tasks
             .iter()
             .filter(|t| t.description.to_lowercase().contains(&pattern_lower))
             .collect()

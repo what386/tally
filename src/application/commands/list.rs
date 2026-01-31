@@ -1,13 +1,9 @@
-use anyhow::Result;
-use crate::utils::project_paths::ProjectPaths;
-use crate::services::storage::task_storage::ListStorage;
 use crate::models::common::Priority;
+use crate::services::storage::task_storage::ListStorage;
+use crate::utils::project_paths::ProjectPaths;
+use anyhow::Result;
 
-pub fn cmd_list(
-    tags: Option<Vec<String>>,
-    priority: Option<Priority>,
-    json: bool,
-) -> Result<()> {
+pub fn cmd_list(tags: Option<Vec<String>>, priority: Option<Priority>, json: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let storage = ListStorage::new(&paths.todo_file)?;
 
@@ -15,9 +11,7 @@ pub fn cmd_list(
 
     // Filter by tags
     if let Some(ref filter_tags) = tags {
-        tasks.retain(|(_, task)| {
-            filter_tags.iter().any(|tag| task.tags.contains(tag))
-        });
+        tasks.retain(|(_, task)| filter_tags.iter().any(|tag| task.tags.contains(tag)));
     }
 
     // Filter by priority
@@ -46,10 +40,18 @@ pub fn cmd_list(
             let tags_str = if task.tags.is_empty() {
                 String::new()
             } else {
-                format!(" {}", task.tags.iter().map(|t| format!("#{}", t)).collect::<Vec<_>>().join(" "))
+                format!(
+                    " {}",
+                    task.tags
+                        .iter()
+                        .map(|t| format!("#{}", t))
+                        .collect::<Vec<_>>()
+                        .join(" ")
+                )
             };
 
-            println!("{}. [{}] {}{}{}",
+            println!(
+                "{}. [{}] {}{}{}",
                 i + 1,
                 checkbox,
                 task.description,

@@ -1,8 +1,8 @@
-use anyhow::Result;
-use crate::utils::project_paths::ProjectPaths;
-use crate::services::storage::task_storage::ListStorage;
-use crate::models::tasks::Task;
 use crate::models::common::Priority;
+use crate::models::tasks::Task;
+use crate::services::storage::task_storage::ListStorage;
+use crate::utils::project_paths::ProjectPaths;
+use anyhow::Result;
 
 pub fn cmd_add(
     description: String,
@@ -12,7 +12,11 @@ pub fn cmd_add(
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
 
-    let task = Task::new(description.clone(), priority, tags.clone().unwrap_or_default());
+    let task = Task::new(
+        description.clone(),
+        priority,
+        tags.clone().unwrap_or_default(),
+    );
 
     if dry_run {
         println!("Would add task:");
@@ -39,7 +43,14 @@ fn print_task(task: &Task) {
     let tags_str = if task.tags.is_empty() {
         String::new()
     } else {
-        format!(" {}", task.tags.iter().map(|t| format!("#{}", t)).collect::<Vec<_>>().join(" "))
+        format!(
+            " {}",
+            task.tags
+                .iter()
+                .map(|t| format!("#{}", t))
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
     };
 
     println!("  [ ] {}{}{}", task.description, priority_str, tags_str);
@@ -55,7 +66,13 @@ fn print_task_simple(description: &str, priority: &Priority, tags: &[String]) {
     let tags_str = if tags.is_empty() {
         String::new()
     } else {
-        format!(" {}", tags.iter().map(|t| format!("#{}", t)).collect::<Vec<_>>().join(" "))
+        format!(
+            " {}",
+            tags.iter()
+                .map(|t| format!("#{}", t))
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
     };
 
     println!("  [ ] {}{}{}", description, priority_str, tags_str);

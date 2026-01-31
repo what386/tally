@@ -1,6 +1,6 @@
+use crate::models::{common::Priority, tasks::Task};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
-use crate::models::{common::Priority, tasks::Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Change {

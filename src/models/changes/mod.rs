@@ -1,5 +1,5 @@
-pub mod changelog;
 pub mod change;
+pub mod changelog;
 pub mod release;
 
 pub use change::Change;

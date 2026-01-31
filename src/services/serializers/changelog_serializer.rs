@@ -1,6 +1,6 @@
 use crate::models::{
-    common::Priority,
     changes::{Changelog, Release},
+    common::Priority,
 };
 
 /// Convert Changelog to markdown format
@@ -29,7 +29,11 @@ pub fn to_json(changelog: &Changelog) -> serde_json::Result<String> {
 fn release_to_markdown(release: &Release) -> String {
     let mut output = String::new();
 
-    output.push_str(&format!("## {} — {}\n\n", release.version, release.date.format("%Y-%m-%d")));
+    output.push_str(&format!(
+        "## {} — {}\n\n",
+        release.version,
+        release.date.format("%Y-%m-%d")
+    ));
 
     for (priority, section_name) in [
         (Priority::High, "🔴 High Priority"),
@@ -47,7 +51,8 @@ fn release_to_markdown(release: &Release) -> String {
                         format!(" `{}`", change.tags.join("`, `"))
                     };
 
-                    let commit = change.commit
+                    let commit = change
+                        .commit
                         .as_ref()
                         .map(|c| format!(" ([`{}`])", &c[..7.min(c.len())]))
                         .unwrap_or_default();

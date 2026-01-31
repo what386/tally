@@ -110,10 +110,10 @@ pub fn hooks_installed() -> Result<bool> {
     let pre_commit = hooks_dir.join("pre-commit");
     let post_commit = hooks_dir.join("post-commit");
 
-    Ok(pre_commit.exists() &&
-       is_tally_hook(&pre_commit).unwrap_or(false) &&
-       post_commit.exists() &&
-       is_tally_hook(&post_commit).unwrap_or(false))
+    Ok(pre_commit.exists()
+        && is_tally_hook(&pre_commit).unwrap_or(false)
+        && post_commit.exists()
+        && is_tally_hook(&post_commit).unwrap_or(false))
 }
 
 /// Update hooks (rewrite with latest version)
@@ -135,7 +135,12 @@ pub fn update_hooks() -> Result<()> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        for name in &["pre-commit", "post-commit", "pre-push", "prepare-commit-msg"] {
+        for name in &[
+            "pre-commit",
+            "post-commit",
+            "pre-push",
+            "prepare-commit-msg",
+        ] {
             let path = hooks_dir.join(name);
             let mut perms = fs::metadata(&path)?.permissions();
             perms.set_mode(0o755);
@@ -145,4 +150,3 @@ pub fn update_hooks() -> Result<()> {
 
     Ok(())
 }
-

@@ -1,6 +1,6 @@
+mod application;
 mod models;
 mod services;
-mod application;
 mod utils;
 
 use console::style;
@@ -35,4 +35,3 @@ fn main() {
         std::process::exit(1);
     }
 }
-

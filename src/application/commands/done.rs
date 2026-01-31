@@ -1,9 +1,9 @@
+use crate::models::common::Version;
+use crate::services::storage::task_storage::ListStorage;
+use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
-use crate::utils::project_paths::ProjectPaths;
-use crate::services::storage::task_storage::ListStorage;
-use crate::models::common::Version;
 
 pub fn cmd_done(
     description: String,
@@ -76,11 +76,11 @@ pub fn cmd_done(
 
             storage.complete_task(index, version_obj)?;
 
-
             Ok(())
         }
-        None => {
-            Err(anyhow::anyhow!("No matching task found for: '{}'", description))
-        }
+        None => Err(anyhow::anyhow!(
+            "No matching task found for: '{}'",
+            description
+        )),
     }
 }

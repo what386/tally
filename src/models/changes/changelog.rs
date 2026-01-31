@@ -1,11 +1,7 @@
+use crate::models::{changes::Release, common::Version, tasks::Task};
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use crate::models::{
-    common::Version,
-    tasks::Task,
-    changes::Release,
-};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Changelog {
@@ -34,7 +30,8 @@ impl Changelog {
 
     /// Filter changelog to only include releases between two versions
     pub fn filter_versions(&self, from: Option<&Version>, to: Option<&Version>) -> Self {
-        let filtered_releases = self.releases
+        let filtered_releases = self
+            .releases
             .iter()
             .filter(|r| {
                 let after_from = from.map_or(true, |f| &r.version >= f);
@@ -51,4 +48,3 @@ impl Changelog {
         }
     }
 }
-

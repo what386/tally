@@ -1,10 +1,10 @@
-use std::fmt::Write;
-use chrono::{DateTime, Utc};
-use anyhow::{Context, Result};
 use crate::models::{
     common::{Priority, Version},
     tasks::{List, Task},
 };
+use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
+use std::fmt::Write;
 
 struct TaskMetadata {
     created_at_time: DateTime<Utc>,
@@ -22,9 +22,9 @@ pub fn serialize(list: &List) -> String {
     writeln!(
         &mut output,
         "# TODO — {} v{}\n",
-        list.project_name,
-        list.project_version
-    ).unwrap();
+        list.project_name, list.project_version
+    )
+    .unwrap();
 
     writeln!(&mut output, "@created: {}", format_date(&list.created_at)).unwrap();
     writeln!(&mut output, "@modified: {}", format_date(&list.modified_at)).unwrap();
@@ -113,17 +113,22 @@ fn write_task(output: &mut String, task: &Task) {
     let tags_str = if task.tags.is_empty() {
         String::new()
     } else {
-        format!(" {}", task.tags.iter().map(|t| format!("#{}", t)).collect::<Vec<_>>().join(" "))
+        format!(
+            " {}",
+            task.tags
+                .iter()
+                .map(|t| format!("#{}", t))
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
     };
 
     writeln!(
         output,
         "- [{}] {}{}{}",
-        checkbox,
-        task.description,
-        priority_str,
-        tags_str
-    ).unwrap();
+        checkbox, task.description, priority_str, tags_str
+    )
+    .unwrap();
 
     write_task_metadata(output, task);
 }
@@ -133,7 +138,8 @@ fn write_task_metadata(output: &mut String, task: &Task) {
         output,
         "      @created {}",
         format_datetime(&task.created_at_time)
-    ).unwrap();
+    )
+    .unwrap();
 
     if let Some(version) = &task.created_at_version {
         writeln!(output, "      @created_version {}", version).unwrap();
@@ -149,7 +155,8 @@ fn write_task_metadata(output: &mut String, task: &Task) {
                 output,
                 "      @completed {}",
                 format_datetime(completed_time)
-            ).unwrap();
+            )
+            .unwrap();
         }
 
         if let Some(version) = &task.completed_at_version {
@@ -177,32 +184,36 @@ fn parse_header(line: &str) -> Result<(String, Version)> {
         anyhow::bail!("Invalid header format: expected 'TODO — [PROJECT] v[VERSION]'");
     }
 
-    let line = line.trim_start_matches("TODO —").trim_start_matches("TODO -").trim();
+    let line = line
+        .trim_start_matches("TODO —")
+        .trim_start_matches("TODO -")
+        .trim();
 
-    let version_start = line.rfind(" v")
-        .context("No version found in header")?;
+    let version_start = line.rfind(" v").context("No version found in header")?;
 
     let project_name = line[..version_start].trim().to_string();
     let version_str = line[version_start + 2..].trim();
 
-    let version = Version::parse(version_str)
-        .context("Failed to parse version in header")?;
+    let version = Version::parse(version_str).context("Failed to parse version in header")?;
 
     Ok((project_name, version))
 }
 
 fn parse_date_line(line: &str) -> Result<DateTime<Utc>> {
-    let date_str = line.split(':')
+    let date_str = line
+        .split(':')
         .nth(1)
         .context("Invalid date line format")?
         .trim();
 
-    let naive_date = chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
-        .context("Failed to parse date")?;
-    let naive_datetime = naive_date.and_hms_opt(0, 0, 0)
-        .context("Invalid time")?;
+    let naive_date =
+        chrono::NaiveDate::parse_from_str(date_str, "%Y-%m-%d").context("Failed to parse date")?;
+    let naive_datetime = naive_date.and_hms_opt(0, 0, 0).context("Invalid time")?;
 
-    Ok(DateTime::<Utc>::from_naive_utc_and_offset(naive_datetime, Utc))
+    Ok(DateTime::<Utc>::from_naive_utc_and_offset(
+        naive_datetime,
+        Utc,
+    ))
 }
 
 fn parse_tasks<'a>(lines: impl Iterator<Item = &'a str>) -> Result<Vec<Task>> {
@@ -314,8 +325,7 @@ fn parse_task_metadata(lines: &[String]) -> Result<TaskMetadata> {
         }
     }
 
-    let created_at_time = created_at_time
-        .context("Task missing @created timestamp")?;
+    let created_at_time = created_at_time.context("Task missing @created timestamp")?;
 
     Ok(TaskMetadata {
         created_at_time,
