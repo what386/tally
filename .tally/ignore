@@ -12,7 +12,3 @@ chore: *
 # Skip changelog-related
 changelog *
 update changelog
-
-# Skip all tasks tagged as docs or meta
-#docs
-#meta
