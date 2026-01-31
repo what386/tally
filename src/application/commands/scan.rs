@@ -3,6 +3,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::process::Command;
+use crate::services::storage::ignore_storage::IgnoreStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
 use crate::utils::project_paths::ProjectPaths;
@@ -18,6 +19,7 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let mut history = HistoryStorage::new(&paths.history_file)?;
+    let ignore = IgnoreStorage::load(&paths.ignore_file);
 
     let output = Command::new("git")
         .args(["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
@@ -36,6 +38,10 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
 
     for (idx, task) in storage.tasks().iter().enumerate() {
         if task.completed {
+            continue;
+        }
+
+        if ignore.is_ignored(&task.description, &task.tags) {
             continue;
         }
 

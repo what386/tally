@@ -28,6 +28,7 @@ pub struct ProjectPaths {
     pub history_file: PathBuf,
     pub config_file: PathBuf,
     pub hooks_dir: PathBuf,
+    pub ignore_file: PathBuf,
     pub tally_dir: PathBuf,
     pub root: PathBuf,
 }
@@ -42,6 +43,7 @@ impl ProjectPaths {
             todo_file: root.join("TODO.md"),
             history_file: tally_dir.join("history.json"),
             config_file: tally_dir.join("config.toml"),
+            ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
             tally_dir,
             root,
@@ -68,6 +70,7 @@ impl ProjectPaths {
             todo_file: root.join("TODO.md"),
             history_file: tally_dir.join("history.json"),
             config_file: tally_dir.join("config.toml"),
+            ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
             tally_dir,
             root,
