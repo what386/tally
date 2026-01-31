@@ -41,13 +41,13 @@ jobs:
       - name: Archive binary
         run: |
           mkdir dist
-          cp target/${{ matrix.target }}/release/dotxt${{ matrix.binary_ext }} dist/dotxt-${{ matrix.target }}${{ matrix.binary_ext }}
+          cp target/${{ matrix.target }}/release/tally${{ matrix.binary_ext }} dist/tally-${{ matrix.target }}${{ matrix.binary_ext }}
         shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dotxt-${{ matrix.target }}
-          path: dist/dotxt-${{ matrix.target }}${{ matrix.binary_ext }}
+          name: tally-${{ matrix.target }}
+          path: dist/tally-${{ matrix.target }}${{ matrix.binary_ext }}
   release:
     name: Create GitHub Release
     needs: build
