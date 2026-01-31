@@ -4,10 +4,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// Embedded git hook scripts
-pub const PRE_COMMIT: &'static str = include_str!("../hooks/pre-commit");
-pub const POST_COMMIT: &'static str = include_str!("../hooks/post-commit");
-pub const PRE_PUSH: &'static str = include_str!("../hooks/pre-push");
-pub const PREPARE_COMMIT_MSG: &'static str = include_str!("../hooks/prepare-commit-msg");
+pub const PRE_COMMIT: &'static str = include_str!("hooks/pre-commit");
+pub const POST_COMMIT: &'static str = include_str!("hooks/post-commit");
+pub const PRE_PUSH: &'static str = include_str!("hooks/pre-push");
+pub const PREPARE_COMMIT_MSG: &'static str = include_str!("hooks/prepare-commit-msg");
 
 /// Find the .git directory
 fn find_git_dir() -> Result<PathBuf> {
