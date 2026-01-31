@@ -39,7 +39,6 @@ pub fn cmd_init() -> Result<()> {
         Ok(()) => {
             println!("Git integration enabled:");
             println!("  - Commit messages with 'done:' section will auto-complete tasks");
-            println!("  - TODO.md will be auto-staged on commits");
         }
         Err(e) => {
             println!("⚠ Git hooks not installed: {}", e);
