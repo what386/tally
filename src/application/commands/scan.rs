@@ -19,7 +19,7 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
     let output = Command::new("git")
-        .args(&["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
+        .args(["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
         .current_dir(&paths.root)
         .output()?;
 

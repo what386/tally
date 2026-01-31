@@ -33,7 +33,7 @@ pub fn serialize(list: &List) -> String {
     let mut completed_tasks: Vec<_> = list.tasks.iter().filter(|t| t.completed).collect();
 
     incomplete_tasks.sort_by_key(|t| t.created_at_time);
-    completed_tasks.sort_by_key(|t| t.completed_at_time.unwrap_or_else(|| t.created_at_time));
+    completed_tasks.sort_by_key(|t| t.completed_at_time.unwrap_or(t.created_at_time));
 
     // Tasks
     writeln!(&mut output, "\n## Tasks\n").unwrap();
@@ -249,7 +249,7 @@ fn parse_task(lines: &[String]) -> Result<Task> {
 
     let content = first_line
         .trim_start_matches("- [")
-        .trim_start_matches(|c| c == 'x' || c == 'X' || c == ' ')
+        .trim_start_matches(['x', 'X', ' '])
         .trim_start_matches(']')
         .trim();
 

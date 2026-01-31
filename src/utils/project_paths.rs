@@ -1,6 +1,6 @@
 use anyhow::{Result, anyhow};
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 pub fn find_project_root() -> Result<PathBuf> {
     let mut current = env::current_dir()?;

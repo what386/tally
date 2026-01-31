@@ -37,8 +37,7 @@ impl List {
             .iter()
             .filter(|t| {
                 t.completed_at_version
-                    .as_ref()
-                    .map_or(false, |v| v == version)
+                    .as_ref() == Some(version)
             })
             .collect()
     }

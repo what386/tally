@@ -25,16 +25,14 @@ pub fn cmd_changelog(from: Option<String>, to: Option<String>) -> Result<()> {
 
     for (version, tasks) in tasks_by_version.iter().rev() {
         // Filter by version range if specified
-        if let Some(ref from_v) = from_version {
-            if version < from_v {
+        if let Some(ref from_v) = from_version
+            && version < from_v {
                 continue;
             }
-        }
-        if let Some(ref to_v) = to_version {
-            if version > to_v {
+        if let Some(ref to_v) = to_version
+            && version > to_v {
                 continue;
             }
-        }
 
         // Create release from tasks
         let release = Release::from_tasks(version.clone(), tasks.to_vec());

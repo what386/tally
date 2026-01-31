@@ -2,7 +2,6 @@ use anyhow::Result;
 
 use crate::application::cli::arguments::{Cli, Commands, ConfigAction};
 use crate::application::commands::{self, cmd_config_get};
-use crate::utils::project_paths::ProjectPaths;
 
 impl Cli {
     pub fn run(self) -> Result<()> {

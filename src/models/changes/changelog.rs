@@ -34,8 +34,8 @@ impl Changelog {
             .releases
             .iter()
             .filter(|r| {
-                let after_from = from.map_or(true, |f| &r.version >= f);
-                let before_to = to.map_or(true, |t| &r.version <= t);
+                let after_from = from.is_none_or(|f| &r.version >= f);
+                let before_to = to.is_none_or(|t| &r.version <= t);
                 after_from && before_to
             })
             .cloned()

@@ -40,8 +40,8 @@ fn release_to_markdown(release: &Release) -> String {
         (Priority::Medium, "📝 Changes"),
         (Priority::Low, "🔹 Minor Changes"),
     ] {
-        if let Some(changes) = release.changes_by_priority.get(&priority) {
-            if !changes.is_empty() {
+        if let Some(changes) = release.changes_by_priority.get(&priority)
+            && !changes.is_empty() {
                 output.push_str(&format!("### {}\n\n", section_name));
 
                 for change in changes {
@@ -62,7 +62,6 @@ fn release_to_markdown(release: &Release) -> String {
 
                 output.push('\n');
             }
-        }
     }
 
     output

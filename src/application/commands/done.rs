@@ -24,11 +24,10 @@ pub fn cmd_done(
             continue; // Skip already completed tasks
         }
 
-        if let Some(score) = matcher.fuzzy_match(&task.description, &description) {
-            if best_match.is_none() || score > best_match.unwrap().1 {
+        if let Some(score) = matcher.fuzzy_match(&task.description, &description)
+            && (best_match.is_none() || score > best_match.unwrap().1) {
                 best_match = Some((i, score));
             }
-        }
     }
 
     match best_match {
