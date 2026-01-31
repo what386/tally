@@ -29,6 +29,8 @@ impl Cli {
                 dry_run,
                 summary,
             } => commands::cmd_release(version, dry_run, summary),
+            Commands::Prune { days, hours, dry_run } => commands::cmd_prune(days, hours, dry_run),
+            Commands::Remove { description, dry_run } => commands::cmd_remove(description, dry_run),
             Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
             Commands::Scan { auto, dry_run } => commands::cmd_scan(auto, dry_run),
             Commands::Edit => commands::cmd_edit(),

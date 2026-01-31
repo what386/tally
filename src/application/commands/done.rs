@@ -1,5 +1,6 @@
 use crate::models::common::Version;
 use crate::services::storage::task_storage::ListStorage;
+use crate::services::storage::history_storage::HistoryStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
@@ -13,6 +14,7 @@ pub fn cmd_done(
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
+    let mut history = HistoryStorage::new(&paths.history_file)?;
 
     // Fuzzy match the description
     let matcher = SkimMatcherV2::default();
@@ -21,7 +23,7 @@ pub fn cmd_done(
 
     for (i, task) in tasks.iter().enumerate() {
         if task.completed {
-            continue; // Skip already completed tasks
+            continue;
         }
 
         if let Some(score) = matcher.fuzzy_match(&task.description, &description)
@@ -33,15 +35,6 @@ pub fn cmd_done(
     match best_match {
         Some((index, score)) => {
             let task = &tasks[index];
-
-            // Require at least 50% match
-            //if score < threshold {
-            //    return Err(anyhow::anyhow!(
-            //        "Best match too low ({:.0}%): '{}'",
-            //        score,
-            //        task.description
-            //    ));
-            //}
 
             if dry_run {
                 println!("Would mark as done (score: {:.0}):", score);
@@ -55,7 +48,6 @@ pub fn cmd_done(
                 return Ok(());
             }
 
-            // Parse version if provided
             let version_obj = if let Some(v) = version {
                 Some(Version::parse(&v)?)
             } else {
@@ -74,6 +66,11 @@ pub fn cmd_done(
             }
 
             storage.complete_task(index, version_obj)?;
+
+            // Record to history after all mutations are done
+            if let Some(task) = storage.tasks().get(index) {
+                history.record(task)?;
+            }
 
             Ok(())
         }

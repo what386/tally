@@ -139,6 +139,43 @@ pub enum Commands {
         to: Option<String>,
     },
 
+    /// Remove a task entirely
+    #[command(long_about = "Remove a task from TODO.md.\n\n\
+        Fuzzy-matches the description. If the task is completed, it will be \
+        saved to history.json before removal so it still appears in changelogs.\n\n\
+        EXAMPLES:\n  \
+        tally remove \"Fix parsing error\"\n  \
+        tally remove \"old task\" --dry-run")]
+    Remove {
+        /// Text to fuzzy-match against existing tasks
+        description: String,
+        /// Show what would be removed without modifying TODO.md
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+    },
+
+    /// Prune old completed tasks
+    #[command(long_about = "Remove completed tasks older than a threshold.\n\n\
+        Pruned tasks are saved to history.json before removal so they \
+        still appear in changelogs. Days and hours combine if both are given.\n\n\
+        EXAMPLES:\n  \
+        tally prune                      # default: 30 days\n  \
+        tally prune --days 7\n  \
+        tally prune --hours 12\n  \
+        tally prune --days 1 --hours 12  # 1.5 days\n  \
+        tally prune --dry-run")]
+    Prune {
+        /// Number of days
+        #[arg(long)]
+        days: Option<u32>,
+        /// Number of hours
+        #[arg(long)]
+        hours: Option<u32>,
+        /// Show what would be pruned without modifying TODO.md
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+    },
+
     /// Detect completed tasks from git commits
     #[command(
         long_about = "Scan git commit messages to automatically detect completed tasks.\n\n\

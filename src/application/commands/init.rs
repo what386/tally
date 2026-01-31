@@ -10,7 +10,7 @@ pub fn cmd_init() -> Result<()> {
 
     // Check if already initialized
     if current_dir.join(".tally").exists() {
-        println!("✗ Tally project already initialized in this directory");
+        println!("Tally project already initialized in this directory");
         return Ok(());
     }
 
@@ -31,14 +31,12 @@ pub fn cmd_init() -> Result<()> {
     let content = todo_serializer::serialize(&initial_list);
     std::fs::write(&paths.todo_file, content)?;
 
-    println!("✓ Created .tally/ directory structure");
-    println!("✓ Created TODO.md");
+    println!("Created .tally/ directory structure");
+    println!("Created TODO.md");
 
     // Install git hooks if in a git repository
     match git::install_hooks() {
         Ok(()) => {
-            println!("✓ Installed git hooks");
-            println!();
             println!("Git integration enabled:");
             println!("  - Commit messages with 'done:' section will auto-complete tasks");
             println!("  - TODO.md will be auto-staged on commits");

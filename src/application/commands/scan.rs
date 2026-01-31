@@ -3,8 +3,8 @@ use chrono::{DateTime, TimeZone, Utc};
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::process::Command;
-
 use crate::services::storage::task_storage::ListStorage;
+use crate::services::storage::history_storage::HistoryStorage;
 use crate::utils::project_paths::ProjectPaths;
 
 #[derive(Debug)]
@@ -17,6 +17,7 @@ struct Commit {
 pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
+    let mut history = HistoryStorage::new(&paths.history_file)?;
 
     let output = Command::new("git")
         .args(["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
@@ -29,7 +30,6 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
 
     let raw = String::from_utf8(output.stdout)?;
     let commits = parse_commits(&raw);
-
     let matcher = SkimMatcherV2::default();
     let mut matches_found = 0;
     let mut completed = Vec::new();
@@ -52,7 +52,6 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
                         .as_ref()
                         .map(|(_, best, _)| score > *best)
                         .unwrap_or(true);
-
                     if is_better {
                         best_match = Some((commit.hash.clone(), score, done.clone()));
                     }
@@ -74,13 +73,10 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
                 completed.push((idx, hash));
             } else {
                 use std::io::{self, Write};
-
                 print!("  Mark as done? [y/N]: ");
                 io::stdout().flush()?;
-
                 let mut input = String::new();
                 io::stdin().read_line(&mut input)?;
-
                 if input.trim().eq_ignore_ascii_case("y") {
                     completed.push((idx, hash));
                 } else {
@@ -93,13 +89,20 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     }
 
     if !dry_run {
-        for (idx, hash) in completed {
-            storage.complete_task(idx, None)?;
-            if let Some(task) = storage.tasks_mut().get_mut(idx) {
-                task.completed_at_commit = Some(hash);
+        for (idx, hash) in &completed {
+            storage.complete_task(*idx, None)?;
+            if let Some(task) = storage.tasks_mut().get_mut(*idx) {
+                task.completed_at_commit = Some(hash.clone());
             }
         }
         storage.save_list()?;
+
+        // Record completed tasks to history after all mutations are done
+        for (idx, _) in &completed {
+            if let Some(task) = storage.tasks().get(*idx) {
+                history.record(task)?;
+            }
+        }
     }
 
     if matches_found == 0 {
@@ -119,7 +122,6 @@ fn parse_commits(input: &str) -> Vec<Commit> {
         }
 
         let mut parts = record.splitn(3, '\x1f'); // 3 parts: hash, timestamp, body
-
         let hash = parts.next().unwrap().to_string();
         let timestamp_str = parts.next().unwrap_or("0");
         let body = parts.next().unwrap_or("").trim();
@@ -131,7 +133,6 @@ fn parse_commits(input: &str) -> Vec<Commit> {
             .unwrap_or_else(|| Utc.timestamp_opt(0, 0).unwrap());
 
         let done_items = extract_done_items(body);
-
         if !done_items.is_empty() {
             commits.push(Commit {
                 hash,
@@ -160,14 +161,11 @@ fn extract_done_items(message: &str) -> Vec<String> {
             if trimmed.is_empty() {
                 break;
             }
-
             // Stop at next section header
             if trimmed.ends_with(':') {
                 break;
             }
-
             let cleaned = trimmed.trim_start_matches(['-', '*']).trim().to_string();
-
             if !cleaned.is_empty() {
                 items.push(cleaned);
             }
