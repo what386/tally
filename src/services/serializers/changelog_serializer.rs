@@ -36,9 +36,9 @@ fn release_to_markdown(release: &Release) -> String {
     ));
 
     for (priority, section_name) in [
-        (Priority::High, "🔴 High Priority"),
-        (Priority::Medium, "📝 Changes"),
-        (Priority::Low, "🔹 Minor Changes"),
+        (Priority::High, "High Priority"),
+        (Priority::Medium, "Changes"),
+        (Priority::Low, "Minor Changes"),
     ] {
         if let Some(changes) = release.changes_by_priority.get(&priority)
             && !changes.is_empty() {
