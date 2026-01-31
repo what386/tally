@@ -1,7 +1,9 @@
 use anyhow::{Result, anyhow};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
+
+use crate::utils::project_paths::ProjectPaths;
 
 /// Embedded git hook scripts
 pub const PRE_COMMIT: &str = include_str!("hooks/pre-commit");
@@ -9,24 +11,28 @@ pub const POST_COMMIT: &str = include_str!("hooks/post-commit");
 pub const PRE_PUSH: &str = include_str!("hooks/pre-push");
 pub const PREPARE_COMMIT_MSG: &str = include_str!("hooks/prepare-commit-msg");
 
-/// Find the .git directory
-fn find_git_dir() -> Result<PathBuf> {
-    let output = Command::new("git")
-        .args(["rev-parse", "--git-dir"])
-        .output()?;
+fn set_git_hooks_path(repo_path: &Path, hooks_path: &Path) -> std::io::Result<()> {
+    let status = Command::new("git")
+        .arg("config")
+        .arg("core.hooksPath")
+        .arg(hooks_path)
+        .current_dir(repo_path)
+        .status()?; // run in the repo directory
 
-    if !output.status.success() {
-        return Err(anyhow!("Not in a git repository"));
+    if !status.success() {
+        Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            "Failed to set core.hooksPath",
+        ))
+    } else {
+        Ok(())
     }
-
-    let git_dir = String::from_utf8(output.stdout)?.trim().to_string();
-    Ok(PathBuf::from(git_dir))
 }
 
 /// Install git hooks into .git/hooks/
 pub fn install_hooks() -> Result<()> {
-    let git_dir = find_git_dir()?;
-    let hooks_dir = git_dir.join("hooks");
+    let paths = ProjectPaths::get_paths()?;
+    let hooks_dir = paths.hooks_dir;
 
     fs::create_dir_all(&hooks_dir)?;
 
@@ -34,6 +40,8 @@ pub fn install_hooks() -> Result<()> {
     install_hook(&hooks_dir, "post-commit", POST_COMMIT)?;
     install_hook(&hooks_dir, "pre-push", PRE_PUSH)?;
     install_hook(&hooks_dir, "prepare-commit-msg", PREPARE_COMMIT_MSG)?;
+
+    set_git_hooks_path(&paths.root.join(".git"), &hooks_dir)?;
 
     Ok(())
 }
@@ -63,10 +71,9 @@ fn install_hook(hooks_dir: &Path, name: &str, content: &str) -> Result<()> {
     Ok(())
 }
 
-/// Uninstall git hooks (restore backups if they exist)
+/// Uninstall git hooks
 pub fn uninstall_hooks() -> Result<()> {
-    let git_dir = find_git_dir()?;
-    let hooks_dir = git_dir.join("hooks");
+    let hooks_dir = ProjectPaths::get_paths()?.hooks_dir;
 
     uninstall_hook(&hooks_dir, "pre-commit")?;
     uninstall_hook(&hooks_dir, "post-commit")?;
@@ -78,54 +85,17 @@ pub fn uninstall_hooks() -> Result<()> {
 
 fn uninstall_hook(hooks_dir: &Path, name: &str) -> Result<()> {
     let hook_path = hooks_dir.join(name);
-    let backup_path = hooks_dir.join(format!("{}.tally-backup", name));
 
-    if hook_path.exists() {
-        // Check if it's a tally hook by looking for a marker
-        if is_tally_hook(&hook_path)? {
-            fs::remove_file(&hook_path)?;
-
-            // Restore backup if exists
-            if backup_path.exists() {
-                fs::rename(&backup_path, &hook_path)?;
-            }
-        } 
-    }
+    fs::remove_file(&hook_path)?;
 
     Ok(())
 }
 
-/// Check if a hook file is managed by tally
-fn is_tally_hook(path: &Path) -> Result<bool> {
-    let content = fs::read_to_string(path)?;
-    Ok(content.contains("# tally-managed-hook") || content.contains("tally:"))
-}
-
-/// Check if hooks are installed
-pub fn hooks_installed() -> Result<bool> {
-    let git_dir = find_git_dir()?;
-    let hooks_dir = git_dir.join("hooks");
-
-    let pre_commit = hooks_dir.join("pre-commit");
-    let post_commit = hooks_dir.join("post-commit");
-
-    Ok(pre_commit.exists()
-        && is_tally_hook(&pre_commit).unwrap_or(false)
-        && post_commit.exists()
-        && is_tally_hook(&post_commit).unwrap_or(false))
-}
 
 /// Update hooks (rewrite with latest version)
 pub fn update_hooks() -> Result<()> {
-    let git_dir = find_git_dir()?;
-    let hooks_dir = git_dir.join("hooks");
+    let hooks_dir = ProjectPaths::get_paths()?.hooks_dir;
 
-    // Only update if already installed
-    if !hooks_installed()? {
-        return Err(anyhow!("Hooks not installed."));
-    }
-
-    // Rewrite without backing up (already tally hooks)
     fs::write(hooks_dir.join("pre-commit"), PRE_COMMIT)?;
     fs::write(hooks_dir.join("post-commit"), POST_COMMIT)?;
     fs::write(hooks_dir.join("pre-push"), PRE_PUSH)?;

@@ -1,7 +1,7 @@
 pub mod change;
-pub mod changelog;
+pub mod log;
 pub mod release;
 
 pub use change::Change;
-pub use changelog::Changelog;
+pub use log::Log;
 pub use release::Release;
