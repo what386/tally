@@ -1,10 +1,10 @@
 use crate::models::{
-    changes::{Changelog, Release},
+    changes::{Log, Release},
     common::Priority,
 };
 
 /// Convert Changelog to markdown format
-pub fn to_markdown(changelog: &Changelog) -> String {
+pub fn to_markdown(changelog: &Log) -> String {
     let mut output = String::new();
 
     output.push_str(&format!("# Changelog — {}\n\n", changelog.project_name));
@@ -22,7 +22,7 @@ pub fn to_markdown(changelog: &Changelog) -> String {
 }
 
 /// Convert Changelog to JSON format
-pub fn to_json(changelog: &Changelog) -> serde_json::Result<String> {
+pub fn to_json(changelog: &Log) -> serde_json::Result<String> {
     serde_json::to_string_pretty(changelog)
 }
 

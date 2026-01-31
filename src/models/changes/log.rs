@@ -4,13 +4,13 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Changelog {
+pub struct Log {
     pub project_name: String,
     pub releases: Vec<Release>,
     pub generated_at: DateTime<Utc>,
 }
 
-impl Changelog {
+impl Log {
     /// Create a new changelog from a list of tasks grouped by version
     pub fn from_tasks(
         project_name: impl Into<String>,
@@ -48,3 +48,4 @@ impl Changelog {
         }
     }
 }
+
