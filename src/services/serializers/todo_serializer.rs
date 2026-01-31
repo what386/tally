@@ -15,35 +15,40 @@ struct TaskMetadata {
     completed_at_commit: Option<String>,
 }
 
-/// Serialize a List to TODO.md format
 pub fn serialize(list: &List) -> String {
     let mut output = String::new();
 
-    // Header
+    // --- Header ---
     writeln!(
         &mut output,
-        "# TODO — {} v{}",
+        "# TODO — {} v{}\n",
         list.project_name,
         list.project_version
     ).unwrap();
 
-    writeln!(
-        &mut output,
-        "@created: {}",
-        format_date(&list.created_at)
-    ).unwrap();
+    writeln!(&mut output, "@created: {}", format_date(&list.created_at)).unwrap();
+    writeln!(&mut output, "@modified: {}", format_date(&list.modified_at)).unwrap();
 
-    writeln!(
-        &mut output,
-        "@modified: {}",
-        format_date(&list.modified_at)
-    ).unwrap();
+    let mut incomplete_tasks: Vec<_> = list.tasks.iter().filter(|t| !t.completed).collect();
+    let mut completed_tasks: Vec<_> = list.tasks.iter().filter(|t| t.completed).collect();
 
-    // Tasks section
-    writeln!(&mut output, "\n## Tasks").unwrap();
+    incomplete_tasks.sort_by_key(|t| t.created_at_time);
+    completed_tasks.sort_by_key(|t| t.completed_at_time.unwrap_or_else(|| t.created_at_time));
 
-    for task in &list.tasks {
+    // Tasks
+    writeln!(&mut output, "\n## Tasks\n").unwrap();
+    for task in incomplete_tasks {
         write_task(&mut output, task);
+        output += "\n";
+    }
+
+    // Completed
+    if !completed_tasks.is_empty() {
+        writeln!(&mut output, "\n## Completed\n").unwrap();
+        for task in completed_tasks {
+            write_task(&mut output, task);
+            output += "\n";
+        }
     }
 
     output
@@ -53,13 +58,9 @@ pub fn serialize(list: &List) -> String {
 pub fn deserialize(content: &str) -> Result<List> {
     let mut lines = content.lines().peekable();
 
-    // Parse header
-    let header = lines.next()
-        .context("Empty TODO file")?;
-
+    let header = lines.next().context("Empty TODO file")?;
     let (project_name, project_version) = parse_header(header)?;
 
-    // Parse metadata
     let mut created_at = None;
     let mut modified_at = None;
 
@@ -75,20 +76,21 @@ pub fn deserialize(content: &str) -> Result<List> {
         }
     }
 
-    let created_at = created_at
-        .context("Missing @created metadata")?;
-    let modified_at = modified_at
-        .context("Missing @modified metadata")?;
+    let created_at = created_at.context("Missing @created metadata")?;
+    let modified_at = modified_at.context("Missing @modified metadata")?;
 
-    // Skip to tasks section
+    let mut tasks = Vec::new();
+
     while let Some(line) = lines.next() {
-        if line.starts_with("## Tasks") {
-            break;
+        match line.trim() {
+            "## Tasks" | "## Completed" => {
+                // Parse tasks until next section or EOF
+                let section_tasks = parse_tasks(&mut lines)?;
+                tasks.extend(section_tasks);
+            }
+            _ => {}
         }
     }
-
-    // Parse tasks
-    let tasks = parse_tasks(lines)?;
 
     Ok(List {
         project_name,
