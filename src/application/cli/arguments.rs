@@ -12,7 +12,7 @@ use crate::models::common::Priority;
     EXAMPLES:\n  \
     tally add \"Fix parsing error\" --priority high --tags bug,parser\n  \
     tally done \"Fix parsing error\" --commit abc123f\n  \
-    tally list --undone --tags bug\n  \
+    tally list --tags bug\n  \
     tally release v0.2.3 --summary"
 )]
 #[command(version)]
@@ -23,6 +23,8 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
+    #[command(long_about = "Initialize tally in the CWD.")]
+    Init,
     /// Add a new task
     #[command(long_about = "Add a new task to TODO.md.\n\n\
         Creates a task with optional priority and tags. Use --dry-run to preview \
