@@ -1,0 +1,126 @@
+[
+  {
+    "change": {
+      "description": "implement 'tally prune [--days] [--hours]' to remove old tasks",
+      "priority": "Medium",
+      "tags": [
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-01-31T22:40:26.308488222Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "add 'tally remove' to remove tasks (instead of marking them as completed)",
+      "priority": "Medium",
+      "tags": [],
+      "commit": null,
+      "completed_at": "2026-01-31T22:40:37.333450259Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "make a .tally/history.json file to track tasks (even if deleted by tally prune) for changelogs",
+      "priority": "High",
+      "tags": [],
+      "commit": null,
+      "completed_at": "2026-01-31T22:40:50.965400412Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "modify changelog to use history.json instead of parsing TODO.md",
+      "priority": "Low",
+      "tags": [],
+      "commit": null,
+      "completed_at": "2026-01-31T22:41:09.577314290Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "implement 'tally prune [--days] [--hours]' to remove old tasks",
+      "priority": "Medium",
+      "tags": [
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-01-31T22:40:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "add 'tally remove' to remove tasks (instead of marking them as completed)",
+      "priority": "Medium",
+      "tags": [],
+      "commit": null,
+      "completed_at": "2026-01-31T22:40:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "make a .tally/history.json file to track tasks (even if deleted by tally prune) for changelogs",
+      "priority": "High",
+      "tags": [],
+      "commit": null,
+      "completed_at": "2026-01-31T22:40:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "modify changelog to use history.json instead of parsing TODO.md",
+      "priority": "Low",
+      "tags": [],
+      "commit": null,
+      "completed_at": "2026-01-31T22:41:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 1,
+      "patch": 1,
+      "is_prerelease": false
+    }
+  }
+]
