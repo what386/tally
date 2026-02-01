@@ -252,24 +252,24 @@ tally done "Fix parsing error" --dry-run
 
 ---
 
-### Release Management
+### Version Management
 
 Assign a version to all completed, unversioned tasks:
 
 ```bash
-tally release v0.2.3
+tally semver v0.2.3
 ```
 
 Show a summary:
 
 ```bash
-tally release v1.0.0 --summary
+tally semver v1.0.0 --summary
 ```
 
-Dry run:
+Automatically make a git tag, too:
 
 ```bash
-tally release v0.2.4 --dry-run
+tally tag v0.2.4
 ```
 
 ---
