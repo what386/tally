@@ -122,6 +122,29 @@ pub enum Commands {
         summary: bool,
     },
 
+    /// Release and create a git tag
+    #[command(long_about = "Assign a version to completed tasks and create a git tag.\n\n\
+        Runs 'tally release' then commits README.md before creating a git tag. The tag name \
+        will always be prefixed with 'v' if not already.\n\n\
+        EXAMPLES:\n  \
+        tally tag v0.2.3\n  \
+        tally tag v1.0.0 --summary\n  \
+        tally tag v0.2.3 --message \"First stable release\"\n  \
+        tally tag v0.2.4 --dry-run")]
+    Tag {
+        /// Version string (e.g., v0.2.3)
+        version: String,
+        /// Custom tag message (defaults to "Release v0.2.3")
+        #[arg(short, long)]
+        message: Option<String>,
+        /// Show what would happen without making changes
+        #[arg(long, default_value_t = false)]
+        dry_run: bool,
+        /// Show tasks assigned to this version
+        #[arg(long, default_value_t = false)]
+        summary: bool,
+    },
+
     /// Generate a changelog
     #[command(long_about = "Generate a changelog from completed tasks.\n\n\
         Create a changelog for a version range or until the current version.\n\n\

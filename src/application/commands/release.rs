@@ -1,4 +1,6 @@
-use anyhow::Result;
+use std::process::Command;
+
+use anyhow::{Result, anyhow};
 use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
@@ -58,6 +60,112 @@ pub fn cmd_release(
             println!("  • {}", entry.change.description);
         }
     }
+
+    Ok(())
+}
+
+/// Runs release, commits TODO.md + history.json, then creates a git tag.
+pub fn cmd_tag(
+    version_str: String,
+    message: Option<String>,
+    dry_run: bool,
+    summary: bool,
+) -> Result<()> {
+    let paths = ProjectPaths::get_paths()?;
+    let version = Version::parse(&version_str)?;
+
+    let tag_name = if version_str.starts_with('v') {
+        version_str.clone()
+    } else {
+        format!("v{}", version_str)
+    };
+
+    // Check for uncommitted changes outside of TODO.md and history.json
+    // so we don't silently commit in a dirty working tree
+    let output = Command::new("git")
+        .args(["diff", "--name-only", "--exclude=TODO.md", "--exclude=.tally/history.json"])
+        .current_dir(&paths.root)
+        .output()?;
+
+    let dirty_files = String::from_utf8(output.stdout)?;
+    if !dirty_files.trim().is_empty() {
+        return Err(anyhow!(
+            "Working tree has uncommitted changes:\n{}\n\
+             Commit or stash them before tagging.",
+            dirty_files.trim()
+        ));
+    }
+
+    // Also check staged changes for the same reason
+    let output = Command::new("git")
+        .args(["diff", "--cached", "--name-only", "--exclude=TODO.md", "--exclude=.tally/history.json"])
+        .current_dir(&paths.root)
+        .output()?;
+
+    let staged_files = String::from_utf8(output.stdout)?;
+    if !staged_files.trim().is_empty() {
+        return Err(anyhow!(
+            "Working tree has staged changes:\n{}\n\
+             Commit or stash them before tagging.",
+            staged_files.trim()
+        ));
+    }
+
+    // Run release
+    cmd_release(version_str.clone(), dry_run, summary)?;
+
+    let msg = message.unwrap_or_else(|| format!("Release {}", tag_name));
+
+    if dry_run {
+        println!();
+        println!("Would commit TODO.md and .tally/history.json");
+        println!("Would create git tag: {} — {}", tag_name, msg);
+        return Ok(());
+    }
+
+    // Stage TODO.md and history.json
+    let output = Command::new("git")
+        .args(["add", "TODO.md", ".tally/history.json"])
+        .current_dir(&paths.root)
+        .output()?;
+
+    if !output.status.success() {
+        return Err(anyhow!(
+            "Failed to stage files: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    // Commit
+    let commit_msg = format!("Release {}", tag_name);
+    let output = Command::new("git")
+        .args(["commit", "-m", &commit_msg])
+        .current_dir(&paths.root)
+        .output()?;
+
+    if !output.status.success() {
+        return Err(anyhow!(
+            "Failed to commit: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    println!("Committed TODO.md and .tally/history.json");
+
+    // Create annotated tag
+    let output = Command::new("git")
+        .args(["tag", "-a", &tag_name, "-m", &msg])
+        .current_dir(&paths.root)
+        .output()?;
+
+    if !output.status.success() {
+        return Err(anyhow!(
+            "Failed to create git tag: {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    println!("Created git tag: {}", tag_name);
 
     Ok(())
 }

@@ -18,6 +18,6 @@ pub use edit::cmd_edit;
 pub use init::cmd_init;
 pub use list::cmd_list;
 pub use prune::cmd_prune;
-pub use release::cmd_release;
+pub use release::{cmd_release, cmd_tag};
 pub use remove::cmd_remove;
 pub use scan::cmd_scan;
