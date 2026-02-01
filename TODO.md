@@ -31,3 +31,9 @@
       @completed 2026-01-31 22:41
       @completed_version 0.1.1
 
+- [x] git hook for tags? (low)
+      @created 2026-02-01 12:59
+      @completed 2026-02-01 13:13
+      @completed_version 0.3.1
+      @completed_commit 3c1b958
+
