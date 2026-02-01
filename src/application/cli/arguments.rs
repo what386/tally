@@ -124,8 +124,8 @@ pub enum Commands {
 
     /// Release and create a git tag
     #[command(long_about = "Assign a version to completed tasks and create a git tag.\n\n\
-        Runs 'tally release' then commits README.md before creating a git tag. The tag name \
-        will always be prefixed with 'v' if not already.\n\n\
+        Runs 'tally release' then commits both the todo and command history before creating a git tag. \n
+        The tag name will always be prefixed with 'v' if not already.\n\n\
         EXAMPLES:\n  \
         tally tag v0.2.3\n  \
         tally tag v1.0.0 --summary\n  \
