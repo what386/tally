@@ -8,6 +8,9 @@
 - [ ] add templates #feature
       @created 2026-02-01 00:05
 
+- [ ] config support (low) #feature
+      @created 2026-02-01 22:22
+
 
 ## Completed
 
