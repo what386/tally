@@ -51,7 +51,7 @@ pub fn cmd_release(
     // Assign version in history.json
     history.assign_version(&version)?;
 
-    println!("✓ Assigned version {} to {} task(s)", version, count);
+    println!("Assigned version {} to {} task(s)", version, count);
 
     if summary {
         println!();
@@ -64,7 +64,6 @@ pub fn cmd_release(
     Ok(())
 }
 
-/// Runs release, commits TODO.md + history.json, then creates a git tag.
 pub fn cmd_tag(
     version_str: String,
     message: Option<String>,
@@ -72,7 +71,6 @@ pub fn cmd_tag(
     summary: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
-    let version = Version::parse(&version_str)?;
 
     let tag_name = if version_str.starts_with('v') {
         version_str.clone()
@@ -82,32 +80,45 @@ pub fn cmd_tag(
 
     // Check for uncommitted changes outside of TODO.md and history.json
     // so we don't silently commit in a dirty working tree
-    let output = Command::new("git")
-        .args(["diff", "--name-only", "--exclude=TODO.md", "--exclude=.tally/history.json"])
-        .current_dir(&paths.root)
-        .output()?;
+    let tally_files = ["TODO.md", ".tally/history.json"];
 
-    let dirty_files = String::from_utf8(output.stdout)?;
-    if !dirty_files.trim().is_empty() {
+    let dirty: Vec<String> = {
+        let output = Command::new("git")
+            .args(["diff", "--name-only"])
+            .current_dir(&paths.root)
+            .output()?;
+        String::from_utf8(output.stdout)?
+            .lines()
+            .map(|s| s.trim().to_string())
+            .filter(|f| !tally_files.contains(&f.as_str()))
+            .collect()
+    };
+
+    if !dirty.is_empty() {
         return Err(anyhow!(
             "Working tree has uncommitted changes:\n{}\n\
              Commit or stash them before tagging.",
-            dirty_files.trim()
+            dirty.join("\n")
         ));
     }
 
-    // Also check staged changes for the same reason
-    let output = Command::new("git")
-        .args(["diff", "--cached", "--name-only", "--exclude=TODO.md", "--exclude=.tally/history.json"])
-        .current_dir(&paths.root)
-        .output()?;
+    let staged: Vec<String> = {
+        let output = Command::new("git")
+            .args(["diff", "--cached", "--name-only"])
+            .current_dir(&paths.root)
+            .output()?;
+        String::from_utf8(output.stdout)?
+            .lines()
+            .map(|s| s.trim().to_string())
+            .filter(|f| !tally_files.contains(&f.as_str()))
+            .collect()
+    };
 
-    let staged_files = String::from_utf8(output.stdout)?;
-    if !staged_files.trim().is_empty() {
+    if !staged.is_empty() {
         return Err(anyhow!(
             "Working tree has staged changes:\n{}\n\
              Commit or stash them before tagging.",
-            staged_files.trim()
+            staged.join("\n")
         ));
     }
 
@@ -165,7 +176,7 @@ pub fn cmd_tag(
         ));
     }
 
-    println!("Created git tag: {}", tag_name);
+    println!("✓ Created git tag: {}", tag_name);
 
     Ok(())
 }
