@@ -1,3 +1,5 @@
+use std::fs::File;
+
 use crate::models::common::Version;
 use crate::models::tasks::List;
 use crate::services::git;
@@ -26,12 +28,16 @@ pub fn cmd_init() -> Result<()> {
         .unwrap_or("Untitled")
         .to_string();
 
+    // create empty history
+    File::create(paths.history_file)?;
+
     // Create initial TODO.md
     let initial_list = List::new(&project_name, Version::new(0, 1, 0, false));
     let content = todo_serializer::serialize(&initial_list);
     std::fs::write(&paths.todo_file, content)?;
 
     println!("Created .tally/ directory structure");
+    println!("Created .tally/history.json");
     println!("Created TODO.md");
 
     // Install git hooks if in a git repository
