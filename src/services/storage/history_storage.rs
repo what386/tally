@@ -69,10 +69,15 @@ impl HistoryStorage {
 
         // Don't duplicate: check if this exact task is already recorded
         // Match on description + completed_at_time
+
         let already_exists = self.entries.iter().any(|e| {
-            e.change.description == task.description
-                && e.change.completed_at == task.completed_at_time.unwrap_or_default()
+            match (&e.change.commit, &task.completed_at_commit) {
+                (Some(a), Some(b)) => a == b,
+                _ => e.change.description == task.description
+                     && e.version == task.completed_at_version,
+            }
         });
+
 
         if already_exists {
             return Ok(());
