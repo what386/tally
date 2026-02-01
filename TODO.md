@@ -1,9 +1,12 @@
 # TODO — tally v0.1.0
 
 @created: 2026-01-31
-@modified: 2026-01-31
+@modified: 2026-02-01
 
 ## Tasks
+
+- [ ] add templates #feature
+      @created 2026-02-01 00:05
 
 
 ## Completed
