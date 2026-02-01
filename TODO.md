@@ -8,6 +8,7 @@
 - [ ] add templates #feature
       @created 2026-02-01 00:05
 
+
 ## Completed
 
 - [x] git hook for tags? (low)
@@ -15,3 +16,9 @@
       @completed 2026-02-01 13:13
       @completed_version 0.3.1
       @completed_commit 3c1b958
+
+- [x] fix duplication in history (high)
+      @created 2026-02-01 13:42
+      @completed 2026-02-01 13:43
+      @completed_commit a556fb5
+

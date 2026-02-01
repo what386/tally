@@ -152,5 +152,15 @@
       "patch": 1,
       "is_prerelease": false
     }
+  },
+  {
+    "change": {
+      "description": "fix duplication in history",
+      "priority": "High",
+      "tags": [],
+      "commit": "a556fb5",
+      "completed_at": "2026-02-01T13:43:24.981759046Z"
+    },
+    "version": null
   }
 ]
