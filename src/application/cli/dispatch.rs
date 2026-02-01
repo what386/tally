@@ -28,7 +28,7 @@ impl Cli {
                 json,
             } => commands::cmd_list(tags, priority, json),
 
-            Commands::Release {
+            Commands::Semver {
                 version,
                 dry_run,
                 summary,
