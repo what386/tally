@@ -114,6 +114,26 @@
       "commit": "a556fb5",
       "completed_at": "2026-02-01T13:43:24.981759046Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 3,
+      "patch": 2,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "fix duplication in history",
+      "priority": "High",
+      "tags": [],
+      "commit": "a556fb5",
+      "completed_at": "2026-02-01T13:43:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 3,
+      "patch": 2,
+      "is_prerelease": false
+    }
   }
 ]

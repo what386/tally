@@ -20,5 +20,6 @@
 - [x] fix duplication in history (high)
       @created 2026-02-01 13:42
       @completed 2026-02-01 13:43
+      @completed_version 0.3.2
       @completed_commit a556fb5
 
