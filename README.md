@@ -47,13 +47,7 @@ It lets you track tasks, mark them complete, associate them with git commits or 
 `tally` is written in Rust and can be installed with Cargo:
 
 ```bash
-cargo install tally
-```
-
-Ensure Cargo’s bin directory is in your `PATH`:
-
-```bash
-export PATH="$HOME/.cargo/bin:$PATH"
+cargo install tally-todo
 ```
 
 To update:
@@ -67,7 +61,7 @@ cargo install --force tally
 ### Build from Source
 
 ```bash
-git clone https://github.com/yourname/tally.git
+git clone https://github.com/what386/tally.git
 cd tally
 cargo build --release
 ```
