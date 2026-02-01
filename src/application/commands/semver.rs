@@ -1,12 +1,13 @@
 use std::process::Command;
 
 use anyhow::{Result, anyhow};
+
 use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
 use crate::models::common::Version;
 
-pub fn cmd_release(
+pub fn cmd_semver(
     version_str: String,
     dry_run: bool,
     summary: bool,
@@ -17,6 +18,10 @@ pub fn cmd_release(
 
     let version = Version::parse(&version_str)?;
 
+    storage.set_project_version(version.clone())?;
+
+    println!("Set project version to '{}'", &version);
+
     // Find unversioned completed tasks
     let unversioned: Vec<_> = storage
         .tasks()
@@ -25,7 +30,7 @@ pub fn cmd_release(
         .collect();
 
     if unversioned.is_empty() {
-        println!("No completed tasks without a version.");
+        println!("Nothing to do: No completed tasks without a version.");
         return Ok(());
     }
 
@@ -123,7 +128,7 @@ pub fn cmd_tag(
     }
 
     // Run release
-    cmd_release(version_str.clone(), dry_run, summary)?;
+    cmd_semver(version_str.clone(), dry_run, summary)?;
 
     let msg = message.unwrap_or_else(|| format!("Release {}", tag_name));
 

@@ -32,7 +32,7 @@ impl Cli {
                 version,
                 dry_run,
                 summary,
-            } => commands::cmd_release(version, dry_run, summary),
+            } => commands::cmd_semver(version, dry_run, summary),
 
             Commands::Tag {
                 version,

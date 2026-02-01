@@ -102,14 +102,13 @@ pub enum Commands {
     /// Assign version to completed tasks
     #[command(
         long_about = "Assign a version to all completed tasks without a version.\n\n\
-        Useful for release management - tags all completed tasks with the specified \
-        version identifier.\n\n\
+        Additionally sets the project version in the TODO list itself.\n\n\
         EXAMPLES:\n  \
-        tally release v0.2.3\n  \
-        tally release v1.0.0 --summary\n  \
-        tally release v0.2.4 --dry-run"
+        tally semver v0.2.3\n  \
+        tally semver v1.0.0 --summary\n  \
+        tally semver v0.2.4 --dry-run"
     )]
-    Release {
+    Semver {
         /// Version string to assign (e.g., v0.2.3)
         version: String,
 

@@ -6,7 +6,7 @@ pub mod edit;
 pub mod init;
 pub mod list;
 pub mod prune;
-pub mod release;
+pub mod semver;
 pub mod remove;
 pub mod scan;
 
@@ -18,6 +18,6 @@ pub use edit::cmd_edit;
 pub use init::cmd_init;
 pub use list::cmd_list;
 pub use prune::cmd_prune;
-pub use release::{cmd_release, cmd_tag};
+pub use semver::{cmd_semver, cmd_tag};
 pub use remove::cmd_remove;
 pub use scan::cmd_scan;
