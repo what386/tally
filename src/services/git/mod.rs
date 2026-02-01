@@ -6,10 +6,7 @@ use std::process::Command;
 use crate::utils::project_paths::ProjectPaths;
 
 /// Embedded git hook scripts
-pub const PRE_COMMIT: &str = include_str!("hooks/pre-commit");
 pub const POST_COMMIT: &str = include_str!("hooks/post-commit");
-pub const PRE_PUSH: &str = include_str!("hooks/pre-push");
-pub const PREPARE_COMMIT_MSG: &str = include_str!("hooks/prepare-commit-msg");
 
 fn set_git_hooks_path(repo_path: &Path, hooks_path: &Path) -> std::io::Result<()> {
     let status = Command::new("git")
@@ -36,10 +33,7 @@ pub fn install_hooks() -> Result<()> {
 
     fs::create_dir_all(&hooks_dir)?;
 
-    install_hook(&hooks_dir, "pre-commit", PRE_COMMIT)?;
     install_hook(&hooks_dir, "post-commit", POST_COMMIT)?;
-    install_hook(&hooks_dir, "pre-push", PRE_PUSH)?;
-    install_hook(&hooks_dir, "prepare-commit-msg", PREPARE_COMMIT_MSG)?;
 
     set_git_hooks_path(&paths.root.join(".git"), &hooks_dir)?;
 
@@ -75,10 +69,7 @@ fn install_hook(hooks_dir: &Path, name: &str, content: &str) -> Result<()> {
 pub fn uninstall_hooks() -> Result<()> {
     let hooks_dir = ProjectPaths::get_paths()?.hooks_dir;
 
-    uninstall_hook(&hooks_dir, "pre-commit")?;
     uninstall_hook(&hooks_dir, "post-commit")?;
-    uninstall_hook(&hooks_dir, "pre-push")?;
-    uninstall_hook(&hooks_dir, "prepare-commit-msg")?;
 
     Ok(())
 }
@@ -96,10 +87,7 @@ fn uninstall_hook(hooks_dir: &Path, name: &str) -> Result<()> {
 pub fn update_hooks() -> Result<()> {
     let hooks_dir = ProjectPaths::get_paths()?.hooks_dir;
 
-    fs::write(hooks_dir.join("pre-commit"), PRE_COMMIT)?;
     fs::write(hooks_dir.join("post-commit"), POST_COMMIT)?;
-    fs::write(hooks_dir.join("pre-push"), PRE_PUSH)?;
-    fs::write(hooks_dir.join("prepare-commit-msg"), PREPARE_COMMIT_MSG)?;
 
     #[cfg(unix)]
     {
