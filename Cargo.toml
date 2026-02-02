@@ -9,6 +9,10 @@ repository = "https://github.com/what386/tally"
 keywords = ["todo", "tasks", "cli", "productivity"]
 categories = ["command-line-utilities", "development-tools"]
 
+include = [
+    "src/services/git/scripts/post-commit",
+]
+
 exclude = [
     ".github",
     "scripts/",
