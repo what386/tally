@@ -1,5 +1,6 @@
 use crate::models::common::Priority;
 use crate::models::tasks::Task;
+use crate::services::git::commits;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
@@ -10,8 +11,12 @@ pub fn cmd_add(
     priority: Priority,
     tags: Option<Vec<String>>,
     dry_run: bool,
+    auto: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
+    let mut storage = ListStorage::new(&paths.todo_file)?;
+    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let config = config_storage.get_config();
 
     let task = Task::new(
         description.clone(),
@@ -25,8 +30,11 @@ pub fn cmd_add(
         return Ok(());
     }
 
-    let mut storage = ListStorage::new(&paths.todo_file)?;
     storage.add_task(task)?;
+
+    if auto || config.preferences.auto_commit_todo {
+        commits::commit_tally_files("update TODO: add task")?;
+    }
 
     println!("✓ Added task:");
     print_task_simple(&description, &priority, &tags.unwrap_or_default());

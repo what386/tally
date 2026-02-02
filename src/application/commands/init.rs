@@ -2,7 +2,7 @@ use std::fs::File;
 
 use crate::models::common::Version;
 use crate::models::tasks::List;
-use crate::services::git::{self, hooks};
+use crate::services::git::hooks;
 use crate::services::serializers::todo_serializer;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;

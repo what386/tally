@@ -1,6 +1,8 @@
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
+use crate::services::git::commits;
+use crate::services::storage::config_storage::ConfigStorage;
 use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
@@ -8,10 +10,13 @@ use crate::services::storage::history_storage::HistoryStorage;
 pub fn cmd_remove(
     description: String,
     dry_run: bool,
+    auto: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let mut history = HistoryStorage::new(&paths.history_file)?;
+    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let config = config_storage.get_config();
 
     let matcher = SkimMatcherV2::default();
     let tasks = storage.tasks();
@@ -58,6 +63,10 @@ pub fn cmd_remove(
 
             if let Some(task) = removed {
                 println!("✓ Removed (match: {:.0}%): {}", score_pct, task.description);
+            }
+
+            if auto || config.preferences.auto_commit_todo {
+                commits::commit_tally_files("update TODO: remove task")?;
             }
 
             Ok(())

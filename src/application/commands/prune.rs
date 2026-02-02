@@ -1,5 +1,7 @@
 use anyhow::Result;
 use chrono::Utc;
+use crate::services::git::commits;
+use crate::services::storage::config_storage::ConfigStorage;
 use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
@@ -8,10 +10,13 @@ pub fn cmd_prune(
     days: Option<u32>,
     hours: Option<u32>,
     dry_run: bool,
+    auto: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let mut history = HistoryStorage::new(&paths.history_file)?;
+    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let config = config_storage.get_config();
 
     // Build the cutoff duration from flags
     // If both are provided, they add together
@@ -73,6 +78,10 @@ pub fn cmd_prune(
 
     for index in &indices {
         storage.remove_task(*index)?;
+    }
+
+    if auto || config.preferences.auto_commit_todo {
+        commits::commit_tally_files("update TODO: prune tasks")?;
     }
 
     println!(

@@ -48,6 +48,10 @@ pub enum Commands {
         /// Show what would be added without modifying TODO.md
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+
+        /// Automatically commit TODO.md after adding a task
+        #[arg(long, default_value_t = false)]
+        auto: bool,
     },
 
     /// Mark a task as completed
@@ -119,6 +123,10 @@ pub enum Commands {
         /// Show number of tasks assigned to this version
         #[arg(long, default_value_t = false)]
         summary: bool,
+
+        /// Automatically commit TODO.md after setting version
+        #[arg(long, default_value_t = false)]
+        auto: bool,
     },
 
     /// Release and create a git tag
@@ -142,6 +150,9 @@ pub enum Commands {
         /// Show tasks assigned to this version
         #[arg(long, default_value_t = false)]
         summary: bool,
+        /// Automatically commit TODO.md after semver
+        #[arg(long, default_value_t = false)]
+        auto: bool,
     },
 
     /// Generate a changelog
@@ -174,6 +185,9 @@ pub enum Commands {
         /// Show what would be removed without modifying TODO.md
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+        /// Automatically commit TODO.md after removing a task
+        #[arg(long, default_value_t = false)]
+        auto: bool,
     },
 
     /// Prune old completed tasks
@@ -196,6 +210,9 @@ pub enum Commands {
         /// Show what would be pruned without modifying TODO.md
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+        /// Automatically commit TODO.md after pruning tasks
+        #[arg(long, default_value_t = false)]
+        auto: bool,
     },
 
     /// Detect completed tasks from git commits

@@ -13,7 +13,8 @@ impl Cli {
                 priority,
                 tags,
                 dry_run,
-            } => commands::cmd_add(description, priority, tags, dry_run),
+                auto,
+            } => commands::cmd_add(description, priority, tags, dry_run, auto),
 
             Commands::Done {
                 description,
@@ -32,18 +33,20 @@ impl Cli {
                 version,
                 dry_run,
                 summary,
-            } => commands::cmd_semver(version, dry_run, summary),
+                auto,
+            } => commands::cmd_semver(version, dry_run, summary, auto),
 
             Commands::Tag {
                 version,
                 message,
                 dry_run,
                 summary,
-            } => commands::cmd_tag(version, message, dry_run, summary),
+                auto,
+            } => commands::cmd_tag(version, message, dry_run, summary, auto),
 
-            Commands::Prune { days, hours, dry_run } => commands::cmd_prune(days, hours, dry_run),
+            Commands::Prune { days, hours, dry_run, auto } => commands::cmd_prune(days, hours, dry_run, auto),
 
-            Commands::Remove { description, dry_run } => commands::cmd_remove(description, dry_run),
+            Commands::Remove { description, dry_run, auto } => commands::cmd_remove(description, dry_run, auto),
 
             Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
 

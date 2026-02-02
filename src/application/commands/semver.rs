@@ -3,6 +3,7 @@ use std::process::Command;
 use anyhow::{Result, anyhow};
 
 use crate::services::git::commits;
+use crate::services::storage::config_storage::ConfigStorage;
 use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
@@ -12,10 +13,13 @@ pub fn cmd_semver(
     version_str: String,
     dry_run: bool,
     summary: bool,
+    auto: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let mut history = HistoryStorage::new(&paths.history_file)?;
+    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let config = config_storage.get_config();
 
     let version = Version::parse(&version_str)?;
 
@@ -67,6 +71,10 @@ pub fn cmd_semver(
         }
     }
 
+    if auto || config.preferences.auto_commit_todo {
+        commits::commit_tally_files("update TODO: set semver")?;
+    }
+
     Ok(())
 }
 
@@ -75,6 +83,7 @@ pub fn cmd_tag(
     message: Option<String>,
     dry_run: bool,
     summary: bool,
+    auto: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
 
@@ -85,7 +94,7 @@ pub fn cmd_tag(
     };
 
     // Run release
-    cmd_semver(version_str.clone(), dry_run, summary)?;
+    cmd_semver(version_str.clone(), dry_run, summary, auto)?;
 
     let msg = message.unwrap_or_else(|| format!("Release {}", tag_name));
 
@@ -95,10 +104,6 @@ pub fn cmd_tag(
         println!("Would create git tag: {} — {}", tag_name, msg);
         return Ok(());
     }
-
-    // Commit tally files
-    let commit_msg = format!("Release {}", tag_name);
-    commits::commit_tally_files(&commit_msg)?;
 
     // Create annotated tag
     let output = Command::new("git")
