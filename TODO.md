@@ -14,7 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-
 ## Completed
 
 - [x] git hook for tags? (low)
@@ -33,4 +32,3 @@
       @created 2026-02-01 22:22
       @completed 2026-02-02 02:15
       @completed_version 0.4.0
-
