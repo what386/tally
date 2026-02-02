@@ -2,12 +2,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
-    pub defaults: Defaults,
+    pub preferences: Preferences,
     pub git: Git,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Defaults {
+pub struct Preferences {
+    pub auto_commit_todo: bool,
+    pub auto_complete_tasks: bool
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -18,15 +20,17 @@ pub struct Git {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            defaults: Defaults::default(),
+            preferences: Preferences::default(),
             git: Git::default(),
         }
     }
 }
 
-impl Default for Defaults {
+impl Default for Preferences {
     fn default() -> Self {
         Self {
+            auto_commit_todo: false,
+            auto_complete_tasks: true
         }
     }
 }
