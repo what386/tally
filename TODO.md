@@ -1,4 +1,4 @@
-# TODO — tally v0.4.0
+# TODO — tally v0.5.0
 
 @created: 2026-01-31
 @modified: 2026-02-02
@@ -25,5 +25,6 @@
 - [x] github doing! (high)
       @created 2026-02-02 19:18
       @completed 2026-02-02 19:19
+      @completed_version 0.5.0
       @completed_commit 9ba2c4a
 

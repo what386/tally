@@ -178,6 +178,26 @@
       "commit": "9ba2c4a",
       "completed_at": "2026-02-02T19:19:32.799950787Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 5,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "github doing!",
+      "priority": "High",
+      "tags": [],
+      "commit": "9ba2c4a",
+      "completed_at": "2026-02-02T19:19:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 5,
+      "patch": 0,
+      "is_prerelease": false
+    }
   }
 ]
