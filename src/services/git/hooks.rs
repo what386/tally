@@ -93,10 +93,7 @@ pub fn update_hooks() -> Result<()> {
     {
         use std::os::unix::fs::PermissionsExt;
         for name in &[
-            "pre-commit",
             "post-commit",
-            "pre-push",
-            "prepare-commit-msg",
         ] {
             let path = hooks_dir.join(name);
             let mut perms = fs::metadata(&path)?.permissions();
