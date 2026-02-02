@@ -8,6 +8,9 @@
 - [ ] add templates #feature
       @created 2026-02-01 00:05
 
+- [ ] proper unhook support (high) #feature
+      @created 2026-02-02 02:41
+
 
 ## Completed
 
