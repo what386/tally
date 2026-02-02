@@ -218,14 +218,6 @@ pub enum Commands {
         dry_run: bool,
     },
 
-    /// Open TODO.md in the default editor
-    #[command(long_about = "Open the TODO.md file for manual editing.\n\n\
-        Uses the editor specified in config or falls back to $EDITOR environment \
-        variable, then common editors like vim, nano, etc.\n\n\
-        EXAMPLE:\n  \
-        tally edit")]
-    Edit,
-
     /// Manage preferences
     #[command(long_about = "View and modify tally configuration.\n\n\
         Configuration is stored in .tally/config.toml and includes settings like \

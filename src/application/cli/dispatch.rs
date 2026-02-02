@@ -49,8 +49,6 @@ impl Cli {
 
             Commands::Scan { auto, dry_run } => commands::cmd_scan(auto, dry_run),
 
-            Commands::Edit => commands::cmd_edit(),
-
             Commands::Config { action } => match action {
                 ConfigAction::List => commands::cmd_config_list(),
                 ConfigAction::Set { key, value } => commands::cmd_config_set(key, value),

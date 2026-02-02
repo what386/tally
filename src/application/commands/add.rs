@@ -1,5 +1,6 @@
 use crate::models::common::Priority;
 use crate::models::tasks::Task;
+use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;

@@ -3,6 +3,7 @@ use chrono::{DateTime, TimeZone, Utc};
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::process::Command;
+use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::ignore_storage::IgnoreStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
@@ -21,6 +22,9 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     let mut history = HistoryStorage::new(&paths.history_file)?;
     let ignore = IgnoreStorage::load(&paths.ignore_file);
 
+    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let config = config_storage.get_config();
+
     let output = Command::new("git")
         .args(["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
         .current_dir(&paths.root)
@@ -31,7 +35,7 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     }
 
     let raw = String::from_utf8(output.stdout)?;
-    let commits = parse_commits(&raw);
+    let commits = parse_commits(&raw, &config.git.done_prefix);
     let matcher = SkimMatcherV2::default();
     let mut matches_found = 0;
     let mut completed = Vec::new();
@@ -118,7 +122,7 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     Ok(())
 }
 
-fn parse_commits(input: &str) -> Vec<Commit> {
+fn parse_commits(input: &str, done_marker: &str) -> Vec<Commit> {
     let mut commits = Vec::new();
 
     for record in input.split('\x1e') {
@@ -138,7 +142,7 @@ fn parse_commits(input: &str) -> Vec<Commit> {
             .single()
             .unwrap_or_else(|| Utc.timestamp_opt(0, 0).unwrap());
 
-        let done_items = extract_done_items(body);
+        let done_items = extract_done_items(body, done_marker);
         if !done_items.is_empty() {
             commits.push(Commit {
                 hash,
@@ -151,14 +155,14 @@ fn parse_commits(input: &str) -> Vec<Commit> {
     commits
 }
 
-fn extract_done_items(message: &str) -> Vec<String> {
+fn extract_done_items(message: &str, done_marker: &str) -> Vec<String> {
     let mut items = Vec::new();
     let mut in_done = false;
 
     for line in message.lines() {
         let trimmed = line.trim();
 
-        if trimmed.eq_ignore_ascii_case("done:") {
+        if trimmed.eq_ignore_ascii_case(done_marker) {
             in_done = true;
             continue;
         }
