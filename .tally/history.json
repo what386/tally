@@ -146,6 +146,28 @@
       "commit": null,
       "completed_at": "2026-02-02T02:15:14.224721304Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 4,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "config support",
+      "priority": "Low",
+      "tags": [
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-02T02:15:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 4,
+      "patch": 0,
+      "is_prerelease": false
+    }
   }
 ]
