@@ -77,6 +77,10 @@ pub enum Commands {
         /// Show changes without writing to TODO.md
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+
+        /// Automatically commit TODO.md after completing task
+        #[arg(long, default_value_t = false)]
+        auto: bool,
     },
 
     /// Display tasks

@@ -21,7 +21,8 @@ impl Cli {
                 commit,
                 version,
                 dry_run,
-            } => commands::cmd_done(description, commit, version, dry_run),
+                auto,
+            } => commands::cmd_done(description, commit, version, dry_run, auto),
 
             Commands::List {
                 tags,
