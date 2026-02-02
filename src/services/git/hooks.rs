@@ -6,7 +6,7 @@ use std::process::Command;
 use crate::utils::project_paths::ProjectPaths;
 
 /// Embedded git hook scripts
-pub const POST_COMMIT: &str = include_str!("scripts/post-commit");
+pub const POST_COMMIT: &str = include_str!("./scripts/post-commit");
 
 fn set_git_hooks_path(repo_path: &Path, hooks_path: &Path) -> std::io::Result<()> {
     let status = Command::new("git")
