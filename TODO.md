@@ -1,7 +1,7 @@
 # TODO — tally v0.3.3
 
 @created: 2026-01-31
-@modified: 2026-02-01
+@modified: 2026-02-02
 
 ## Tasks
 
@@ -10,6 +10,9 @@
 
 - [ ] config support (low) #feature
       @created 2026-02-01 22:22
+
+- [ ] testing autocommit #test
+      @created 2026-02-02 02:08
 
 
 ## Completed
