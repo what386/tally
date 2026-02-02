@@ -8,9 +8,6 @@
 - [ ] add templates #feature
       @created 2026-02-01 00:05
 
-- [ ] config support (low) #feature
-      @created 2026-02-01 22:22
-
 
 ## Completed
 
@@ -25,4 +22,8 @@
       @completed 2026-02-01 13:43
       @completed_version 0.3.2
       @completed_commit a556fb5
+
+- [x] config support (low) #feature
+      @created 2026-02-01 22:22
+      @completed 2026-02-02 02:15
 
