@@ -78,8 +78,11 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
             println!("  Commit: {}", hash);
 
             if dry_run {
-                println!("  (dry-run: would mark as done)");
-            } else if auto {
+                println!("  (dry-run: would mark as done)\n");
+                continue;
+            }
+
+            if auto || config.preferences.auto_complete_tasks {
                 completed.push((idx, hash));
             } else {
                 use std::io::{self, Write};
@@ -98,20 +101,18 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
         }
     }
 
-    if !dry_run {
-        for (idx, hash) in &completed {
-            storage.complete_task(*idx, None)?;
-            if let Some(task) = storage.tasks_mut().get_mut(*idx) {
-                task.completed_at_commit = Some(hash.clone());
-            }
+    for (idx, hash) in &completed {
+        storage.complete_task(*idx, None)?;
+        if let Some(task) = storage.tasks_mut().get_mut(*idx) {
+            task.completed_at_commit = Some(hash.clone());
         }
-        storage.save_list()?;
+    }
+    storage.save_list()?;
 
-        // Record completed tasks to history after all mutations are done
-        for (idx, _) in &completed {
-            if let Some(task) = storage.tasks().get(*idx) {
-                history.record(task)?;
-            }
+    // Record completed tasks to history after all mutations are done
+    for (idx, _) in &completed {
+        if let Some(task) = storage.tasks().get(*idx) {
+            history.record(task)?;
         }
     }
 
