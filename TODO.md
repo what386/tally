@@ -14,8 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] github doing! (high)
-      @created 2026-02-02 19:18
 
 ## Completed
 
@@ -23,3 +21,9 @@
       @created 2026-02-01 22:22
       @completed 2026-02-02 02:15
       @completed_version 0.4.0
+
+- [x] github doing! (high)
+      @created 2026-02-02 19:18
+      @completed 2026-02-02 19:19
+      @completed_commit 9ba2c4a
+
