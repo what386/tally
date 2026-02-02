@@ -8,6 +8,7 @@ pub mod prune;
 pub mod semver;
 pub mod remove;
 pub mod scan;
+pub mod status;
 
 pub use add::cmd_add;
 pub use changelog::cmd_changelog;
@@ -19,3 +20,4 @@ pub use prune::cmd_prune;
 pub use semver::{cmd_semver, cmd_tag};
 pub use remove::cmd_remove;
 pub use scan::cmd_scan;
+pub use status::cmd_status;
