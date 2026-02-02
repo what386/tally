@@ -14,6 +14,9 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
+- [ ] github doing! (high)
+      @created 2026-02-02 19:18
+
 
 ## Completed
 
