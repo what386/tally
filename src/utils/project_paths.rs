@@ -1,6 +1,7 @@
 use anyhow::{Result, anyhow};
-use std::env;
+use std::{env, fs};
 use std::path::PathBuf;
+use dirs;
 
 pub fn find_project_root() -> Result<PathBuf> {
     let mut current = env::current_dir()?;
@@ -39,10 +40,21 @@ impl ProjectPaths {
         let root = find_project_root()?;
         let tally_dir = root.join(".tally");
 
+        let config_file: PathBuf;
+        let conf = tally_dir.join("config.toml");
+
+
+        if conf.exists() {
+            config_file = conf;
+        } else {
+            let config_dir = dirs::config_dir().unwrap().join("tally");
+            config_file = config_dir.join("config.toml");
+        }
+
         Ok(Self {
             todo_file: root.join("TODO.md"),
             history_file: tally_dir.join("history.json"),
-            config_file: tally_dir.join("config.toml"),
+            config_file: config_file,
             ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
             tally_dir,
@@ -63,13 +75,23 @@ impl ProjectPaths {
             ));
         }
 
+        let config_file: PathBuf;
+        let conf = tally_dir.join("config.toml");
+
+        if conf.exists() {
+            config_file = conf;
+        } else {
+            let config_dir = dirs::config_dir().unwrap().join("tally");
+            config_file = config_dir.join("config.toml");
+        }
+
         std::fs::create_dir_all(&tally_dir)?;
         std::fs::create_dir_all(&hooks_dir)?;
 
         Ok(Self {
             todo_file: root.join("TODO.md"),
             history_file: tally_dir.join("history.json"),
-            config_file: tally_dir.join("config.toml"),
+            config_file: config_file,
             ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
             tally_dir,
