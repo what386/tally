@@ -2,6 +2,7 @@ use std::process::Command;
 
 use anyhow::{Result, anyhow};
 
+use crate::services::git::commits;
 use crate::utils::project_paths::ProjectPaths;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
@@ -83,50 +84,6 @@ pub fn cmd_tag(
         format!("v{}", version_str)
     };
 
-    // Check for uncommitted changes outside of TODO.md and history.json
-    // so we don't silently commit in a dirty working tree
-    let tally_files = ["TODO.md", ".tally/history.json"];
-
-    let dirty: Vec<String> = {
-        let output = Command::new("git")
-            .args(["diff", "--name-only"])
-            .current_dir(&paths.root)
-            .output()?;
-        String::from_utf8(output.stdout)?
-            .lines()
-            .map(|s| s.trim().to_string())
-            .filter(|f| !tally_files.contains(&f.as_str()))
-            .collect()
-    };
-
-    if !dirty.is_empty() {
-        return Err(anyhow!(
-            "Working tree has uncommitted changes:\n{}\n\
-             Commit or stash them before tagging.",
-            dirty.join("\n")
-        ));
-    }
-
-    let staged: Vec<String> = {
-        let output = Command::new("git")
-            .args(["diff", "--cached", "--name-only"])
-            .current_dir(&paths.root)
-            .output()?;
-        String::from_utf8(output.stdout)?
-            .lines()
-            .map(|s| s.trim().to_string())
-            .filter(|f| !tally_files.contains(&f.as_str()))
-            .collect()
-    };
-
-    if !staged.is_empty() {
-        return Err(anyhow!(
-            "Working tree has staged changes:\n{}\n\
-             Commit or stash them before tagging.",
-            staged.join("\n")
-        ));
-    }
-
     // Run release
     cmd_semver(version_str.clone(), dry_run, summary)?;
 
@@ -139,34 +96,9 @@ pub fn cmd_tag(
         return Ok(());
     }
 
-    // Stage TODO.md and history.json
-    let output = Command::new("git")
-        .args(["add", "TODO.md", ".tally/history.json"])
-        .current_dir(&paths.root)
-        .output()?;
-
-    if !output.status.success() {
-        return Err(anyhow!(
-            "Failed to stage files: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
-    }
-
-    // Commit
+    // Commit tally files
     let commit_msg = format!("Release {}", tag_name);
-    let output = Command::new("git")
-        .args(["commit", "-m", &commit_msg])
-        .current_dir(&paths.root)
-        .output()?;
-
-    if !output.status.success() {
-        return Err(anyhow!(
-            "Failed to commit: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
-    }
-
-    println!("Committed TODO.md and .tally/history.json");
+    commits::commit_tally_files(&commit_msg)?;
 
     // Create annotated tag
     let output = Command::new("git")
