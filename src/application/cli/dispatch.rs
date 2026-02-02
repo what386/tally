@@ -16,7 +16,7 @@ impl Cli {
                 auto,
             } => commands::cmd_add(description, priority, tags, dry_run, auto),
 
-            Commands::Status => commands::status::cmd_status(),
+            Commands::Status => commands::cmd_status(),
 
             Commands::Done {
                 description,
