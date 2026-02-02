@@ -11,9 +11,6 @@
 - [ ] config support (low) #feature
       @created 2026-02-01 22:22
 
-- [ ] testing autocommit #test
-      @created 2026-02-02 02:08
-
 
 ## Completed
 
