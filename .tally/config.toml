@@ -1,0 +1,6 @@
+[preferences]
+auto_commit_todo = true
+auto_complete_tasks = true
+
+[git]
+done_prefix = "done:"
