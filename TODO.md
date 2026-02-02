@@ -1,4 +1,4 @@
-# TODO — tally v0.5.0
+# TODO — tally v0.5.2
 
 @created: 2026-01-31
 @modified: 2026-02-02
