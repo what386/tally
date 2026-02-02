@@ -2,7 +2,7 @@ use std::fs::File;
 
 use crate::models::common::Version;
 use crate::models::tasks::List;
-use crate::services::git;
+use crate::services::git::{self, hooks};
 use crate::services::serializers::todo_serializer;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
@@ -41,7 +41,7 @@ pub fn cmd_init() -> Result<()> {
     println!("Created TODO.md");
 
     // Install git hooks if in a git repository
-    match git::install_hooks() {
+    match hooks::install_hooks() {
         Ok(()) => {
             println!("Git integration enabled:");
             println!("  - Commit messages with 'done:' section will auto-complete tasks");
