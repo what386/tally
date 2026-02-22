@@ -212,5 +212,18 @@
       "completed_at": "2026-02-22T18:15:59.117164529Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Add cross-project registry and aggregated project status command",
+      "priority": "High",
+      "tags": [
+        "feature",
+        "workspace"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-22T18:16:01.661783593Z"
+    },
+    "version": null
   }
 ]
