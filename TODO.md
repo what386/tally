@@ -1,7 +1,7 @@
 # TODO — tally v0.5.2
 
 @created: 2026-01-31
-@modified: 2026-02-02
+@modified: 2026-02-22
 
 ## Tasks
 
@@ -13,6 +13,9 @@
 
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
+
+- [ ] Add tally edit command to open TODO.md in configured editor (high) #feature #ux
+      @created 2026-02-22 18:02
 
 
 ## Completed
