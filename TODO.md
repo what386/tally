@@ -17,6 +17,9 @@
 - [ ] Add tally edit command to open TODO.md in configured editor (high) #feature #ux
       @created 2026-02-22 18:02
 
+- [ ] Add cross-project registry and aggregated project status command (high) #feature #workspace
+      @created 2026-02-22 18:02
+
 
 ## Completed
 
