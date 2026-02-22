@@ -199,5 +199,18 @@
       "patch": 0,
       "is_prerelease": false
     }
+  },
+  {
+    "change": {
+      "description": "Add tally edit command to open TODO.md in configured editor",
+      "priority": "High",
+      "tags": [
+        "feature",
+        "ux"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-22T18:15:59.117164529Z"
+    },
+    "version": null
   }
 ]

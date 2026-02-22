@@ -14,9 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] Add tally edit command to open TODO.md in configured editor (high) #feature #ux
-      @created 2026-02-22 18:02
-
 - [ ] Add cross-project registry and aggregated project status command (high) #feature #workspace
       @created 2026-02-22 18:02
 
@@ -33,4 +30,8 @@
       @completed 2026-02-02 19:19
       @completed_version 0.5.0
       @completed_commit 9ba2c4a
+
+- [x] Add tally edit command to open TODO.md in configured editor (high) #feature #ux
+      @created 2026-02-22 18:02
+      @completed 2026-02-22 18:15
 
