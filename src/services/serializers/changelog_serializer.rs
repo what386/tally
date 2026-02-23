@@ -66,3 +66,7 @@ fn release_to_markdown(release: &Release) -> String {
 
     output
 }
+
+#[cfg(test)]
+#[path = "../../../tests/services/serializers/changelog_serializer_tests.rs"]
+mod tests;

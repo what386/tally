@@ -183,3 +183,7 @@ impl ConfigStorage {
         Ok(toml::Value::String(value.to_string()))
     }
 }
+
+#[cfg(test)]
+#[path = "../../../tests/services/storage/config_storage_tests.rs"]
+mod tests;

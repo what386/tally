@@ -342,3 +342,7 @@ fn parse_datetime(s: &str) -> Result<DateTime<Utc>> {
         .context(format!("Failed to parse datetime: {}", s))?;
     Ok(DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc))
 }
+
+#[cfg(test)]
+#[path = "../../../tests/services/serializers/todo_serializer_tests.rs"]
+mod tests;

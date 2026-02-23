@@ -108,3 +108,7 @@ impl Ord for Version {
         Version::cmp(self, other)
     }
 }
+
+#[cfg(test)]
+#[path = "../../../tests/models/common/version_tests.rs"]
+mod tests;

@@ -185,3 +185,7 @@ fn extract_done_items(message: &str, done_marker: &str) -> Vec<String> {
 
     items
 }
+
+#[cfg(test)]
+#[path = "../../../tests/application/commands/scan_tests.rs"]
+mod tests;
