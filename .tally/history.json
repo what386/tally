@@ -63,36 +63,6 @@
   },
   {
     "change": {
-      "description": "make a .tally/history.json file to track tasks (even if deleted by tally prune) for changelogs",
-      "priority": "High",
-      "tags": [],
-      "commit": null,
-      "completed_at": "2026-01-31T22:40:00Z"
-    },
-    "version": {
-      "major": 0,
-      "minor": 1,
-      "patch": 1,
-      "is_prerelease": false
-    }
-  },
-  {
-    "change": {
-      "description": "modify changelog to use history.json instead of parsing TODO.md",
-      "priority": "Low",
-      "tags": [],
-      "commit": null,
-      "completed_at": "2026-01-31T22:41:00Z"
-    },
-    "version": {
-      "major": 0,
-      "minor": 1,
-      "patch": 1,
-      "is_prerelease": false
-    }
-  },
-  {
-    "change": {
       "description": "git hook for tags?",
       "priority": "Low",
       "tags": [],
@@ -123,21 +93,6 @@
   },
   {
     "change": {
-      "description": "fix duplication in history",
-      "priority": "High",
-      "tags": [],
-      "commit": "a556fb5",
-      "completed_at": "2026-02-01T13:43:00Z"
-    },
-    "version": {
-      "major": 0,
-      "minor": 3,
-      "patch": 2,
-      "is_prerelease": false
-    }
-  },
-  {
-    "change": {
       "description": "config support",
       "priority": "Low",
       "tags": [
@@ -155,43 +110,11 @@
   },
   {
     "change": {
-      "description": "config support",
-      "priority": "Low",
-      "tags": [
-        "feature"
-      ],
-      "commit": null,
-      "completed_at": "2026-02-02T02:15:00Z"
-    },
-    "version": {
-      "major": 0,
-      "minor": 4,
-      "patch": 0,
-      "is_prerelease": false
-    }
-  },
-  {
-    "change": {
       "description": "github doing!",
       "priority": "High",
       "tags": [],
       "commit": "9ba2c4a",
       "completed_at": "2026-02-02T19:19:32.799950787Z"
-    },
-    "version": {
-      "major": 0,
-      "minor": 5,
-      "patch": 0,
-      "is_prerelease": false
-    }
-  },
-  {
-    "change": {
-      "description": "github doing!",
-      "priority": "High",
-      "tags": [],
-      "commit": "9ba2c4a",
-      "completed_at": "2026-02-02T19:19:00Z"
     },
     "version": {
       "major": 0,
@@ -223,6 +146,18 @@
       ],
       "commit": null,
       "completed_at": "2026-02-22T18:16:01.661783593Z"
+    },
+    "version": null
+  },
+  {
+    "change": {
+      "description": "Fix changelog duplicate entries",
+      "priority": "High",
+      "tags": [
+        "bug"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-23T20:53:37.648115686Z"
     },
     "version": null
   }

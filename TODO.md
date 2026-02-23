@@ -14,9 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] Fix changelog duplicate entries (high) #bug
-      @created 2026-02-23 20:48
-
 
 ## Completed
 
@@ -38,4 +35,8 @@
 - [x] Add cross-project registry and aggregated project status command (high) #feature #workspace
       @created 2026-02-22 18:02
       @completed 2026-02-22 18:16
+
+- [x] Fix changelog duplicate entries (high) #bug
+      @created 2026-02-23 20:48
+      @completed 2026-02-23 20:53
 
