@@ -172,5 +172,18 @@
       "completed_at": "2026-02-23T21:03:27.905393769Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Add publish script to create git tag from provided version",
+      "priority": "High",
+      "tags": [
+        "feature",
+        "release"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-23T21:28:30.194225026Z"
+    },
+    "version": null
   }
 ]

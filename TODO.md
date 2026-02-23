@@ -14,9 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] Add publish script to create git tag from provided version (high) #feature #release
-      @created 2026-02-23 21:28
-
 
 ## Completed
 
@@ -46,4 +43,8 @@
 - [x] Add high-priority regression tests for version/config/scan parsing (high) #test
       @created 2026-02-23 21:01
       @completed 2026-02-23 21:03
+
+- [x] Add publish script to create git tag from provided version (high) #feature #release
+      @created 2026-02-23 21:28
+      @completed 2026-02-23 21:28
 
