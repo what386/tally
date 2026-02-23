@@ -16,6 +16,7 @@ include = [
 
 exclude = [
     ".github",
+    ".tally",
     "scripts/",
 ]
 
