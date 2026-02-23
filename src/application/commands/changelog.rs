@@ -1,16 +1,13 @@
-use anyhow::Result;
-use chrono::Utc;
-use crate::utils::project_paths::ProjectPaths;
-use crate::services::storage::task_storage::ListStorage;
-use crate::services::storage::history_storage::HistoryStorage;
-use crate::services::serializers::changelog_serializer;
 use crate::models::changes::{Log, Release};
 use crate::models::common::Version;
+use crate::services::serializers::changelog_serializer;
+use crate::services::storage::history_storage::HistoryStorage;
+use crate::services::storage::task_storage::ListStorage;
+use crate::utils::project_paths::ProjectPaths;
+use anyhow::Result;
+use chrono::Utc;
 
-pub fn cmd_changelog(
-    from: Option<String>,
-    to: Option<String>,
-) -> Result<()> {
+pub fn cmd_changelog(from: Option<String>, to: Option<String>) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let storage = ListStorage::new(&paths.todo_file)?;
     let history = HistoryStorage::new(&paths.history_file)?;
@@ -70,4 +67,3 @@ pub fn cmd_changelog(
 
     Ok(())
 }
-

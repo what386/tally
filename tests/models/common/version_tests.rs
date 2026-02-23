@@ -21,7 +21,10 @@ fn parse_accepts_prefix_and_missing_parts() {
 #[test]
 fn parse_rejects_invalid_inputs() {
     for input in ["", "1.2.3.4", "x.2.3", "1.x.3", "1.2.x"] {
-        assert!(Version::parse(input).is_err(), "expected parse failure for '{input}'");
+        assert!(
+            Version::parse(input).is_err(),
+            "expected parse failure for '{input}'"
+        );
     }
 }
 

@@ -1,17 +1,12 @@
-use anyhow::Result;
-use chrono::Utc;
 use crate::services::git::commits;
 use crate::services::storage::config_storage::ConfigStorage;
-use crate::utils::project_paths::ProjectPaths;
-use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
+use crate::services::storage::task_storage::ListStorage;
+use crate::utils::project_paths::ProjectPaths;
+use anyhow::Result;
+use chrono::Utc;
 
-pub fn cmd_prune(
-    days: Option<u32>,
-    hours: Option<u32>,
-    dry_run: bool,
-    auto: bool,
-) -> Result<()> {
+pub fn cmd_prune(days: Option<u32>, hours: Option<u32>, dry_run: bool, auto: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let mut history = HistoryStorage::new(&paths.history_file)?;
@@ -30,24 +25,21 @@ pub fn cmd_prune(
         }
     };
 
-    let cutoff = Utc::now()
-        - chrono::Duration::hours(total_hours as i64);
+    let cutoff = Utc::now() - chrono::Duration::hours(total_hours as i64);
 
     // Find completed tasks older than cutoff
     let to_prune: Vec<(usize, &crate::models::tasks::Task)> = storage
         .tasks()
         .iter()
         .enumerate()
-        .filter(|(_, task)| {
-            task.completed
-                && task
-                    .completed_at_time
-                    .map_or(false, |t| t < cutoff)
-        })
+        .filter(|(_, task)| task.completed && task.completed_at_time.map_or(false, |t| t < cutoff))
         .collect();
 
     if to_prune.is_empty() {
-        println!("No completed tasks older than {} to prune.", format_duration(total_hours));
+        println!(
+            "No completed tasks older than {} to prune.",
+            format_duration(total_hours)
+        );
         return Ok(());
     }
 

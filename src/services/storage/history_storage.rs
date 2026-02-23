@@ -1,9 +1,9 @@
-use anyhow::{Result, anyhow};
-use std::fs;
-use std::path::{Path, PathBuf};
 use crate::models::changes::Change;
 use crate::models::common::Version;
 use crate::models::tasks::Task;
+use anyhow::{Result, anyhow};
+use std::fs;
+use std::path::{Path, PathBuf};
 
 /// History storage persists completed tasks to history.json
 /// so that changelog generation works even after prune.
@@ -125,11 +125,7 @@ impl HistoryStorage {
     }
 
     /// Get all entries between two versions (inclusive)
-    pub fn entries_between_versions(
-        &self,
-        from: &Version,
-        to: &Version,
-    ) -> Vec<&HistoryEntry> {
+    pub fn entries_between_versions(&self, from: &Version, to: &Version) -> Vec<&HistoryEntry> {
         self.entries
             .iter()
             .filter(|e| {
@@ -157,7 +153,10 @@ impl HistoryStorage {
 
     /// Get all unversioned entries
     pub fn unversioned_entries(&self) -> Vec<&HistoryEntry> {
-        self.entries.iter().filter(|e| e.version.is_none()).collect()
+        self.entries
+            .iter()
+            .filter(|e| e.version.is_none())
+            .collect()
     }
 
     pub fn entries(&self) -> &[HistoryEntry] {

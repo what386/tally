@@ -1,8 +1,8 @@
 use crate::models::common::Version;
 use crate::services::git::commits;
 use crate::services::storage::config_storage::ConfigStorage;
-use crate::services::storage::task_storage::ListStorage;
 use crate::services::storage::history_storage::HistoryStorage;
+use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
@@ -32,9 +32,10 @@ pub fn cmd_done(
         }
 
         if let Some(score) = matcher.fuzzy_match(&task.description, &description)
-            && (best_match.is_none() || score > best_match.unwrap().1) {
-                best_match = Some((i, score));
-            }
+            && (best_match.is_none() || score > best_match.unwrap().1)
+        {
+            best_match = Some((i, score));
+        }
     }
 
     match best_match {

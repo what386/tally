@@ -1,2 +1,2 @@
-pub mod hooks;
 pub mod commits;
+pub mod hooks;

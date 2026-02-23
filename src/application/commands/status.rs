@@ -45,8 +45,6 @@ pub fn cmd_status() -> Result<()> {
     println!("  Open: {}", open_tasks);
     println!("  Done: {}", completed_tasks);
 
-
-
     if open_tasks > 0 {
         println!("\nOpen Tasks:");
         let high = priority_counts.get(&Priority::High).unwrap_or(&0);
@@ -76,7 +74,10 @@ pub fn cmd_status() -> Result<()> {
         for (tag, (open, completed)) in sorted_tags.iter().take(10) {
             let total = *open + *completed;
             if *open > 0 {
-                println!("  #{}: {} open, {} done ({} total)", tag, open, completed, total);
+                println!(
+                    "  #{}: {} open, {} done ({} total)",
+                    tag, open, completed, total
+                );
             } else {
                 println!("  #{}: {} done", tag, completed);
             }

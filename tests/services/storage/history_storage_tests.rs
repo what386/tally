@@ -56,12 +56,7 @@ fn record_all_dedupes_when_commit_matches() {
         history_file: std::env::temp_dir().join("tally-history-record-all-commit.json"),
     };
 
-    let task = make_task(
-        "github doing!",
-        Some("9ba2c4a"),
-        Some(version),
-        second_time,
-    );
+    let task = make_task("github doing!", Some("9ba2c4a"), Some(version), second_time);
     storage.record_all(&[&task]).unwrap();
 
     assert_eq!(storage.entries.len(), 1);
@@ -99,12 +94,7 @@ fn record_all_keeps_distinct_versions() {
         history_file: std::env::temp_dir().join("tally-history-record-all-versions.json"),
     };
 
-    let task = make_task(
-        "release notes update",
-        None,
-        Some(new_version),
-        timestamp,
-    );
+    let task = make_task("release notes update", None, Some(new_version), timestamp);
     storage.record_all(&[&task]).unwrap();
 
     assert_eq!(storage.entries.len(), 2);

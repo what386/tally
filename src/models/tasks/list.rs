@@ -35,10 +35,7 @@ impl List {
     pub fn tasks_for_version(&self, version: &Version) -> Vec<&Task> {
         self.tasks
             .iter()
-            .filter(|t| {
-                t.completed_at_version
-                    .as_ref() == Some(version)
-            })
+            .filter(|t| t.completed_at_version.as_ref() == Some(version))
             .collect()
     }
 

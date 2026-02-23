@@ -82,7 +82,6 @@ fn uninstall_hook(hooks_dir: &Path, name: &str) -> Result<()> {
     Ok(())
 }
 
-
 /// Update hooks (rewrite with latest version)
 pub fn update_hooks() -> Result<()> {
     let hooks_dir = ProjectPaths::get_paths()?.hooks_dir;
@@ -92,9 +91,7 @@ pub fn update_hooks() -> Result<()> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        for name in &[
-            "post-commit",
-        ] {
+        for name in &["post-commit"] {
             let path = hooks_dir.join(name);
             let mut perms = fs::metadata(&path)?.permissions();
             perms.set_mode(0o755);

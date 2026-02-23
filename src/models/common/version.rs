@@ -42,7 +42,8 @@ impl Version {
             bail!("Cannot parse empty version");
         }
 
-        let s = s.strip_prefix('v')
+        let s = s
+            .strip_prefix('v')
             .or_else(|| s.strip_prefix('V'))
             .unwrap_or(s);
 
@@ -51,14 +52,20 @@ impl Version {
             bail!("Invalid version format");
         }
 
-        let major = parts[0].parse::<u32>().map_err(|_| anyhow::anyhow!("Invalid major"))?;
+        let major = parts[0]
+            .parse::<u32>()
+            .map_err(|_| anyhow::anyhow!("Invalid major"))?;
         let minor = if parts.len() > 1 {
-            parts[1].parse::<u32>().map_err(|_| anyhow::anyhow!("Invalid minor"))?
+            parts[1]
+                .parse::<u32>()
+                .map_err(|_| anyhow::anyhow!("Invalid minor"))?
         } else {
             0
         };
         let patch = if parts.len() > 2 {
-            parts[2].parse::<u32>().map_err(|_| anyhow::anyhow!("Invalid patch"))?
+            parts[2]
+                .parse::<u32>()
+                .map_err(|_| anyhow::anyhow!("Invalid patch"))?
         } else {
             0
         };

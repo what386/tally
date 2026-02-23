@@ -41,27 +41,28 @@ fn release_to_markdown(release: &Release) -> String {
         (Priority::Low, "Minor Changes"),
     ] {
         if let Some(changes) = release.changes_by_priority.get(&priority)
-            && !changes.is_empty() {
-                output.push_str(&format!("### {}\n\n", section_name));
+            && !changes.is_empty()
+        {
+            output.push_str(&format!("### {}\n\n", section_name));
 
-                for change in changes {
-                    let tags = if change.tags.is_empty() {
-                        String::new()
-                    } else {
-                        format!(" `{}`", change.tags.join("`, `"))
-                    };
+            for change in changes {
+                let tags = if change.tags.is_empty() {
+                    String::new()
+                } else {
+                    format!(" `{}`", change.tags.join("`, `"))
+                };
 
-                    let commit = change
-                        .commit
-                        .as_ref()
-                        .map(|c| format!(" ([`{}`])", &c[..7.min(c.len())]))
-                        .unwrap_or_default();
+                let commit = change
+                    .commit
+                    .as_ref()
+                    .map(|c| format!(" ([`{}`])", &c[..7.min(c.len())]))
+                    .unwrap_or_default();
 
-                    output.push_str(&format!("- {}{}{}\n", change.description, tags, commit));
-                }
-
-                output.push('\n');
+                output.push_str(&format!("- {}{}{}\n", change.description, tags, commit));
             }
+
+            output.push('\n');
+        }
     }
 
     output

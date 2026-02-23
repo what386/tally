@@ -2,7 +2,8 @@ use super::*;
 
 #[test]
 fn extract_done_items_parses_list_and_stops_on_blank_line() {
-    let message = "feat: improve parser\n\nDone:\n- first item\n* second item\n\nNotes:\n- not included";
+    let message =
+        "feat: improve parser\n\nDone:\n- first item\n* second item\n\nNotes:\n- not included";
 
     let items = extract_done_items(message, "done:");
 
