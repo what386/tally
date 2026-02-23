@@ -160,5 +160,17 @@
       "completed_at": "2026-02-23T20:53:37.648115686Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Add high-priority regression tests for version/config/scan parsing",
+      "priority": "High",
+      "tags": [
+        "test"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-23T21:03:27.905393769Z"
+    },
+    "version": null
   }
 ]

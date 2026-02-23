@@ -14,9 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] Add high-priority regression tests for version/config/scan parsing (high) #test
-      @created 2026-02-23 21:01
-
 
 ## Completed
 
@@ -42,4 +39,8 @@
 - [x] Fix changelog duplicate entries (high) #bug
       @created 2026-02-23 20:48
       @completed 2026-02-23 20:53
+
+- [x] Add high-priority regression tests for version/config/scan parsing (high) #test
+      @created 2026-02-23 21:01
+      @completed 2026-02-23 21:03
 
