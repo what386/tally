@@ -14,6 +14,9 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
+- [ ] Add publish script to create git tag from provided version (high) #feature #release
+      @created 2026-02-23 21:28
+
 
 ## Completed
 
