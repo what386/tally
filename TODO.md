@@ -14,6 +14,9 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
+- [ ] Add high-priority regression tests for version/config/scan parsing (high) #test
+      @created 2026-02-23 21:01
+
 
 ## Completed
 
