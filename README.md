@@ -23,6 +23,7 @@ It lets you track tasks, mark them complete, associate them with git commits or 
    - [Task Cleanup](#task-cleanup)
    - [Git Integration](#git-integration)
    - [Editing Tasks](#editing-tasks)
+   - [Cross-Project Commands](#cross-project-commands)
 5. [Configuration](#configuration)
 6. [Storage Format](#storage-format)
 
@@ -37,6 +38,7 @@ It lets you track tasks, mark them complete, associate them with git commits or 
 - Associate tasks with git commits or release versions
 - Prune or archive old completed tasks
 - Scan git history to detect completed tasks
+- Global project registry with cross-project status
 
 ---
 
@@ -86,6 +88,9 @@ This creates:
 
 - `TODO.md` — your task list
 - `.tally/` — configuration and history files
+
+It also registers the project in `~/.config/tally/projects.json`.
+Running `tally init` again is safe and will re-register existing projects.
 
 ---
 
@@ -349,9 +354,31 @@ tally edit
 
 Uses:
 
-1. Editor set in `tally config`
+1. `preferences.editor` from `tally config`
 2. `$EDITOR`
 3. Common fallbacks (vim, nano, etc.)
+
+---
+
+### Cross-Project Commands
+
+List registered projects:
+
+```bash
+tally projects list
+```
+
+Show an aggregated status across all registered projects:
+
+```bash
+tally projects status
+```
+
+Remove missing entries from the global registry:
+
+```bash
+tally projects prune
+```
 
 ---
 
@@ -360,7 +387,8 @@ Uses:
 Configuration is stored in:
 
 ```text
-.tally/config.toml
+./.tally/config.toml (optional, per-project)
+~/.config/tally/config.toml (fallback)
 ```
 
 Manage configuration via:
@@ -380,8 +408,8 @@ Available actions:
 Examples:
 
 ```bash
-tally config set default_priority medium
-tally config get changelog_template
+tally config set preferences.editor vim
+tally config get preferences.editor
 tally config list
 ```
 
@@ -391,7 +419,8 @@ tally config list
 
 - **`TODO.md`** — active tasks
 - **`.tally/history.json`** — archived completed tasks
-- **`.tally/config.toml`** — user preferences
+- **`.tally/config.toml`** or **`~/.config/tally/config.toml`** — user preferences
+- **`~/.config/tally/projects.json`** — registry of initialized projects
 
 All data is human-readable and git-friendly.
 

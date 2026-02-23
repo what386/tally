@@ -4,17 +4,15 @@ use crate::models::common::Version;
 use crate::models::tasks::List;
 use crate::services::git::hooks;
 use crate::services::serializers::todo_serializer;
+use crate::services::storage::project_registry_storage::ProjectRegistryStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 
 pub fn cmd_init() -> Result<()> {
     let current_dir = std::env::current_dir()?;
-
-    // Check if already initialized
-    if current_dir.join(".tally").exists() {
-        println!("Tally project already initialized in this directory");
-        return Ok(());
-    }
+    let had_tally_dir = current_dir.join(".tally").exists();
+    let had_todo = current_dir.join("TODO.md").exists();
+    let had_history = current_dir.join(".tally").join("history.json").exists();
 
     println!("Initializing tally project...");
 
@@ -28,17 +26,30 @@ pub fn cmd_init() -> Result<()> {
         .unwrap_or("Untitled")
         .to_string();
 
-    // create empty history
-    File::create(paths.history_file)?;
+    if !had_tally_dir {
+        println!("Created .tally/ directory structure");
+    }
 
-    // Create initial TODO.md
-    let initial_list = List::new(&project_name, Version::new(0, 1, 0, false));
-    let content = todo_serializer::serialize(&initial_list);
-    std::fs::write(&paths.todo_file, content)?;
+    if !had_history {
+        File::create(&paths.history_file)?;
+        println!("Created .tally/history.json");
+    }
 
-    println!("Created .tally/ directory structure");
-    println!("Created .tally/history.json");
-    println!("Created TODO.md");
+    if !had_todo {
+        let initial_list = List::new(&project_name, Version::new(0, 1, 0, false));
+        let content = todo_serializer::serialize(&initial_list);
+        std::fs::write(&paths.todo_file, content)?;
+        println!("Created TODO.md");
+    } else {
+        println!("Using existing TODO.md");
+    }
+
+    let mut registry = ProjectRegistryStorage::new()?;
+    if registry.add_project(&paths.root)? {
+        println!("Registered project in ~/.config/tally/projects.json");
+    } else {
+        println!("Project already in ~/.config/tally/projects.json");
+    }
 
     // Install git hooks if in a git repository
     match hooks::install_hooks() {
@@ -53,9 +64,13 @@ pub fn cmd_init() -> Result<()> {
     }
 
     println!();
-    println!("Tally initialized! Try:");
-    println!("  tally add \"My first task\"");
-    println!("  tally list");
+    if had_tally_dir && had_todo && had_history {
+        println!("Tally already initialized here. Registry and hooks are up to date.");
+    } else {
+        println!("Tally initialized! Try:");
+        println!("  tally add \"My first task\"");
+        println!("  tally list");
+    }
 
     Ok(())
 }

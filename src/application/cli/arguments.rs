@@ -25,6 +25,14 @@ pub struct Cli {
 pub enum Commands {
     #[command(long_about = "Initialize tally in the CWD.")]
     Init,
+
+    /// Open TODO.md in your editor
+    #[command(long_about = "Open TODO.md in your editor.\n\n\
+        Editor resolution order:\n  \
+        1) preferences.editor in config\n  \
+        2) $EDITOR\n  \
+        3) nvim/vim/nano/vi")]
+    Edit,
     /// Add a new task
     #[command(long_about = "Add a new task to TODO.md.\n\n\
         Creates a task with optional priority and tags. Use --dry-run to preview \
@@ -134,14 +142,16 @@ pub enum Commands {
     },
 
     /// Release and create a git tag
-    #[command(long_about = "Assign a version to completed tasks and create a git tag.\n\n\
+    #[command(
+        long_about = "Assign a version to completed tasks and create a git tag.\n\n\
         Runs 'tally release' then commits both the todo and command history before creating a git tag. \n
         The tag name will always be prefixed with 'v' if not already.\n\n\
         EXAMPLES:\n  \
         tally tag v0.2.3\n  \
         tally tag v1.0.0 --summary\n  \
         tally tag v0.2.3 --message \"First stable release\"\n  \
-        tally tag v0.2.4 --dry-run")]
+        tally tag v0.2.4 --dry-run"
+    )]
     Tag {
         /// Version string (e.g., v0.2.3)
         version: String,
@@ -244,21 +254,35 @@ pub enum Commands {
         Configuration is stored in .tally/config.toml and includes settings like \
         default priority, editor preferences, and changelog templates.\n\n\
         EXAMPLES:\n  \
-        tally config set default_priority medium\n  \
-        tally config get changelog_template\n  \
+        tally config set preferences.editor vim\n  \
+        tally config get preferences.editor\n  \
         tally config list")]
     Config {
         #[command(subcommand)]
         action: ConfigAction,
     },
 
+    /// Cross-project commands using the global registry
+    #[command(long_about = "Manage and inspect all registered tally projects.\n\n\
+        Projects are stored in ~/.config/tally/projects.json.\n\n\
+        EXAMPLES:\n  \
+        tally projects list\n  \
+        tally projects status\n  \
+        tally projects prune")]
+    Projects {
+        #[command(subcommand)]
+        action: ProjectsAction,
+    },
+
     /// Display a summary for all tasks.
-    #[command(long_about = "Display a summary dashboard of your project's tasks.\n\n\
+    #[command(
+        long_about = "Display a summary dashboard of your project's tasks.\n\n\
         Shows overall progress, open tasks by priority, tag usage, and version \
         statistics. Provides a quick overview without needing to piece together \
         multiple commands.\n\n\
         EXAMPLE:\n  \
-        tally status")]
+        tally status"
+    )]
     Status,
 }
 
@@ -269,8 +293,8 @@ pub enum ConfigAction {
         Use dot notation for nested keys if needed. Values are stored in \
         .tally/config.toml.\n\n\
         EXAMPLES:\n  \
-        tally config set default_priority medium\n  \
-        tally config set editor vim")]
+        tally config set preferences.auto_commit_todo true\n  \
+        tally config set preferences.editor vim")]
     Set {
         /// Configuration key
         key: String,
@@ -283,8 +307,8 @@ pub enum ConfigAction {
     #[command(long_about = "Retrieve a configuration value.\n\n\
         Displays the current value for the specified configuration key.\n\n\
         EXAMPLES:\n  \
-        tally config get default_priority\n  \
-        tally config get changelog_template")]
+        tally config get preferences.auto_commit_todo\n  \
+        tally config get preferences.editor")]
     Get {
         /// Configuration key to retrieve
         key: String,
@@ -296,4 +320,14 @@ pub enum ConfigAction {
         EXAMPLE:\n  \
         tally config list")]
     List,
+}
+
+#[derive(Subcommand)]
+pub enum ProjectsAction {
+    /// List all registered project roots
+    List,
+    /// Show aggregate status across all registered projects
+    Status,
+    /// Remove missing projects from the registry
+    Prune,
 }

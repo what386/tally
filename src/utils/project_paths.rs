@@ -1,7 +1,16 @@
-use anyhow::{Result, anyhow};
-use std::{env, fs};
+use anyhow::{anyhow, Result};
+use std::env;
 use std::path::PathBuf;
-use dirs;
+
+pub fn global_config_dir() -> Result<PathBuf> {
+    dirs::config_dir()
+        .map(|dir| dir.join("tally"))
+        .ok_or_else(|| anyhow!("Unable to determine global config directory"))
+}
+
+pub fn global_registry_file() -> Result<PathBuf> {
+    Ok(global_config_dir()?.join("projects.json"))
+}
 
 pub fn find_project_root() -> Result<PathBuf> {
     let mut current = env::current_dir()?;
@@ -42,19 +51,17 @@ impl ProjectPaths {
 
         let config_file: PathBuf;
         let conf = tally_dir.join("config.toml");
-
-
         if conf.exists() {
             config_file = conf;
         } else {
-            let config_dir = dirs::config_dir().unwrap().join("tally");
+            let config_dir = global_config_dir()?;
             config_file = config_dir.join("config.toml");
         }
 
         Ok(Self {
             todo_file: root.join("TODO.md"),
             history_file: tally_dir.join("history.json"),
-            config_file: config_file,
+            config_file,
             ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
             tally_dir,
@@ -68,20 +75,13 @@ impl ProjectPaths {
         let tally_dir = root.join(".tally");
         let hooks_dir = tally_dir.join("hooks");
 
-        if tally_dir.exists() {
-            return Err(anyhow!(
-                "Project already initialized at {}",
-                tally_dir.display()
-            ));
-        }
-
         let config_file: PathBuf;
         let conf = tally_dir.join("config.toml");
 
         if conf.exists() {
             config_file = conf;
         } else {
-            let config_dir = dirs::config_dir().unwrap().join("tally");
+            let config_dir = global_config_dir()?;
             config_file = config_dir.join("config.toml");
         }
 
@@ -91,7 +91,7 @@ impl ProjectPaths {
         Ok(Self {
             todo_file: root.join("TODO.md"),
             history_file: tally_dir.join("history.json"),
-            config_file: config_file,
+            config_file,
             ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
             tally_dir,

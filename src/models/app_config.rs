@@ -9,12 +9,13 @@ pub struct AppConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Preferences {
     pub auto_commit_todo: bool,
-    pub auto_complete_tasks: bool
+    pub auto_complete_tasks: bool,
+    pub editor: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Git {
-    pub done_prefix: String
+    pub done_prefix: String,
 }
 
 impl Default for AppConfig {
@@ -31,6 +32,7 @@ impl Default for Preferences {
         Self {
             auto_commit_todo: false,
             auto_complete_tasks: false,
+            editor: None,
         }
     }
 }
