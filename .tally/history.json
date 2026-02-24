@@ -134,7 +134,12 @@
       "commit": null,
       "completed_at": "2026-02-22T18:15:59.117164529Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -147,7 +152,12 @@
       "commit": null,
       "completed_at": "2026-02-22T18:16:01.661783593Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -159,7 +169,12 @@
       "commit": null,
       "completed_at": "2026-02-23T20:53:37.648115686Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -171,7 +186,12 @@
       "commit": null,
       "completed_at": "2026-02-23T21:03:27.905393769Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -184,6 +204,99 @@
       "commit": null,
       "completed_at": "2026-02-23T21:28:30.194225026Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Add tally edit command to open TODO.md in configured editor",
+      "priority": "High",
+      "tags": [
+        "feature",
+        "ux"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-22T18:15:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Add cross-project registry and aggregated project status command",
+      "priority": "High",
+      "tags": [
+        "feature",
+        "workspace"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-22T18:16:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Fix changelog duplicate entries",
+      "priority": "High",
+      "tags": [
+        "bug"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-23T20:53:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Add high-priority regression tests for version/config/scan parsing",
+      "priority": "High",
+      "tags": [
+        "test"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-23T21:03:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Add publish script to create git tag from provided version",
+      "priority": "High",
+      "tags": [
+        "feature",
+        "release"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-23T21:28:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
   }
 ]
