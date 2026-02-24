@@ -14,9 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] Fix clippy warnings across command, model, and storage modules (high) #cleanup
-      @created 2026-02-24 21:35
-
 
 ## Completed
 
@@ -55,4 +52,8 @@
       @created 2026-02-23 21:28
       @completed 2026-02-23 21:28
       @completed_version 0.6.0
+
+- [x] Fix clippy warnings across command, model, and storage modules (high) #cleanup
+      @created 2026-02-24 21:35
+      @completed 2026-02-24 21:38
 
