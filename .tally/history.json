@@ -309,7 +309,12 @@
       "commit": null,
       "completed_at": "2026-02-24T21:38:28.196522784Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
   },
   {
     "change": {
@@ -321,6 +326,45 @@
       "commit": null,
       "completed_at": "2026-02-24T21:42:50.093955555Z"
     },
-    "version": null
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Fix clippy warnings across command, model, and storage modules",
+      "priority": "High",
+      "tags": [
+        "cleanup"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-24T21:38:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
+  },
+  {
+    "change": {
+      "description": "Remove dead code methods flagged by clippy",
+      "priority": "High",
+      "tags": [
+        "cleanup"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-24T21:42:00Z"
+    },
+    "version": {
+      "major": 0,
+      "minor": 6,
+      "patch": 0,
+      "is_prerelease": false
+    }
   }
 ]
