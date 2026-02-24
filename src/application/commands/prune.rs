@@ -32,7 +32,7 @@ pub fn cmd_prune(days: Option<u32>, hours: Option<u32>, dry_run: bool, auto: boo
         .tasks()
         .iter()
         .enumerate()
-        .filter(|(_, task)| task.completed && task.completed_at_time.map_or(false, |t| t < cutoff))
+        .filter(|(_, task)| task.completed && task.completed_at_time.is_some_and(|t| t < cutoff))
         .collect();
 
     if to_prune.is_empty() {

@@ -20,22 +20,6 @@ impl Version {
         }
     }
 
-    pub fn is_newer_than(&self, other: &Version) -> bool {
-        if self.major != other.major {
-            return self.major > other.major;
-        }
-        if self.minor != other.minor {
-            return self.minor > other.minor;
-        }
-        if self.patch != other.patch {
-            return self.patch > other.patch;
-        }
-        if self.is_prerelease != other.is_prerelease {
-            return !self.is_prerelease;
-        }
-        false
-    }
-
     pub fn parse(s: &str) -> Result<Self> {
         let s = s.trim();
         if s.is_empty() {
@@ -106,7 +90,7 @@ impl fmt::Display for Version {
 
 impl PartialOrd for Version {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
+        Some(std::cmp::Ord::cmp(self, other))
     }
 }
 

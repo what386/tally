@@ -37,31 +37,4 @@ impl Task {
         }
     }
 
-    /// Mark task as complete
-    pub fn mark_complete(&mut self, commit: Option<String>, version: Option<Version>) {
-        self.completed = true;
-        self.completed_at_time = Some(Utc::now());
-        self.completed_at_commit = commit;
-        self.completed_at_version = version;
-    }
-
-    /// Check if task matches any of the given tags
-    pub fn has_any_tag(&self, tags: &[String]) -> bool {
-        tags.iter().any(|t| self.tags.contains(t))
-    }
-
-    /// Check if task has all given tags
-    pub fn has_all_tags(&self, tags: &[String]) -> bool {
-        tags.iter().all(|t| self.tags.contains(t))
-    }
-
-    /// Check if task is older than given duration (in days)
-    pub fn is_older_than_days(&self, days: u32) -> bool {
-        if let Some(completed_time) = self.completed_at_time {
-            let age = Utc::now().signed_duration_since(completed_time);
-            age.num_days() > days as i64
-        } else {
-            false
-        }
-    }
 }

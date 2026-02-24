@@ -25,16 +25,14 @@ pub fn cmd_changelog(from: Option<String>, to: Option<String>) -> Result<()> {
     let mut releases = Vec::new();
 
     for (version, entries) in entries_by_version.iter().rev() {
-        if let Some(ref from_v) = from_version {
-            if version < from_v {
+        if let Some(ref from_v) = from_version
+            && version < from_v {
                 continue;
             }
-        }
-        if let Some(ref to_v) = to_version {
-            if version > to_v {
+        if let Some(ref to_v) = to_version
+            && version > to_v {
                 continue;
             }
-        }
 
         // Build tasks from history entries for Release::from_tasks
         // We construct temporary Task-like data via the changes

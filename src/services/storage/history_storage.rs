@@ -124,20 +124,6 @@ impl HistoryStorage {
             .collect()
     }
 
-    /// Get all entries between two versions (inclusive)
-    pub fn entries_between_versions(&self, from: &Version, to: &Version) -> Vec<&HistoryEntry> {
-        self.entries
-            .iter()
-            .filter(|e| {
-                if let Some(v) = &e.version {
-                    v >= from && v <= to
-                } else {
-                    false
-                }
-            })
-            .collect()
-    }
-
     /// Get all versioned entries grouped by version
     pub fn entries_by_version(&self) -> std::collections::BTreeMap<Version, Vec<&HistoryEntry>> {
         let mut map = std::collections::BTreeMap::new();
@@ -151,25 +137,6 @@ impl HistoryStorage {
         map
     }
 
-    /// Get all unversioned entries
-    pub fn unversioned_entries(&self) -> Vec<&HistoryEntry> {
-        self.entries
-            .iter()
-            .filter(|e| e.version.is_none())
-            .collect()
-    }
-
-    pub fn entries(&self) -> &[HistoryEntry] {
-        &self.entries
-    }
-
-    pub fn len(&self) -> usize {
-        self.entries.len()
-    }
-
-    pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
-    }
 }
 
 #[cfg(test)]

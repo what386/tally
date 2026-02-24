@@ -47,7 +47,7 @@ pub fn cmd_semver(version_str: String, dry_run: bool, summary: bool, auto: bool)
     }
 
     // Record all completed tasks to history before versioning
-    let task_refs: Vec<&crate::models::tasks::Task> = unversioned.iter().copied().collect();
+    let task_refs: Vec<&crate::models::tasks::Task> = unversioned.to_vec();
     history.record_all(&task_refs)?;
 
     // Assign version in TODO.md

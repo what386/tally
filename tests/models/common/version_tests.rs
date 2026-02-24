@@ -35,7 +35,5 @@ fn comparison_handles_prerelease_and_numeric_ordering() {
     let newer_patch = Version::new(1, 2, 4, false);
 
     assert!(stable > prerelease);
-    assert!(stable.is_newer_than(&prerelease));
     assert!(newer_patch > stable);
-    assert!(newer_patch.is_newer_than(&stable));
 }

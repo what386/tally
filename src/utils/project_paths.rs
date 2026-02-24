@@ -39,7 +39,6 @@ pub struct ProjectPaths {
     pub config_file: PathBuf,
     pub hooks_dir: PathBuf,
     pub ignore_file: PathBuf,
-    pub tally_dir: PathBuf,
     pub root: PathBuf,
 }
 
@@ -49,14 +48,13 @@ impl ProjectPaths {
         let root = find_project_root()?;
         let tally_dir = root.join(".tally");
 
-        let config_file: PathBuf;
         let conf = tally_dir.join("config.toml");
-        if conf.exists() {
-            config_file = conf;
+        let config_file: PathBuf = if conf.exists() {
+            conf
         } else {
             let config_dir = global_config_dir()?;
-            config_file = config_dir.join("config.toml");
-        }
+            config_dir.join("config.toml")
+        };
 
         Ok(Self {
             todo_file: root.join("TODO.md"),
@@ -64,7 +62,6 @@ impl ProjectPaths {
             config_file,
             ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
-            tally_dir,
             root,
         })
     }
@@ -75,15 +72,13 @@ impl ProjectPaths {
         let tally_dir = root.join(".tally");
         let hooks_dir = tally_dir.join("hooks");
 
-        let config_file: PathBuf;
         let conf = tally_dir.join("config.toml");
-
-        if conf.exists() {
-            config_file = conf;
+        let config_file: PathBuf = if conf.exists() {
+            conf
         } else {
             let config_dir = global_config_dir()?;
-            config_file = config_dir.join("config.toml");
-        }
+            config_dir.join("config.toml")
+        };
 
         std::fs::create_dir_all(&tally_dir)?;
         std::fs::create_dir_all(&hooks_dir)?;
@@ -94,7 +89,6 @@ impl ProjectPaths {
             config_file,
             ignore_file: tally_dir.join("ignore"),
             hooks_dir: tally_dir.join("hooks"),
-            tally_dir,
             root,
         })
     }

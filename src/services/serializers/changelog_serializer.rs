@@ -21,11 +21,6 @@ pub fn to_markdown(changelog: &Log) -> String {
     output
 }
 
-/// Convert Changelog to JSON format
-pub fn to_json(changelog: &Log) -> serde_json::Result<String> {
-    serde_json::to_string_pretty(changelog)
-}
-
 fn release_to_markdown(release: &Release) -> String {
     let mut output = String::new();
 

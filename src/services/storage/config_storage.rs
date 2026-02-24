@@ -51,10 +51,6 @@ impl ConfigStorage {
         &self.config
     }
 
-    pub fn get_mut_config(&mut self) -> &mut AppConfig {
-        &mut self.config
-    }
-
     /// Sets a configuration value at the given key path (e.g., "github.api_token").
     pub fn try_set_value(&mut self, key_path: &str, value: &str) -> Result<(), String> {
         if key_path.trim().is_empty() {
@@ -117,17 +113,10 @@ impl ConfigStorage {
     pub fn get_flattened_config(&self) -> HashMap<String, String> {
         let root =
             toml::Value::try_from(&self.config).unwrap_or(toml::Value::Table(Default::default()));
-        self.flatten_value(&root, "", 10, 0)
-    }
-
-    /// Resets all configuration to defaults.
-    pub fn reset_to_defaults(&mut self) -> Result<()> {
-        self.config = AppConfig::default();
-        self.save_config()
+        Self::flatten_value(&root, "", 10, 0)
     }
 
     fn flatten_value(
-        &self,
         value: &toml::Value,
         prefix: &str,
         max_depth: usize,
@@ -159,7 +148,7 @@ impl ConfigStorage {
                     } else {
                         format!("{}.{}", prefix, key)
                     };
-                    result.extend(self.flatten_value(
+                    result.extend(Self::flatten_value(
                         val,
                         &new_prefix,
                         max_depth,

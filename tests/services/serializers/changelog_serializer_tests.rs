@@ -59,7 +59,7 @@ fn to_markdown_renders_sections_tags_and_short_commits() {
 }
 
 #[test]
-fn to_json_emits_valid_payload() {
+fn serde_json_emits_valid_payload() {
     let release = Release {
         version: Version::new(0, 5, 0, false),
         date: Utc.with_ymd_and_hms(2026, 2, 2, 0, 0, 0).unwrap(),
@@ -73,7 +73,7 @@ fn to_json_emits_valid_payload() {
         generated_at: Utc.with_ymd_and_hms(2026, 2, 23, 0, 0, 0).unwrap(),
     };
 
-    let json = to_json(&log).unwrap();
+    let json = serde_json::to_string_pretty(&log).unwrap();
     let value: serde_json::Value = serde_json::from_str(&json).unwrap();
 
     assert_eq!(value["project_name"], "tally");

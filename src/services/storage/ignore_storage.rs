@@ -57,9 +57,6 @@ impl IgnoreStorage {
         })
     }
 
-    pub fn is_empty(&self) -> bool {
-        self.rules.is_empty()
-    }
 }
 
 /// Simple glob matching supporting only `*` as a wildcard (matches any number of chars).
