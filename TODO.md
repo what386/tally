@@ -14,9 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] Remove dead code methods flagged by clippy (high) #cleanup
-      @created 2026-02-24 21:40
-
 
 ## Completed
 
@@ -59,4 +56,8 @@
 - [x] Fix clippy warnings across command, model, and storage modules (high) #cleanup
       @created 2026-02-24 21:35
       @completed 2026-02-24 21:38
+
+- [x] Remove dead code methods flagged by clippy (high) #cleanup
+      @created 2026-02-24 21:40
+      @completed 2026-02-24 21:42
 
