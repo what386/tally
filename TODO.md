@@ -1,7 +1,7 @@
 # TODO — tally v0.6.0
 
 @created: 2026-01-31
-@modified: 2026-02-24
+@modified: 2026-02-26
 
 ## Tasks
 
@@ -13,6 +13,9 @@
 
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
+
+- [ ] Add --auto and config auto-commit support to changelog command (high) #feature
+      @created 2026-02-26 18:39
 
 
 ## Completed
