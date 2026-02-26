@@ -14,9 +14,6 @@
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
 
-- [ ] Add --auto and config auto-commit support to changelog command (high) #feature
-      @created 2026-02-26 18:39
-
 
 ## Completed
 
@@ -65,4 +62,8 @@
       @created 2026-02-24 21:40
       @completed 2026-02-24 21:42
       @completed_version 0.6.0
+
+- [x] Add --auto and config auto-commit support to changelog command (high) #feature
+      @created 2026-02-26 18:39
+      @completed 2026-02-26 18:41
 

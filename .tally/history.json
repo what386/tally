@@ -366,5 +366,17 @@
       "patch": 0,
       "is_prerelease": false
     }
+  },
+  {
+    "change": {
+      "description": "Add --auto and config auto-commit support to changelog command",
+      "priority": "High",
+      "tags": [
+        "feature"
+      ],
+      "commit": null,
+      "completed_at": "2026-02-26T18:41:19.912498998Z"
+    },
+    "version": null
   }
 ]
