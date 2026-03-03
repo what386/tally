@@ -106,7 +106,7 @@ jobs:
         run: |
           {
             echo "body<<__RELEASE_NOTES__"
-            ./scripts/release/changelog_for_tag.bash "${{ needs.guard.outputs.tag_name }}"
+            ./scripts/changelog_for_tag.bash "${{ needs.guard.outputs.tag_name }}"
             echo "__RELEASE_NOTES__"
           } >> "$GITHUB_OUTPUT"
       - name: Create release
