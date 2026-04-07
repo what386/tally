@@ -221,6 +221,18 @@ Filter by tags and priority:
 tally list --tags bug,parser --priority high
 ```
 
+Show only completed tasks:
+
+```bash
+tally list --done
+```
+
+Filter completed tasks by exact semver:
+
+```bash
+tally list --semver v0.6.0
+```
+
 Output as JSON:
 
 ```bash
