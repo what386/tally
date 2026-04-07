@@ -1,7 +1,7 @@
 # TODO — tally v0.6.0
 
 @created: 2026-01-31
-@modified: 2026-02-26
+@modified: 2026-04-07
 
 ## Tasks
 
@@ -13,6 +13,12 @@
 
 - [ ] consider removing dead functions (low) #cleanup
       @created 2026-02-02 02:42
+
+- [ ] Add --done and --semver filters to tally list (high) #feature #ux
+      @created 2026-04-07 01:55
+
+- [ ] Add --done and --semver filters to tally list (high) #feature #ux
+      @created 2026-04-07 01:58
 
 
 ## Completed
