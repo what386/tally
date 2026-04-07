@@ -15,9 +15,6 @@
       @created 2026-02-02 02:42
 
 - [ ] Add --done and --semver filters to tally list (high) #feature #ux
-      @created 2026-04-07 01:55
-
-- [ ] Add --done and --semver filters to tally list (high) #feature #ux
       @created 2026-04-07 01:58
 
 
@@ -72,4 +69,8 @@
 - [x] Add --auto and config auto-commit support to changelog command (high) #feature
       @created 2026-02-26 18:39
       @completed 2026-02-26 18:41
+
+- [x] Add --done and --semver filters to tally list (high) #feature #ux
+      @created 2026-04-07 01:55
+      @completed 2026-04-07 02:40
 

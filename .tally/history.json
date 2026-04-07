@@ -378,5 +378,18 @@
       "completed_at": "2026-02-26T18:41:19.912498998Z"
     },
     "version": null
+  },
+  {
+    "change": {
+      "description": "Add --done and --semver filters to tally list",
+      "priority": "High",
+      "tags": [
+        "feature",
+        "ux"
+      ],
+      "commit": null,
+      "completed_at": "2026-04-07T02:40:57.474553848Z"
+    },
+    "version": null
   }
 ]
