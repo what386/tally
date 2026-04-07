@@ -2,37 +2,53 @@
 
 set -euo pipefail
 
+// Color output
+readonly RED = "\033[0;31m"
+readonly GREEN = "\033[0;32m"
+readonly BLUE = "\033[0;34m"
+readonly NC = "\033[0m"
+
 // Remotes to publish on
-@define GITHUB true
-@define CARGO true
+@define PUBLISH_GITHUB true
+@define PUBLISH_CRATE true
 
 if #argv == 0 || #argv > 1
-    echo "Invalid version"
+    echo -e $"{RED}Invalid version{NC}"
     exit 1
 end
 
-const version = argv[0]
+let version = argv[0]
 
-tally semver $version --auto
+git checkout dev
+
+tally semver $version
+
+if $(tally list --done --semver $version) == "No tasks found."
+    echo -e $"{RED}No completed tasks for version.{NC}"
+    exit 1
+end
+
 tally changelog > CHANGELOG.md
 
-git checkout main
+git add CHANGELOG.md TODO.md .tally/history.json
 
-echo "Merging dev into main..."
+git commit -m "Update changelog"
+
+echo -e $"{BLUE}Pushing dev branch to remotes...{NC}"
+git push github dev
+git push gitea dev
+
+echo -e $"{BLUE}Merging dev into main...{NC}"
+git checkout main
 git merge dev -m "Merge dev into main"
 
-echo "Pushing main branch to remotes..."
+echo -e $"{BLUE}Pushing main branch to remotes...{NC}"
 git push github main
 git push gitea main
 
 git tag $version
 
-@if defined(GITHUB) && GITHUB == "true"
-git push github $version
-@end
-
-@if defined(CARGO) && CARGO == "true"
-cargo publish
-@end
-
 git checkout dev
+
+echo -e $"{GREEN}Publish successful!{NC}"
+
