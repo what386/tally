@@ -1,4 +1,4 @@
-# TODO — tally v0.6.0
+# TODO — tally v0.7.0
 
 @created: 2026-01-31
 @modified: 2026-04-07
@@ -69,8 +69,10 @@
 - [x] Add --auto and config auto-commit support to changelog command (high) #feature
       @created 2026-02-26 18:39
       @completed 2026-02-26 18:41
+      @completed_version 0.7.0
 
 - [x] Add --done and --semver filters to tally list (high) #feature #ux
       @created 2026-04-07 01:55
       @completed 2026-04-07 02:40
+      @completed_version 0.7.0
 
