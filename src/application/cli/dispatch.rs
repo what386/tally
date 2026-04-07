@@ -30,8 +30,10 @@ impl Cli {
             Commands::List {
                 tags,
                 priority,
+                done,
+                semver,
                 json,
-            } => commands::cmd_list(tags, priority, json),
+            } => commands::cmd_list(tags, priority, done, semver, json),
 
             Commands::Semver {
                 version,

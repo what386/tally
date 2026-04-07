@@ -1,23 +1,27 @@
-use crate::models::common::Priority;
+use crate::models::common::{Priority, Version};
+use crate::models::tasks::Task;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 
-pub fn cmd_list(tags: Option<Vec<String>>, priority: Option<Priority>, json: bool) -> Result<()> {
+pub fn cmd_list(
+    tags: Option<Vec<String>>,
+    priority: Option<Priority>,
+    done: bool,
+    semver: Option<String>,
+    json: bool,
+) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let storage = ListStorage::new(&paths.todo_file)?;
+    let semver = semver.as_deref().map(Version::parse).transpose()?;
 
-    let mut tasks: Vec<_> = storage.tasks().iter().enumerate().collect();
-
-    // Filter by tags
-    if let Some(ref filter_tags) = tags {
-        tasks.retain(|(_, task)| filter_tags.iter().any(|tag| task.tags.contains(tag)));
-    }
-
-    // Filter by priority
-    if let Some(ref filter_priority) = priority {
-        tasks.retain(|(_, task)| &task.priority == filter_priority);
-    }
+    let tasks = filter_tasks(
+        storage.tasks(),
+        tags.as_deref(),
+        priority.as_ref(),
+        done,
+        semver.as_ref(),
+    );
 
     if json {
         // Output as JSON
@@ -72,3 +76,37 @@ pub fn cmd_list(tags: Option<Vec<String>>, priority: Option<Priority>, json: boo
 
     Ok(())
 }
+
+fn filter_tasks<'a>(
+    tasks: &'a [Task],
+    tags: Option<&[String]>,
+    priority: Option<&Priority>,
+    done: bool,
+    semver: Option<&Version>,
+) -> Vec<(usize, &'a Task)> {
+    let mut tasks: Vec<_> = tasks.iter().enumerate().collect();
+
+    if let Some(filter_tags) = tags {
+        tasks.retain(|(_, task)| filter_tags.iter().any(|tag| task.tags.contains(tag)));
+    }
+
+    if let Some(filter_priority) = priority {
+        tasks.retain(|(_, task)| &task.priority == filter_priority);
+    }
+
+    if done {
+        tasks.retain(|(_, task)| task.completed);
+    }
+
+    if let Some(filter_semver) = semver {
+        tasks.retain(|(_, task)| {
+            task.completed && task.completed_at_version.as_ref() == Some(filter_semver)
+        });
+    }
+
+    tasks
+}
+
+#[cfg(test)]
+#[path = "../../../tests/application/commands/list_tests.rs"]
+mod tests;

@@ -94,11 +94,13 @@ pub enum Commands {
     /// Display tasks
     #[command(
         long_about = "Display tasks with optional filtering and formatting.\n\n\
-        View all tasks, or filter by tags or priority. \
+        View all tasks, or filter by tags, priority, completion status, or semver. \
         Output as human-readable text or raw JSON.\n\n\
         EXAMPLES:\n  \
         tally list\n  \
         tally list --tags bug,parser --priority high\n  \
+        tally list --done\n  \
+        tally list --semver v0.2.3\n  \
         tally list --json"
     )]
     List {
@@ -109,6 +111,14 @@ pub enum Commands {
         /// Filter by priority level
         #[arg(short, long, value_enum)]
         priority: Option<Priority>,
+
+        /// Show only completed tasks
+        #[arg(long, default_value_t = false)]
+        done: bool,
+
+        /// Filter by completed semver (e.g., v0.2.3)
+        #[arg(long)]
+        semver: Option<String>,
 
         /// Output in JSON format
         #[arg(long, default_value_t = false)]
