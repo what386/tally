@@ -20,9 +20,10 @@ pub fn cmd_remove(description: String, dry_run: bool, auto: bool) -> Result<()> 
 
     for (i, task) in tasks.iter().enumerate() {
         if let Some(score) = matcher.fuzzy_match(&task.description, &description)
-            && (best_match.is_none() || score > best_match.unwrap().1) {
-                best_match = Some((i, score));
-            }
+            && (best_match.is_none() || score > best_match.unwrap().1)
+        {
+            best_match = Some((i, score));
+        }
     }
 
     match best_match {

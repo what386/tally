@@ -36,5 +36,4 @@ impl Task {
             completed_at_commit: None,
         }
     }
-
 }

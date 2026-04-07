@@ -122,5 +122,4 @@ impl ListStorage {
     pub fn project_name(&self) -> &str {
         &self.todo_list.project_name
     }
-
 }

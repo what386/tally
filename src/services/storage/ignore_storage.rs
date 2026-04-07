@@ -56,7 +56,6 @@ impl IgnoreStorage {
             IgnoreRule::Tag(tag) => tags.iter().any(|t| t.to_lowercase() == *tag),
         })
     }
-
 }
 
 /// Simple glob matching supporting only `*` as a wildcard (matches any number of chars).

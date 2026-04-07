@@ -16,7 +16,8 @@ pub fn cmd_edit() -> Result<()> {
 
     if let Some(editor) = config
         .preferences
-        .editor.as_deref()
+        .editor
+        .as_deref()
         .map(str::trim)
         .filter(|s| !s.is_empty())
     {

@@ -17,9 +17,7 @@ fn set_git_hooks_path(repo_path: &Path, hooks_path: &Path) -> std::io::Result<()
         .status()?; // run in the repo directory
 
     if !status.success() {
-        Err(std::io::Error::other(
-            "Failed to set core.hooksPath",
-        ))
+        Err(std::io::Error::other("Failed to set core.hooksPath"))
     } else {
         Ok(())
     }

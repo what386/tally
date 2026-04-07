@@ -136,7 +136,6 @@ impl HistoryStorage {
         }
         map
     }
-
 }
 
 #[cfg(test)]
