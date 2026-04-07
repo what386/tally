@@ -23,7 +23,7 @@ git checkout dev
 
 tally semver $version
 
-if $(tally list --done --semver $version) == "No tasks found."
+if $(tally list --done --semver $version) == ""
     echo -e $"{RED}No completed tasks for version.{NC}"
     exit 1
 end
@@ -47,6 +47,16 @@ git push github main
 git push gitea main
 
 git tag $version
+
+@if PUBLISH_GITHUB == "true"
+git push github $version
+echo -e $"{GREEN}Published on Github{NC}"
+@end
+
+@if PUBLISH_CRATE == "true"
+cargo publish
+echo -e $"{GREEN}Published on Cargo{NC}"
+@end
 
 git checkout dev
 
