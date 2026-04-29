@@ -4,7 +4,6 @@ use crate::models::common::Version;
 use crate::models::tasks::List;
 use crate::services::git::hooks;
 use crate::services::serializers::todo_serializer;
-use crate::services::storage::project_registry_storage::ProjectRegistryStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 
@@ -42,13 +41,6 @@ pub fn cmd_init() -> Result<()> {
         println!("Created TODO.md");
     } else {
         println!("Using existing TODO.md");
-    }
-
-    let mut registry = ProjectRegistryStorage::new()?;
-    if registry.add_project(&paths.root)? {
-        println!("Registered project in ~/.config/tally/projects.json");
-    } else {
-        println!("Project already in ~/.config/tally/projects.json");
     }
 
     // Install git hooks if in a git repository

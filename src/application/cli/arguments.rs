@@ -272,18 +272,6 @@ pub enum Commands {
         action: ConfigAction,
     },
 
-    /// Cross-project commands using the global registry
-    #[command(long_about = "Manage and inspect all registered tally projects.\n\n\
-        Projects are stored in ~/.config/tally/projects.json.\n\n\
-        EXAMPLES:\n  \
-        tally projects list\n  \
-        tally projects status\n  \
-        tally projects prune")]
-    Projects {
-        #[command(subcommand)]
-        action: ProjectsAction,
-    },
-
     /// Display a summary for all tasks.
     #[command(
         long_about = "Display a summary dashboard of your project's tasks.\n\n\
@@ -330,14 +318,4 @@ pub enum ConfigAction {
         EXAMPLE:\n  \
         tally config list")]
     List,
-}
-
-#[derive(Subcommand)]
-pub enum ProjectsAction {
-    /// List all registered project roots
-    List,
-    /// Show aggregate status across all registered projects
-    Status,
-    /// Remove missing projects from the registry
-    Prune,
 }

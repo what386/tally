@@ -1,6 +1,6 @@
 use anyhow::Result;
 
-use crate::application::cli::arguments::{Cli, Commands, ConfigAction, ProjectsAction};
+use crate::application::cli::arguments::{Cli, Commands, ConfigAction};
 use crate::application::commands::{self, cmd_config_get};
 
 impl Cli {
@@ -71,12 +71,6 @@ impl Cli {
                 ConfigAction::List => commands::cmd_config_list(),
                 ConfigAction::Set { key, value } => commands::cmd_config_set(key, value),
                 ConfigAction::Get { key } => cmd_config_get(key),
-            },
-
-            Commands::Projects { action } => match action {
-                ProjectsAction::List => commands::cmd_projects_list(),
-                ProjectsAction::Status => commands::cmd_projects_status(),
-                ProjectsAction::Prune => commands::cmd_projects_prune(),
             },
         }
     }

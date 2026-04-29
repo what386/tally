@@ -8,10 +8,6 @@ pub fn global_config_dir() -> Result<PathBuf> {
         .ok_or_else(|| anyhow!("Unable to determine global config directory"))
 }
 
-pub fn global_registry_file() -> Result<PathBuf> {
-    Ok(global_config_dir()?.join("projects.json"))
-}
-
 pub fn find_project_root() -> Result<PathBuf> {
     let mut current = env::current_dir()?;
 
