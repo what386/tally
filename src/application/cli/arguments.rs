@@ -272,16 +272,6 @@ pub enum Commands {
         action: ConfigAction,
     },
 
-    /// Display a summary for all tasks.
-    #[command(
-        long_about = "Display a summary dashboard of your project's tasks.\n\n\
-        Shows overall progress, open tasks by priority, tag usage, and version \
-        statistics. Provides a quick overview without needing to piece together \
-        multiple commands.\n\n\
-        EXAMPLE:\n  \
-        tally status"
-    )]
-    Status,
 }
 
 #[derive(Subcommand)]
