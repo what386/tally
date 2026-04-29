@@ -1,7 +1,7 @@
-# TODO — tally v0.7.0
+# TODO — tally v0.8.0
 
 @created: 2026-01-31
-@modified: 2026-04-07
+@modified: 2026-04-29
 
 ## Tasks
 

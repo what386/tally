@@ -1,6 +1,6 @@
 # Changelog — tally
 
-*Generated on 2026-04-07*
+*Generated on 2026-04-29*
 
 ## 0.7.0 — 2026-04-07
 
