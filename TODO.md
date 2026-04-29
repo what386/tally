@@ -17,6 +17,9 @@
 - [ ] Add --done and --semver filters to tally list (high) #feature #ux
       @created 2026-04-07 01:58
 
+- [ ] trim features
+      @created 2026-04-29 03:04
+
 
 ## Completed
 
