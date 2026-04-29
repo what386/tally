@@ -79,4 +79,5 @@
 - [x] trim features
       @created 2026-04-29 03:04
       @completed 2026-04-29 03:05
+      @completed_version 0.8.0
 
