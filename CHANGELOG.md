@@ -2,6 +2,13 @@
 
 *Generated on 2026-04-29*
 
+## 0.8.0 — 2026-04-29
+
+### Changes
+
+- trim features
+
+
 ## 0.7.0 — 2026-04-07
 
 ### High Priority
