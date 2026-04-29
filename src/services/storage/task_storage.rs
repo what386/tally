@@ -53,11 +53,6 @@ impl ListStorage {
         Ok(())
     }
 
-    /// Get a reference to the entire list
-    pub fn list(&self) -> &List {
-        &self.todo_list
-    }
-
     /// Add a new task and save
     pub fn add_task(&mut self, task: Task) -> Result<()> {
         self.todo_list.add_task(task);

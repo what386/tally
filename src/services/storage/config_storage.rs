@@ -1,5 +1,7 @@
 use anyhow::Result;
+#[cfg(test)]
 use serde::de::DeserializeOwned;
+#[cfg(test)]
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::{fs, io};
@@ -52,6 +54,7 @@ impl ConfigStorage {
     }
 
     /// Sets a configuration value at the given key path (e.g., "github.api_token").
+    #[cfg(test)]
     pub fn try_set_value(&mut self, key_path: &str, value: &str) -> Result<(), String> {
         if key_path.trim().is_empty() {
             return Err("Key path cannot be empty".into());
@@ -84,6 +87,7 @@ impl ConfigStorage {
     }
 
     /// Gets a configuration value at the given key path.
+    #[cfg(test)]
     pub fn try_get_value<T>(&self, key_path: &str) -> Result<T, String>
     where
         T: DeserializeOwned,
@@ -95,6 +99,7 @@ impl ConfigStorage {
             .map_err(|e| format!("Failed to deserialize '{}': {}", key_path, e))
     }
 
+    #[cfg(test)]
     fn get_value(&self, key_path: &str) -> Result<toml::Value, String> {
         let root = toml::Value::try_from(&self.config)
             .map_err(|e| format!("Failed to serialize config: {}", e))?;
@@ -110,12 +115,15 @@ impl ConfigStorage {
     }
 
     /// Gets all configuration keys and values as flattened dot-notation paths.
+    #[cfg(test)]
+    #[allow(dead_code)]
     pub fn get_flattened_config(&self) -> HashMap<String, String> {
         let root =
             toml::Value::try_from(&self.config).unwrap_or(toml::Value::Table(Default::default()));
         Self::flatten_value(&root, "", 10, 0)
     }
 
+    #[cfg(test)]
     fn flatten_value(
         value: &toml::Value,
         prefix: &str,
@@ -162,6 +170,7 @@ impl ConfigStorage {
         result
     }
 
+    #[cfg(test)]
     fn convert_value(&self, value: &str) -> Result<toml::Value, String> {
         // Try TOML literal first
         if let Ok(parsed) = value.parse::<toml::Value>() {
