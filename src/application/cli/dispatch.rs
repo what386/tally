@@ -1,7 +1,7 @@
 use anyhow::Result;
 
-use crate::application::cli::arguments::{Cli, Commands, ConfigAction};
-use crate::application::commands::{self, cmd_config_get};
+use crate::application::cli::arguments::{Cli, Commands};
+use crate::application::commands;
 
 impl Cli {
     pub fn run(self) -> Result<()> {
@@ -40,14 +40,6 @@ impl Cli {
                 auto,
             } => commands::cmd_semver(version, dry_run, summary, auto),
 
-            Commands::Tag {
-                version,
-                message,
-                dry_run,
-                summary,
-                auto,
-            } => commands::cmd_tag(version, message, dry_run, summary, auto),
-
             Commands::Prune {
                 days,
                 hours,
@@ -64,12 +56,6 @@ impl Cli {
             Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
 
             Commands::Scan { auto, dry_run } => commands::cmd_scan(auto, dry_run),
-
-            Commands::Config { action } => match action {
-                ConfigAction::List => commands::cmd_config_list(),
-                ConfigAction::Set { key, value } => commands::cmd_config_set(key, value),
-                ConfigAction::Get { key } => cmd_config_get(key),
-            },
         }
     }
 }

@@ -67,6 +67,6 @@ pub fn cmd_edit() -> Result<()> {
     }
 
     Err(anyhow!(
-        "No editor available. Set 'preferences.editor' with `tally config set preferences.editor <editor>` or export EDITOR"
+        "No editor available. Set 'preferences.editor' in .tally/config.toml (or ~/.config/tally/config.toml) or export EDITOR"
     ))
 }

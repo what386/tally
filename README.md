@@ -279,12 +279,6 @@ Show a summary:
 tally semver v1.0.0 --summary
 ```
 
-Automatically make a git tag, too:
-
-```bash
-tally tag v0.2.4
-```
-
 ---
 
 ### Changelog Generation
@@ -362,7 +356,7 @@ tally edit
 
 Uses:
 
-1. `preferences.editor` from `tally config`
+1. `preferences.editor` from `.tally/config.toml` (or `~/.config/tally/config.toml`)
 2. `$EDITOR`
 3. Common fallbacks (vim, nano, etc.)
 
@@ -377,27 +371,7 @@ Configuration is stored in:
 ~/.config/tally/config.toml (fallback)
 ```
 
-Manage configuration via:
-
-```bash
-tally config <action>
-```
-
-Available actions:
-
-| Action | Description                    |
-| ------ | ------------------------------ |
-| `set`  | Set a configuration value      |
-| `get`  | Retrieve a configuration value |
-| `list` | List all configuration keys    |
-
-Examples:
-
-```bash
-tally config set preferences.editor vim
-tally config get preferences.editor
-tally config list
-```
+Edit these files directly to update preferences.
 
 ---
 

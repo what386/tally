@@ -1,6 +1,4 @@
-use std::process::Command;
-
-use anyhow::{Result, anyhow};
+use anyhow::Result;
 
 use crate::models::common::Version;
 use crate::services::git::commits;
@@ -69,51 +67,6 @@ pub fn cmd_semver(version_str: String, dry_run: bool, summary: bool, auto: bool)
     if auto || config.preferences.auto_commit_todo {
         commits::commit_tally_files("update TODO: set semver")?;
     }
-
-    Ok(())
-}
-
-pub fn cmd_tag(
-    version_str: String,
-    message: Option<String>,
-    dry_run: bool,
-    summary: bool,
-    auto: bool,
-) -> Result<()> {
-    let paths = ProjectPaths::get_paths()?;
-
-    let tag_name = if version_str.starts_with('v') {
-        version_str.clone()
-    } else {
-        format!("v{}", version_str)
-    };
-
-    // Run release
-    cmd_semver(version_str.clone(), dry_run, summary, auto)?;
-
-    let msg = message.unwrap_or_else(|| format!("Release {}", tag_name));
-
-    if dry_run {
-        println!();
-        println!("Would commit TODO.md and .tally/history.json");
-        println!("Would create git tag: {} — {}", tag_name, msg);
-        return Ok(());
-    }
-
-    // Create annotated tag
-    let output = Command::new("git")
-        .args(["tag", "-a", &tag_name, "-m", &msg])
-        .current_dir(&paths.root)
-        .output()?;
-
-    if !output.status.success() {
-        return Err(anyhow!(
-            "Failed to create git tag: {}",
-            String::from_utf8_lossy(&output.stderr)
-        ));
-    }
-
-    println!("✓ Created git tag: {}", tag_name);
 
     Ok(())
 }

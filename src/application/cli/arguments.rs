@@ -151,34 +151,6 @@ pub enum Commands {
         auto: bool,
     },
 
-    /// Release and create a git tag
-    #[command(
-        long_about = "Assign a version to completed tasks and create a git tag.\n\n\
-        Runs 'tally release' then commits both the todo and command history before creating a git tag. \n
-        The tag name will always be prefixed with 'v' if not already.\n\n\
-        EXAMPLES:\n  \
-        tally tag v0.2.3\n  \
-        tally tag v1.0.0 --summary\n  \
-        tally tag v0.2.3 --message \"First stable release\"\n  \
-        tally tag v0.2.4 --dry-run"
-    )]
-    Tag {
-        /// Version string (e.g., v0.2.3)
-        version: String,
-        /// Custom tag message (defaults to "Release v0.2.3")
-        #[arg(short, long)]
-        message: Option<String>,
-        /// Show what would happen without making changes
-        #[arg(long, default_value_t = false)]
-        dry_run: bool,
-        /// Show tasks assigned to this version
-        #[arg(long, default_value_t = false)]
-        summary: bool,
-        /// Automatically commit TODO.md after semver
-        #[arg(long, default_value_t = false)]
-        auto: bool,
-    },
-
     /// Generate a changelog
     #[command(long_about = "Generate a changelog from completed tasks.\n\n\
         Create a changelog for a version range or until the current version.\n\n\
@@ -259,53 +231,4 @@ pub enum Commands {
         dry_run: bool,
     },
 
-    /// Manage preferences
-    #[command(long_about = "View and modify tally configuration.\n\n\
-        Configuration is stored in .tally/config.toml and includes settings like \
-        default priority, editor preferences, and changelog templates.\n\n\
-        EXAMPLES:\n  \
-        tally config set preferences.editor vim\n  \
-        tally config get preferences.editor\n  \
-        tally config list")]
-    Config {
-        #[command(subcommand)]
-        action: ConfigAction,
-    },
-
-}
-
-#[derive(Subcommand)]
-pub enum ConfigAction {
-    /// Set a configuration value
-    #[command(long_about = "Set one or more configuration values.\n\n\
-        Use dot notation for nested keys if needed. Values are stored in \
-        .tally/config.toml.\n\n\
-        EXAMPLES:\n  \
-        tally config set preferences.auto_commit_todo true\n  \
-        tally config set preferences.editor vim")]
-    Set {
-        /// Configuration key
-        key: String,
-
-        /// Configuration value
-        value: String,
-    },
-
-    /// Get a configuration value
-    #[command(long_about = "Retrieve a configuration value.\n\n\
-        Displays the current value for the specified configuration key.\n\n\
-        EXAMPLES:\n  \
-        tally config get preferences.auto_commit_todo\n  \
-        tally config get preferences.editor")]
-    Get {
-        /// Configuration key to retrieve
-        key: String,
-    },
-
-    /// List all configuration keys and values
-    #[command(long_about = "Display all configuration settings.\n\n\
-        Shows all current configuration keys and their values.\n\n\
-        EXAMPLE:\n  \
-        tally config list")]
-    List,
 }
