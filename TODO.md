@@ -23,6 +23,9 @@
 - [ ] add source scanner function
       @created 2026-05-14 01:48
 
+- [ ] remove some commands
+      @created 2026-05-14 01:48
+
 
 ## Completed
 
