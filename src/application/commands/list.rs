@@ -1,4 +1,4 @@
-use crate::models::common::Priority;
+use crate::models::common::{Priority, Version};
 use crate::models::tasks::Task;
 use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::task_storage::ListStorage;
@@ -15,14 +15,14 @@ pub fn cmd_list(
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let storage = ListStorage::new(&paths.todo_file)?;
-    if let Some(released_filter) = released {
-        let released_tag = (released_filter != "__all__").then_some(released_filter);
+    if let Some(released_version_str) = released {
+        let released_version = Version::parse(&released_version_str)?;
         return cmd_list_released(
             &paths.changelog_file,
             storage.project_name(),
             tags,
             priority,
-            released_tag,
+            released_version,
             json,
         );
     }
@@ -95,13 +95,16 @@ fn cmd_list_released(
     project_name: &str,
     tags: Option<Vec<String>>,
     priority: Option<Priority>,
-    released_tag: Option<String>,
+    released_version: Version,
     json: bool,
 ) -> Result<()> {
     let changelog = ChangelogStorage::new(changelog_file, project_name)?;
     let mut entries: Vec<ReleasedEntry> = Vec::new();
 
     for release in changelog.log().releases.iter().rev() {
+        if release.version != released_version {
+            continue;
+        }
         for group in release.changes_by_priority.values() {
             for change in group {
                 if let Some(filter_tags) = tags.as_ref()
@@ -109,12 +112,6 @@ fn cmd_list_released(
                 {
                     continue;
                 }
-                if let Some(tag) = released_tag.as_ref()
-                    && !change.tags.contains(tag)
-                {
-                    continue;
-                }
-
                 if let Some(filter_priority) = priority.as_ref()
                     && &change.priority != filter_priority
                 {

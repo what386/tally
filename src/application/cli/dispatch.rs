@@ -40,9 +40,10 @@ impl Cli {
             Commands::Remove {
                 description,
                 released,
+                tags,
                 dry_run,
                 auto,
-            } => commands::cmd_remove(join_words(description), released, dry_run, auto),
+            } => commands::cmd_remove(join_words(description), released, tags, dry_run, auto),
 
             Commands::Yank {
                 description,

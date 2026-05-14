@@ -62,8 +62,8 @@ pub enum Commands {
         /// Show only completed tasks.
         #[arg(long, default_value_t = false)]
         done: bool,
-        /// List released tasks from CHANGELOG.md; optionally filter by tag.
-        #[arg(short = 'r', long, num_args = 0..=1, default_missing_value = "__all__")]
+        /// List released tasks from CHANGELOG.md for a specific version.
+        #[arg(short = 'r', long)]
         released: Option<String>,
         /// Output results as JSON.
         #[arg(long, default_value_t = false)]
@@ -90,9 +90,12 @@ pub enum Commands {
         /// Task text to match.
         #[arg(required = true, num_args = 1..)]
         description: Vec<String>,
-        /// Remove from CHANGELOG.md instead of TODO.md; optionally filter by tag.
-        #[arg(short = 'r', long, num_args = 0..=1, default_missing_value = "__all__")]
+        /// Remove from CHANGELOG.md in a specific version instead of TODO.md.
+        #[arg(short = 'r', long)]
         released: Option<String>,
+        /// Filter candidate tasks by one or more comma-separated tags before matching.
+        #[arg(short, long, value_delimiter = ',')]
+        tags: Option<Vec<String>>,
         /// Show what would be removed without writing TODO.md.
         #[arg(long, default_value_t = false)]
         dry_run: bool,

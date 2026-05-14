@@ -4,19 +4,21 @@ use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
+use crate::models::common::Version;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 
 pub fn cmd_remove(
     description: String,
     released: Option<String>,
+    tags: Option<Vec<String>>,
     dry_run: bool,
     auto: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
-    if let Some(released_filter) = released {
-        let released_tag = (released_filter != "__all__").then_some(released_filter);
-        return cmd_remove_released(description, released_tag, dry_run, auto);
+    if let Some(released_version_str) = released {
+        let released_version = Version::parse(&released_version_str)?;
+        return cmd_remove_released(description, released_version, tags, dry_run, auto);
     }
 
     let mut storage = ListStorage::new(&paths.todo_file)?;
@@ -28,6 +30,11 @@ pub fn cmd_remove(
     let mut best_match: Option<(usize, i64)> = None;
 
     for (i, task) in tasks.iter().enumerate() {
+        if let Some(filter_tags) = tags.as_ref()
+            && !filter_tags.iter().any(|tag| task.tags.contains(tag))
+        {
+            continue;
+        }
         if let Some(score) = matcher.fuzzy_match(&task.description, &description)
             && (best_match.is_none() || score > best_match.unwrap().1)
         {
@@ -77,7 +84,8 @@ pub fn cmd_remove(
 
 fn cmd_remove_released(
     description: String,
-    released_tag: Option<String>,
+    released_version: Version,
+    tags: Option<Vec<String>>,
     dry_run: bool,
     auto: bool,
 ) -> Result<()> {
@@ -88,8 +96,7 @@ fn cmd_remove_released(
     let config = config_storage.get_config();
 
     if dry_run {
-        if let Some((v, change)) =
-            changelog.remove_change(&description, None, released_tag.as_deref())
+        if let Some((v, change)) = changelog.remove_change(&description, Some(&released_version), tags.as_deref())
         {
             println!("Would remove from {}: {}", v, change.description);
         } else {
@@ -98,7 +105,11 @@ fn cmd_remove_released(
         return Ok(());
     }
 
-    if let Some((v, change)) = changelog.remove_change(&description, None, released_tag.as_deref())
+    if let Some((v, change)) = changelog.remove_change(
+        &description,
+        Some(&released_version),
+        tags.as_deref(),
+    )
     {
         changelog.save()?;
         println!("Removed from {}: {}", v, change.description);

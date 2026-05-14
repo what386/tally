@@ -116,7 +116,7 @@ impl ChangelogStorage {
         &mut self,
         query: &str,
         version: Option<&Version>,
-        tag_filter: Option<&str>,
+        tag_filter: Option<&[String]>,
     ) -> Option<(Version, Change)> {
         use fuzzy_matcher::skim::SkimMatcherV2;
         use fuzzy_matcher::FuzzyMatcher;
@@ -138,8 +138,8 @@ impl ChangelogStorage {
                 .collect();
 
             for (ci, change) in changes.iter().enumerate() {
-                if let Some(tag) = tag_filter
-                    && !change.tags.iter().any(|t| t == tag)
+                if let Some(tags) = tag_filter
+                    && !tags.iter().any(|tag| change.tags.contains(tag))
                 {
                     continue;
                 }
