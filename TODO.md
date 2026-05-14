@@ -1,7 +1,7 @@
-# TODO — tally v0.8.0
+# TODO — tally
 
 @created: 2026-01-31
-@modified: 2026-04-29
+@modified: 2026-05-14
 
 ## Tasks
 
@@ -16,6 +16,9 @@
 
 - [ ] Add --done and --semver filters to tally list (high) #feature #ux
       @created 2026-04-07 01:58
+
+- [ ] reformat to use CHANGELOG as storage and TODO as scratchpad
+      @created 2026-05-14 01:48
 
 
 ## Completed
