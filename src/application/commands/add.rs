@@ -13,7 +13,7 @@ pub fn cmd_add(
     dry_run: bool,
     auto: bool,
 ) -> Result<()> {
-    let paths = ProjectPaths::get_paths()?;
+    let paths = ProjectPaths::get_paths().or_else(|_| ProjectPaths::for_current_dir())?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();

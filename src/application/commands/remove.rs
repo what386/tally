@@ -1,6 +1,5 @@
 use crate::services::git::commits;
 use crate::services::storage::config_storage::ConfigStorage;
-use crate::services::storage::history_storage::HistoryStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
@@ -10,7 +9,6 @@ use fuzzy_matcher::skim::SkimMatcherV2;
 pub fn cmd_remove(description: String, dry_run: bool, auto: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
-    let mut history = HistoryStorage::new(&paths.history_file)?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();
 
@@ -44,15 +42,7 @@ pub fn cmd_remove(description: String, dry_run: bool, auto: bool) -> Result<()> 
                 println!("Would remove (match: {:.0}%):", score_pct);
                 let checkbox = if task.completed { "x" } else { " " };
                 println!("  [{}] {}", checkbox, task.description);
-                if task.completed {
-                    println!("  (completed task — will be saved to history first)");
-                }
                 return Ok(());
-            }
-
-            // If the task is completed, record it to history before removing
-            if task.completed {
-                history.record(task)?;
             }
 
             let removed = storage.remove_task(index)?;

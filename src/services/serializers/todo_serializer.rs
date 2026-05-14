@@ -18,13 +18,7 @@ struct TaskMetadata {
 pub fn serialize(list: &List) -> String {
     let mut output = String::new();
 
-    // --- Header ---
-    writeln!(
-        &mut output,
-        "# TODO — {} v{}\n",
-        list.project_name, list.project_version
-    )
-    .unwrap();
+    writeln!(&mut output, "# TODO — {}\n", list.project_name).unwrap();
 
     writeln!(&mut output, "@created: {}", format_date(&list.created_at)).unwrap();
     writeln!(&mut output, "@modified: {}", format_date(&list.modified_at)).unwrap();
@@ -35,14 +29,12 @@ pub fn serialize(list: &List) -> String {
     incomplete_tasks.sort_by_key(|t| t.created_at_time);
     completed_tasks.sort_by_key(|t| t.completed_at_time.unwrap_or(t.created_at_time));
 
-    // Tasks
     writeln!(&mut output, "\n## Tasks\n").unwrap();
     for task in incomplete_tasks {
         write_task(&mut output, task);
         output += "\n";
     }
 
-    // Completed
     if !completed_tasks.is_empty() {
         writeln!(&mut output, "\n## Completed\n").unwrap();
         for task in completed_tasks {
@@ -54,12 +46,11 @@ pub fn serialize(list: &List) -> String {
     output
 }
 
-/// Parse a TODO.md string into a List
 pub fn deserialize(content: &str) -> Result<List> {
     let mut lines = content.lines().peekable();
 
     let header = lines.next().context("Empty TODO file")?;
-    let (project_name, project_version) = parse_header(header)?;
+    let project_name = parse_header(header)?;
 
     let mut created_at = None;
     let mut modified_at = None;
@@ -84,7 +75,6 @@ pub fn deserialize(content: &str) -> Result<List> {
     while let Some(line) = lines.next() {
         match line.trim() {
             "## Tasks" | "## Completed" => {
-                // Parse tasks until next section or EOF
                 let section_tasks = parse_tasks(&mut lines)?;
                 tasks.extend(section_tasks);
             }
@@ -94,7 +84,7 @@ pub fn deserialize(content: &str) -> Result<List> {
 
     Ok(List {
         project_name,
-        project_version,
+        project_version: Version::new(0, 1, 0, false),
         created_at,
         modified_at,
         tasks,
@@ -177,11 +167,11 @@ fn format_datetime(dt: &DateTime<Utc>) -> String {
     dt.format("%Y-%m-%d %H:%M").to_string()
 }
 
-fn parse_header(line: &str) -> Result<(String, Version)> {
+fn parse_header(line: &str) -> Result<String> {
     let line = line.trim_start_matches('#').trim();
 
     if !line.starts_with("TODO —") && !line.starts_with("TODO -") {
-        anyhow::bail!("Invalid header format: expected 'TODO — [PROJECT] v[VERSION]'");
+        anyhow::bail!("Invalid header format: expected 'TODO — [PROJECT]'");
     }
 
     let line = line
@@ -189,14 +179,17 @@ fn parse_header(line: &str) -> Result<(String, Version)> {
         .trim_start_matches("TODO -")
         .trim();
 
-    let version_start = line.rfind(" v").context("No version found in header")?;
+    let project_name = if let Some(version_start) = line.rfind(" v") {
+        line[..version_start].trim().to_string()
+    } else {
+        line.to_string()
+    };
 
-    let project_name = line[..version_start].trim().to_string();
-    let version_str = line[version_start + 2..].trim();
+    if project_name.is_empty() {
+        anyhow::bail!("Missing project name in TODO header");
+    }
 
-    let version = Version::parse(version_str).context("Failed to parse version in header")?;
-
-    Ok((project_name, version))
+    Ok(project_name)
 }
 
 fn parse_date_line(line: &str) -> Result<DateTime<Utc>> {
@@ -325,10 +318,8 @@ fn parse_task_metadata(lines: &[String]) -> Result<TaskMetadata> {
         }
     }
 
-    let created_at_time = created_at_time.context("Task missing @created timestamp")?;
-
     Ok(TaskMetadata {
-        created_at_time,
+        created_at_time: created_at_time.context("Task missing @created metadata")?,
         created_at_version,
         created_at_commit,
         completed_at_time,
@@ -337,9 +328,9 @@ fn parse_task_metadata(lines: &[String]) -> Result<TaskMetadata> {
     })
 }
 
-fn parse_datetime(s: &str) -> Result<DateTime<Utc>> {
-    let naive = chrono::NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M")
-        .context(format!("Failed to parse datetime: {}", s))?;
+fn parse_datetime(value: &str) -> Result<DateTime<Utc>> {
+    let naive = chrono::NaiveDateTime::parse_from_str(value, "%Y-%m-%d %H:%M")
+        .context("Failed to parse datetime")?;
     Ok(DateTime::<Utc>::from_naive_utc_and_offset(naive, Utc))
 }
 

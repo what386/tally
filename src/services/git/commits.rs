@@ -2,19 +2,19 @@ use crate::utils::project_paths::ProjectPaths;
 use anyhow::{Result, anyhow};
 use std::process::Command;
 
-/// Auto-commits TODO.md and .tally/history.json to git
 pub fn commit_tally_files(message: &str) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
 
+    let mut files = vec!["TODO.md"];
+    if paths.changelog_file.exists() {
+        files.push("CHANGELOG.md");
+    }
+
+    let mut args = vec!["commit", "-m", message, "--"];
+    args.extend(files.iter().copied());
+
     let output = Command::new("git")
-        .args([
-            "commit",
-            "-m",
-            message,
-            "--",
-            "TODO.md",
-            ".tally/history.json",
-        ])
+        .args(args)
         .current_dir(&paths.root)
         .output()?;
 
@@ -25,7 +25,7 @@ pub fn commit_tally_files(message: &str) -> Result<()> {
         ));
     }
 
-    println!("Committed TODO.md and .tally/history.json");
+    println!("Committed {}", files.join(" and "));
 
     Ok(())
 }

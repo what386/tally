@@ -6,7 +6,6 @@ use crate::application::commands;
 impl Cli {
     pub fn run(self) -> Result<()> {
         match self.command {
-            Commands::Init => commands::cmd_init(),
             Commands::Edit => commands::cmd_edit(),
 
             Commands::Add {
@@ -29,9 +28,8 @@ impl Cli {
                 tags,
                 priority,
                 done,
-                semver,
                 json,
-            } => commands::cmd_list(tags, priority, done, semver, json),
+            } => commands::cmd_list(tags, priority, done, json),
 
             Commands::Semver {
                 version,
@@ -40,13 +38,6 @@ impl Cli {
                 auto,
             } => commands::cmd_semver(version, dry_run, summary, auto),
 
-            Commands::Prune {
-                days,
-                hours,
-                dry_run,
-                auto,
-            } => commands::cmd_prune(days, hours, dry_run, auto),
-
             Commands::Remove {
                 description,
                 dry_run,
@@ -54,6 +45,15 @@ impl Cli {
             } => commands::cmd_remove(description, dry_run, auto),
 
             Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
+
+            Commands::Released { version, query } => commands::cmd_released(version, query),
+
+            Commands::Unrelease {
+                description,
+                version,
+                dry_run,
+                auto,
+            } => commands::cmd_unrelease(description, version, dry_run, auto),
 
             Commands::Scan { auto, dry_run } => commands::cmd_scan(auto, dry_run),
         }

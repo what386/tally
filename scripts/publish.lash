@@ -23,14 +23,14 @@ git checkout dev
 
 tally semver $version
 
-if $(tally list --done --semver $version) == ""
+if $(tally released --version ) == ""
     echo -e $"{RED}No completed tasks for version.{NC}"
     exit 1
 end
 
 tally changelog > CHANGELOG.md
 
-git add CHANGELOG.md TODO.md .tally/history.json
+git add CHANGELOG.md TODO.md
 
 git commit -m "Update changelog"
 

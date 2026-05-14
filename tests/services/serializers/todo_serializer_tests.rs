@@ -42,13 +42,13 @@ fn serialize_deserialize_round_trip_preserves_task_metadata() {
     });
 
     let markdown = serialize(&list);
-    assert!(markdown.contains("# TODO — tally v0.5.0"));
+    assert!(markdown.contains("# TODO — tally"));
     assert!(markdown.contains("## Tasks"));
     assert!(markdown.contains("## Completed"));
 
     let parsed = deserialize(&markdown).unwrap();
     assert_eq!(parsed.project_name, "tally");
-    assert_eq!(parsed.project_version.to_string(), "0.5.0");
+    assert_eq!(parsed.project_version.to_string(), "0.1.0");
     assert_eq!(parsed.tasks.len(), 2);
 
     let config_task = parsed
@@ -89,18 +89,18 @@ fn serialize_deserialize_round_trip_preserves_task_metadata() {
 
 #[test]
 fn deserialize_accepts_ascii_hyphen_header() {
-    let content = "# TODO - demo v1.2.3\n\n@created: 2026-02-20\n@modified: 2026-02-21\n\n## Tasks\n\n- [ ] keep parser compatibility\n      @created 2026-02-20 10:00\n";
+    let content = "# TODO - demo\n\n@created: 2026-02-20\n@modified: 2026-02-21\n\n## Tasks\n\n- [ ] keep parser compatibility\n      @created 2026-02-20 10:00\n";
 
     let parsed = deserialize(content).unwrap();
     assert_eq!(parsed.project_name, "demo");
-    assert_eq!(parsed.project_version.to_string(), "1.2.3");
+    assert_eq!(parsed.project_version.to_string(), "0.1.0");
     assert_eq!(parsed.tasks.len(), 1);
     assert_eq!(parsed.tasks[0].description, "keep parser compatibility");
 }
 
 #[test]
 fn deserialize_requires_created_metadata() {
-    let content = "# TODO — demo v1.2.3\n\n@modified: 2026-02-21\n\n## Tasks\n\n- [ ] missing metadata\n      @created 2026-02-20 10:00\n";
+    let content = "# TODO — demo\n\n@modified: 2026-02-21\n\n## Tasks\n\n- [ ] missing metadata\n      @created 2026-02-20 10:00\n";
 
     let err = deserialize(content).unwrap_err();
     assert!(err.to_string().contains("Missing @created metadata"));

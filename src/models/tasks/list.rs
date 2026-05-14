@@ -30,21 +30,4 @@ impl List {
         self.modified_at = Utc::now();
     }
 
-    /// Assign version to all unversioned completed tasks
-    pub fn assign_version_to_completed(&mut self, version: Version) -> usize {
-        let mut count = 0;
-
-        for task in &mut self.tasks {
-            if task.completed && task.completed_at_version.is_none() {
-                task.completed_at_version = Some(version.clone());
-                count += 1;
-            }
-        }
-
-        if count > 0 {
-            self.modified_at = Utc::now();
-        }
-
-        count
-    }
 }

@@ -5,16 +5,6 @@ use crate::models::common::Priority;
 #[derive(Parser)]
 #[command(name = "tally")]
 #[command(about = "A task management tool for TODO.md files")]
-#[command(
-    long_about = "tally is a command-line task manager that uses TODO.md as its storage format.\n\n\
-    Track tasks, generate changelogs, and integrate with git commits for automatic \
-    task completion detection.\n\n\
-    EXAMPLES:\n  \
-    tally add \"Fix parsing error\" --priority high --tags bug,parser\n  \
-    tally done \"Fix parsing error\" --commit abc123f\n  \
-    tally list --tags bug\n  \
-    tally release v0.2.3 --summary"
-)]
 #[command(version)]
 pub struct Cli {
     #[command(subcommand)]
@@ -23,210 +13,87 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    #[command(long_about = "Initialize tally in the CWD.")]
-    Init,
-
-    /// Open TODO.md in your editor
-    #[command(long_about = "Open TODO.md in your editor.\n\n\
-        Editor resolution order:\n  \
-        1) preferences.editor in config\n  \
-        2) $EDITOR\n  \
-        3) nvim/vim/nano/vi")]
     Edit,
-    /// Add a new task
-    #[command(long_about = "Add a new task to TODO.md.\n\n\
-        Creates a task with optional priority and tags. Use --dry-run to preview \
-        the task before adding it.\n\n\
-        EXAMPLES:\n  \
-        tally add \"Fix parsing error in format.rs\"\n  \
-        tally add \"Implement new feature\" --priority high --tags feature,backend\n  \
-        tally add \"Update docs\" --dry-run")]
-    Add {
-        /// Text of the task to add
-        description: String,
 
-        /// Priority level for the task
+    Add {
+        description: String,
         #[arg(short, long, value_enum, default_value_t = Priority::Medium)]
         priority: Priority,
-
-        /// Comma-separated tags (e.g., bug,frontend)
         #[arg(short, long, value_delimiter = ',')]
         tags: Option<Vec<String>>,
-
-        /// Show what would be added without modifying TODO.md
         #[arg(long, default_value_t = false)]
         dry_run: bool,
-
-        /// Automatically commit TODO.md after adding a task
         #[arg(long, default_value_t = false)]
         auto: bool,
     },
 
-    /// Mark a task as completed
-    #[command(long_about = "Mark a task as completed in TODO.md.\n\n\
-        Fuzzy-matches the description against existing tasks and marks the match \
-        as done. Optionally associate a git commit or version.\n\n\
-        EXAMPLES:\n  \
-        tally done \"Fix parsing error\"\n  \
-        tally done \"parsing error\" --commit abc123f\n  \
-        tally done \"Fix bug\" --version v0.2.3 --dry-run")]
     Done {
-        /// Text to fuzzy-match against existing tasks
         description: String,
-
-        /// Git commit hash associated with completion
         #[arg(short, long)]
         commit: Option<String>,
-
-        /// Release version (e.g., v0.2.3)
         #[arg(short, long)]
         version: Option<String>,
-
-        /// Show changes without writing to TODO.md
         #[arg(long, default_value_t = false)]
         dry_run: bool,
-
-        /// Automatically commit TODO.md after completing task
         #[arg(long, default_value_t = false)]
         auto: bool,
     },
 
-    /// Display tasks
-    #[command(
-        long_about = "Display tasks with optional filtering and formatting.\n\n\
-        View all tasks, or filter by tags, priority, completion status, or semver. \
-        Output as human-readable text or raw JSON.\n\n\
-        EXAMPLES:\n  \
-        tally list\n  \
-        tally list --tags bug,parser --priority high\n  \
-        tally list --done\n  \
-        tally list --semver v0.2.3\n  \
-        tally list --json"
-    )]
     List {
-        /// Filter by tags (comma-separated)
         #[arg(short, long, value_delimiter = ',')]
         tags: Option<Vec<String>>,
-
-        /// Filter by priority level
         #[arg(short, long, value_enum)]
         priority: Option<Priority>,
-
-        /// Show only completed tasks
         #[arg(long, default_value_t = false)]
         done: bool,
-
-        /// Filter by completed semver (e.g., v0.2.3)
-        #[arg(long)]
-        semver: Option<String>,
-
-        /// Output in JSON format
         #[arg(long, default_value_t = false)]
         json: bool,
     },
 
-    /// Assign version to completed tasks
-    #[command(
-        long_about = "Assign a version to all completed tasks without a version.\n\n\
-        Additionally sets the project version in the TODO list itself.\n\n\
-        EXAMPLES:\n  \
-        tally semver v0.2.3\n  \
-        tally semver v1.0.0 --summary\n  \
-        tally semver v0.2.4 --dry-run"
-    )]
     Semver {
-        /// Version string to assign (e.g., v0.2.3)
         version: String,
-
-        /// Show what would be assigned without modifying tasks
         #[arg(long, default_value_t = false)]
         dry_run: bool,
-
-        /// Show number of tasks assigned to this version
         #[arg(long, default_value_t = false)]
         summary: bool,
-
-        /// Automatically commit TODO.md after setting version
         #[arg(long, default_value_t = false)]
         auto: bool,
     },
 
-    /// Generate a changelog
-    #[command(long_about = "Generate a changelog from completed tasks.\n\n\
-        Create a changelog for a version range or until the current version.\n\n\
-        EXAMPLES:\n  \
-        tally changelog\n  \
-        tally changelog --from v0.7.2\n  \
-        tally changelog --from v0.2.2 --to v0.2.3")]
     Changelog {
-        /// Start version/date range
         #[arg(long)]
         from: Option<String>,
-
-        /// End version/date range
         #[arg(long)]
         to: Option<String>,
     },
 
-    /// Remove a task entirely
-    #[command(long_about = "Remove a task from TODO.md.\n\n\
-        Fuzzy-matches the description. If the task is completed, it will be \
-        saved to history.json before removal so it still appears in changelogs.\n\n\
-        EXAMPLES:\n  \
-        tally remove \"Fix parsing error\"\n  \
-        tally remove \"old task\" --dry-run")]
-    Remove {
-        /// Text to fuzzy-match against existing tasks
+    Released {
+        #[arg(long)]
+        version: Option<String>,
+        query: Option<String>,
+    },
+
+    Unrelease {
         description: String,
-        /// Show what would be removed without modifying TODO.md
+        #[arg(long)]
+        version: Option<String>,
         #[arg(long, default_value_t = false)]
         dry_run: bool,
-        /// Automatically commit TODO.md after removing a task
         #[arg(long, default_value_t = false)]
         auto: bool,
     },
 
-    /// Prune old completed tasks
-    #[command(long_about = "Remove completed tasks older than a threshold.\n\n\
-        Pruned tasks are saved to history.json before removal so they \
-        still appear in changelogs. Days and hours combine if both are given.\n\n\
-        EXAMPLES:\n  \
-        tally prune                      # default: 30 days\n  \
-        tally prune --days 7\n  \
-        tally prune --hours 12\n  \
-        tally prune --days 1 --hours 12  # 1.5 days\n  \
-        tally prune --dry-run")]
-    Prune {
-        /// Number of days
-        #[arg(long)]
-        days: Option<u32>,
-        /// Number of hours
-        #[arg(long)]
-        hours: Option<u32>,
-        /// Show what would be pruned without modifying TODO.md
+    Remove {
+        description: String,
         #[arg(long, default_value_t = false)]
         dry_run: bool,
-        /// Automatically commit TODO.md after pruning tasks
         #[arg(long, default_value_t = false)]
         auto: bool,
     },
 
-    /// Detect completed tasks from git commits
-    #[command(
-        long_about = "Scan git commit messages to automatically detect completed tasks.\n\n\
-        Uses fuzzy matching to find tasks that may have been completed based on \
-        commit messages. Can run automatically or prompt for confirmation.\n\n\
-        EXAMPLES:\n  \
-        tally scan\n  \
-        tally scan --auto\n  \
-        tally scan --dry-run"
-    )]
     Scan {
-        /// Automatically mark matches as done without prompting
         #[arg(long, default_value_t = false)]
         auto: bool,
-
-        /// Show suggested matches without modifying TODO.md
         #[arg(long, default_value_t = false)]
         dry_run: bool,
     },

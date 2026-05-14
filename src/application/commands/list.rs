@@ -1,4 +1,4 @@
-use crate::models::common::{Priority, Version};
+use crate::models::common::Priority;
 use crate::models::tasks::Task;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
@@ -8,27 +8,17 @@ pub fn cmd_list(
     tags: Option<Vec<String>>,
     priority: Option<Priority>,
     done: bool,
-    semver: Option<String>,
     json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let storage = ListStorage::new(&paths.todo_file)?;
-    let semver = semver.as_deref().map(Version::parse).transpose()?;
 
-    let tasks = filter_tasks(
-        storage.tasks(),
-        tags.as_deref(),
-        priority.as_ref(),
-        done,
-        semver.as_ref(),
-    );
+    let tasks = filter_tasks(storage.tasks(), tags.as_deref(), priority.as_ref(), done);
 
     if json {
-        // Output as JSON
         let task_list: Vec<_> = tasks.iter().map(|(_, task)| task).collect();
         println!("{}", serde_json::to_string_pretty(&task_list)?);
     } else {
-        // Human-readable output
         if tasks.is_empty() {
             println!("No tasks found.");
             return Ok(());
@@ -82,7 +72,6 @@ fn filter_tasks<'a>(
     tags: Option<&[String]>,
     priority: Option<&Priority>,
     done: bool,
-    semver: Option<&Version>,
 ) -> Vec<(usize, &'a Task)> {
     let mut tasks: Vec<_> = tasks.iter().enumerate().collect();
 
@@ -96,12 +85,6 @@ fn filter_tasks<'a>(
 
     if done {
         tasks.retain(|(_, task)| task.completed);
-    }
-
-    if let Some(filter_semver) = semver {
-        tasks.retain(|(_, task)| {
-            task.completed && task.completed_at_version.as_ref() == Some(filter_semver)
-        });
     }
 
     tasks

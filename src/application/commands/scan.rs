@@ -1,6 +1,4 @@
 use crate::services::storage::config_storage::ConfigStorage;
-use crate::services::storage::history_storage::HistoryStorage;
-use crate::services::storage::ignore_storage::IgnoreStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
@@ -19,8 +17,6 @@ struct Commit {
 pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
-    let mut history = HistoryStorage::new(&paths.history_file)?;
-    let ignore = IgnoreStorage::load(&paths.ignore_file);
 
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();
@@ -42,10 +38,6 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
 
     for (idx, task) in storage.tasks().iter().enumerate() {
         if task.completed {
-            continue;
-        }
-
-        if ignore.is_ignored(&task.description, &task.tags) {
             continue;
         }
 
@@ -93,7 +85,7 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
                 if input.trim().eq_ignore_ascii_case("y") {
                     completed.push((idx, hash));
                 } else {
-                    println!("  → Skipped");
+                    println!("  -> Skipped");
                 }
             }
 
@@ -108,13 +100,6 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
         }
     }
     storage.save_list()?;
-
-    // Record completed tasks to history after all mutations are done
-    for (idx, _) in &completed {
-        if let Some(task) = storage.tasks().get(*idx) {
-            history.record(task)?;
-        }
-    }
 
     if matches_found == 0 {
         println!("No matches found.");
@@ -132,7 +117,7 @@ fn parse_commits(input: &str, done_marker: &str) -> Vec<Commit> {
             continue;
         }
 
-        let mut parts = record.splitn(3, '\x1f'); // 3 parts: hash, timestamp, body
+        let mut parts = record.splitn(3, '\x1f');
         let hash = parts.next().unwrap().to_string();
         let timestamp_str = parts.next().unwrap_or("0");
         let body = parts.next().unwrap_or("").trim();
@@ -172,7 +157,6 @@ fn extract_done_items(message: &str, done_marker: &str) -> Vec<String> {
             if trimmed.is_empty() {
                 break;
             }
-            // Stop at next section header
             if trimmed.ends_with(':') {
                 break;
             }

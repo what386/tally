@@ -1,7 +1,6 @@
 use crate::models::common::Version;
 use crate::services::git::commits;
 use crate::services::storage::config_storage::ConfigStorage;
-use crate::services::storage::history_storage::HistoryStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
@@ -17,7 +16,6 @@ pub fn cmd_done(
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
-    let mut history = HistoryStorage::new(&paths.history_file)?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();
 
@@ -73,10 +71,6 @@ pub fn cmd_done(
 
             storage.complete_task(index, version_obj)?;
 
-            // Record to history after all mutations are done
-            if let Some(task) = storage.tasks().get(index) {
-                history.record(task)?;
-            }
 
             if auto || config.preferences.auto_commit_todo {
                 commits::commit_tally_files("update TODO: complete task")?;

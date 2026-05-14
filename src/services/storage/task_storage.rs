@@ -24,7 +24,11 @@ impl ListStorage {
     pub fn load_list(&mut self) -> Result<()> {
         if !self.list_file.exists() {
             // Create a default list if file doesn't exist
-            self.todo_list = List::new("Untitled", Version::new(0, 1, 0, false));
+            let project_name = self.list_file.parent()
+                .and_then(|p| p.file_name())
+                .and_then(|n| n.to_str())
+                .unwrap_or("Untitled");
+            self.todo_list = List::new(project_name, Version::new(0, 1, 0, false));
             return Ok(());
         }
 
@@ -95,22 +99,6 @@ impl ListStorage {
         } else {
             Err(anyhow!("Task index {} out of bounds", index))
         }
-    }
-
-    /// Assign version to all unversioned completed tasks and save
-    pub fn assign_version_to_completed(&mut self, version: Version) -> Result<usize> {
-        let count = self.todo_list.assign_version_to_completed(version);
-        if count > 0 {
-            self.save_list()?;
-        }
-        Ok(count)
-    }
-
-    /// Update the project version and save
-    pub fn set_project_version(&mut self, version: Version) -> Result<()> {
-        self.todo_list.project_version = version;
-        self.todo_list.modified_at = chrono::Utc::now();
-        self.save_list()
     }
 
     /// Get the project name

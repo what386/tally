@@ -2,70 +2,85 @@ use anyhow::Result;
 
 use crate::models::common::Version;
 use crate::services::git::commits;
+use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::config_storage::ConfigStorage;
-use crate::services::storage::history_storage::HistoryStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 
 pub fn cmd_semver(version_str: String, dry_run: bool, summary: bool, auto: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
-    let mut history = HistoryStorage::new(&paths.history_file)?;
+    let mut changelog = ChangelogStorage::new(&paths.changelog_file, storage.project_name())?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();
 
     let version = Version::parse(&version_str)?;
 
-    storage.set_project_version(version.clone())?;
-
-    println!("Set project version to '{}'", &version);
-
-    // Find unversioned completed tasks
-    let unversioned: Vec<_> = storage
+    let unversioned_indices: Vec<usize> = storage
         .tasks()
         .iter()
-        .filter(|t| t.completed && t.completed_at_version.is_none())
+        .enumerate()
+        .filter(|(_, t)| t.completed && t.completed_at_version.is_none())
+        .map(|(idx, _)| idx)
         .collect();
 
-    if unversioned.is_empty() {
+    if unversioned_indices.is_empty() {
         println!("Nothing to do: No completed tasks without a version.");
         return Ok(());
     }
 
     if dry_run {
         println!(
-            "Would assign version {} to {} task(s):",
+            "Would assign version {} and move {} task(s) to CHANGELOG.md:",
             version,
-            unversioned.len()
+            unversioned_indices.len()
         );
-        for task in &unversioned {
-            println!("  [x] {}", task.description);
+        for idx in &unversioned_indices {
+            println!("  [x] {}", storage.tasks()[*idx].description);
         }
         return Ok(());
     }
 
-    // Record all completed tasks to history before versioning
-    let task_refs: Vec<&crate::models::tasks::Task> = unversioned.to_vec();
-    history.record_all(&task_refs)?;
+    for idx in &unversioned_indices {
+        if let Some(task) = storage.tasks_mut().get_mut(*idx) {
+            task.completed_at_version = Some(version.clone());
+        }
+    }
 
-    // Assign version in TODO.md
-    let count = storage.assign_version_to_completed(version.clone())?;
+    let mut versioned_tasks = Vec::new();
+    for idx in &unversioned_indices {
+        versioned_tasks.push(storage.tasks()[*idx].clone());
+    }
 
-    // Assign version in history.json
-    history.assign_version(&version)?;
+    let changes = versioned_tasks
+        .iter()
+        .map(crate::models::changes::Change::from)
+        .collect();
+    let inserted = changelog.merge_changes_for_version(&version, changes);
 
-    println!("Assigned version {} to {} task(s)", version, count);
+    let mut removal_indices = unversioned_indices;
+    removal_indices.sort_unstable_by(|a, b| b.cmp(a));
+    for idx in removal_indices {
+        storage.remove_task(idx)?;
+    }
+
+    changelog.save()?;
+
+    println!(
+        "Moved {} task(s) into CHANGELOG.md under version {}",
+        inserted, version
+    );
 
     if summary {
         println!();
-        println!("Tasks in {}:", version);
-        for entry in history.entries_for_version(&version) {
-            println!("  • {}", entry.change.description);
+        println!("Tasks moved into {}:", version);
+        for task in versioned_tasks {
+            println!("  • {}", task.description);
         }
     }
 
     if auto || config.preferences.auto_commit_todo {
-        commits::commit_tally_files("update TODO: set semver")?;
+        commits::commit_tally_files("update TODO/CHANGELOG: set semver")?;
     }
 
     Ok(())

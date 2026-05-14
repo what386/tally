@@ -15,7 +15,7 @@ pub struct Release {
 }
 
 impl Release {
-    /// Build a Release from a list of changes (used when reading from history.json)
+    /// Build a Release from a list of changes (used when reading from CHANGELOG.md)
     pub fn from_changes(version: Version, date: DateTime<Utc>, changes: Vec<&Change>) -> Self {
         let mut changes_by_priority = BTreeMap::new();
         let mut changes_by_tag = BTreeMap::new();
