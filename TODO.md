@@ -20,6 +20,9 @@
 - [ ] reformat to use CHANGELOG as storage and TODO as scratchpad
       @created 2026-05-14 01:48
 
+- [ ] add source scanner function
+      @created 2026-05-14 01:48
+
 
 ## Completed
 
