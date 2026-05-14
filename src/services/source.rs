@@ -4,12 +4,20 @@ use std::path::Path;
 use std::process::Command;
 
 const TODO_MARKER: &str = " TODO: ";
+const DONE_MARKER: &str = " DONE: ";
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SourceMarkerKind {
+    Todo,
+    Done,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SourceTodo {
     pub path: String,
     pub line: usize,
     pub text: String,
+    pub kind: SourceMarkerKind,
 }
 
 impl SourceTodo {
@@ -63,7 +71,13 @@ pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> 
 
     while i < lines.len() {
         let line = lines[i];
-        let Some(marker_idx) = line.find(TODO_MARKER) else {
+        let marker = if let Some(idx) = line.find(TODO_MARKER) {
+            Some((idx, TODO_MARKER, SourceMarkerKind::Todo))
+        } else {
+            line.find(DONE_MARKER)
+                .map(|idx| (idx, DONE_MARKER, SourceMarkerKind::Done))
+        };
+        let Some((marker_idx, marker_text, marker_kind)) = marker else {
             i += 1;
             continue;
         };
@@ -77,7 +91,7 @@ pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> 
         }
 
         let mut parts = Vec::new();
-        let first_part = line[marker_idx + TODO_MARKER.len()..].trim();
+        let first_part = line[marker_idx + marker_text.len()..].trim();
         if !first_part.is_empty() {
             parts.push(first_part.to_string());
         }
@@ -105,6 +119,7 @@ pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> 
                 path: path.to_string(),
                 line: i + 1,
                 text,
+                kind: marker_kind,
             });
         }
 
@@ -116,7 +131,7 @@ pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> 
 
 #[cfg(test)]
 mod tests {
-    use super::extract_todos_from_content;
+    use super::{SourceMarkerKind, extract_todos_from_content};
 
     #[test]
     fn extracts_single_line_todo() {
@@ -126,6 +141,7 @@ mod tests {
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].line, 1);
         assert_eq!(todos[0].text, "fix parser");
+        assert_eq!(todos[0].kind, SourceMarkerKind::Todo);
     }
 
     #[test]
@@ -135,6 +151,7 @@ mod tests {
 
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].text, "fix this and this too");
+        assert_eq!(todos[0].kind, SourceMarkerKind::Todo);
     }
 
     #[test]
@@ -144,5 +161,16 @@ mod tests {
 
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].text, "yes");
+        assert_eq!(todos[0].kind, SourceMarkerKind::Todo);
+    }
+
+    #[test]
+    fn extracts_done_marker() {
+        let content = "# DONE: finish parser cleanup\n";
+        let todos = extract_todos_from_content("src/main.rs", content);
+
+        assert_eq!(todos.len(), 1);
+        assert_eq!(todos[0].text, "finish parser cleanup");
+        assert_eq!(todos[0].kind, SourceMarkerKind::Done);
     }
 }

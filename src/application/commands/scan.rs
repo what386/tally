@@ -115,9 +115,9 @@ fn run_git_scan(
 }
 
 fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: bool) -> Result<()> {
-    let todos = source::scan_project(root)?;
+    let markers = source::scan_project(root)?;
 
-    if todos.is_empty() {
+    if markers.is_empty() {
         println!("No source TODO markers found.");
         return Ok(());
     }
@@ -132,9 +132,34 @@ fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: b
     }
 
     let mut planned = Vec::new();
+    let mut planned_done = Vec::new();
     let mut seen_new = HashSet::new();
+    let matcher = SkimMatcherV2::default();
 
-    for todo in todos {
+    for todo in markers {
+        if todo.kind == source::SourceMarkerKind::Done {
+            let mut best_match: Option<(usize, i64)> = None;
+            for (idx, task) in storage.tasks().iter().enumerate() {
+                if task.completed {
+                    continue;
+                }
+
+                if let Some(score) = matcher.fuzzy_match(&task.description, &todo.text)
+                    && (best_match.is_none() || score > best_match.unwrap().1)
+                {
+                    best_match = Some((idx, score));
+                }
+            }
+
+            if let Some((idx, score)) = best_match {
+                let score_pct = (score as f64).min(100.0);
+                if score_pct >= 50.0 {
+                    planned_done.push((todo.location(), idx, todo.text.clone(), score_pct));
+                }
+            }
+            continue;
+        }
+
         let desc = todo.description();
         if existing.contains(&desc) || seen_new.contains(&desc) {
             if done_descriptions.contains(&desc) {
@@ -151,14 +176,30 @@ fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: b
     }
 
     if planned.is_empty() {
-        println!("No new source TODO tasks to add.");
-        return Ok(());
+        if planned_done.is_empty() {
+            println!("No new source TODO tasks to add.");
+            return Ok(());
+        }
     }
 
     if dry_run {
-        println!("Would add {} source TODO task(s):", planned.len());
-        for (_, desc) in &planned {
-            println!("  [ ] {}", desc);
+        if !planned.is_empty() {
+            println!("Would add {} source TODO task(s):", planned.len());
+            for (_, desc) in &planned {
+                println!("  [ ] {}", desc);
+            }
+        }
+        if !planned_done.is_empty() {
+            println!("Would mark {} task(s) as done from source DONE markers:", planned_done.len());
+            for (location, idx, text, score) in &planned_done {
+                println!(
+                    "  {} -> {} (match: {:.0}%)",
+                    location,
+                    storage.tasks()[*idx].description,
+                    score
+                );
+                println!("      DONE: {}", text);
+            }
         }
         return Ok(());
     }
@@ -167,7 +208,18 @@ fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: b
         storage.add_task(Task::new(desc.clone(), Priority::Medium, vec![]))?;
     }
 
-    println!("Added {} source TODO task(s)", planned.len());
+    for (_, idx, _, _) in &planned_done {
+        storage.complete_task(*idx, None)?;
+    }
+
+    if !planned.is_empty() {
+        println!("Added {} source TODO task(s)", planned.len());
+    }
+    if !planned_done.is_empty() {
+        println!(
+            "Marked {} task(s) as done from source DONE markers",
+            planned_done.len()
+        );
+    }
     Ok(())
 }
-
