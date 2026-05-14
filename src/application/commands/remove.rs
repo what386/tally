@@ -52,7 +52,7 @@ pub fn cmd_remove(description: String, dry_run: bool, auto: bool) -> Result<()> 
             }
 
             if auto || config.preferences.auto_commit_todo {
-                commits::commit_tally_files("update TODO: remove task")?;
+                git::commit_tally_files("update TODO: remove task")?;
             }
 
             Ok(())

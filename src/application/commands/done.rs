@@ -73,7 +73,7 @@ pub fn cmd_done(
 
 
             if auto || config.preferences.auto_commit_todo {
-                commits::commit_tally_files("update TODO: complete task")?;
+                git::commit_tally_files("update TODO: complete task")?;
             }
 
             Ok(())

@@ -33,7 +33,7 @@ pub fn cmd_unrelease(
         changelog.save()?;
         println!("Removed from {}: {}", v, change.description);
         if auto || config.preferences.auto_commit_todo {
-            commits::commit_tally_files("update CHANGELOG: unrelease task")?;
+            git::commit_tally_files("update CHANGELOG: unrelease task")?;
         }
         Ok(())
     } else {

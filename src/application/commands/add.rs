@@ -33,7 +33,7 @@ pub fn cmd_add(
     storage.add_task(task)?;
 
     if auto || config.preferences.auto_commit_todo {
-        commits::commit_tally_files("update TODO: add task")?;
+        git::commit_tally_files("update TODO: add task")?;
     }
 
     println!("✓ Added task:");
