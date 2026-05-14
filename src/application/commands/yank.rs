@@ -7,17 +7,20 @@ use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use chrono::Utc;
 
-pub fn cmd_yank(description: String, tag: Option<String>, dry_run: bool, auto: bool) -> Result<()> {
+pub fn cmd_yank(
+    description: String,
+    tags: Option<Vec<String>>,
+    dry_run: bool,
+    auto: bool,
+) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let mut changelog = ChangelogStorage::new(&paths.changelog_file, storage.project_name())?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();
 
-    let tag_filters = tag.as_ref().map(|t| vec![t.clone()]);
-
     if dry_run {
-        if let Some((version, change)) = changelog.remove_change(&description, None, tag_filters.as_deref()) {
+        if let Some((version, change)) = changelog.remove_change(&description, None, tags.as_deref()) {
             println!(
                 "Would yank from {} into TODO: {}",
                 version, change.description
@@ -28,7 +31,7 @@ pub fn cmd_yank(description: String, tag: Option<String>, dry_run: bool, auto: b
         return Ok(());
     }
 
-    if let Some((version, change)) = changelog.remove_change(&description, None, tag_filters.as_deref()) {
+    if let Some((version, change)) = changelog.remove_change(&description, None, tags.as_deref()) {
         let task = Task {
             description: change.description.clone(),
             priority: change.priority,

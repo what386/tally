@@ -47,10 +47,10 @@ impl Cli {
 
             Commands::Yank {
                 description,
-                tag,
+                tags,
                 dry_run,
                 auto,
-            } => commands::cmd_yank(join_words(description), tag, dry_run, auto),
+            } => commands::cmd_yank(join_words(description), tags, dry_run, auto),
 
             Commands::Scan {
                 auto,

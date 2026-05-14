@@ -63,7 +63,7 @@ pub enum Commands {
         #[arg(long, default_value_t = false)]
         done: bool,
         /// List released tasks from CHANGELOG.md for a specific version.
-        #[arg(short = 'r', long)]
+        #[arg(short = 'r', long, value_name = "VERSION")]
         released: Option<String>,
         /// Output results as JSON.
         #[arg(long, default_value_t = false)]
@@ -85,13 +85,13 @@ pub enum Commands {
         auto: bool,
     },
 
-    /// Remove a task by fuzzy description match.
+    /// Remove a task by fuzzy description match from TODO.md or a released entry.
     Remove {
         /// Task text to match.
         #[arg(required = true, num_args = 1..)]
         description: Vec<String>,
         /// Remove from CHANGELOG.md in a specific version instead of TODO.md.
-        #[arg(short = 'r', long)]
+        #[arg(short = 'r', long, value_name = "VERSION")]
         released: Option<String>,
         /// Filter candidate tasks by one or more comma-separated tags before matching.
         #[arg(short, long, value_delimiter = ',')]
@@ -110,8 +110,8 @@ pub enum Commands {
         #[arg(required = true, num_args = 1..)]
         description: Vec<String>,
         /// Optional tag filter to narrow released-task matching.
-        #[arg(short, long)]
-        tag: Option<String>,
+        #[arg(short, long, value_delimiter = ',')]
+        tags: Option<Vec<String>>,
         /// Show what would be yanked without writing files.
         #[arg(long, default_value_t = false)]
         dry_run: bool,
@@ -128,10 +128,10 @@ pub enum Commands {
         /// Show what would change without writing files.
         #[arg(long, default_value_t = false)]
         dry_run: bool,
-        /// Run only git commit scanning.
+        /// Include git commit scanning.
         #[arg(long, default_value_t = false)]
         git: bool,
-        /// Run only source TODO scanning.
+        /// Include source TODO/DONE scanning.
         #[arg(long, default_value_t = false)]
         source: bool,
     },
