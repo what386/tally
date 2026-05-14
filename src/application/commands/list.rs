@@ -1,17 +1,31 @@
 use crate::models::common::Priority;
 use crate::models::tasks::Task;
+use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
+use serde::Serialize;
 
 pub fn cmd_list(
     tags: Option<Vec<String>>,
     priority: Option<Priority>,
     done: bool,
+    released: Option<String>,
     json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let storage = ListStorage::new(&paths.todo_file)?;
+    if let Some(released_filter) = released {
+        let released_tag = (released_filter != "__all__").then_some(released_filter);
+        return cmd_list_released(
+            &paths.changelog_file,
+            storage.project_name(),
+            tags,
+            priority,
+            released_tag,
+            json,
+        );
+    }
 
     let tasks = filter_tasks(storage.tasks(), tags.as_deref(), priority.as_ref(), done);
 
@@ -61,6 +75,101 @@ pub fn cmd_list(
                     println!("      @version {}", version);
                 }
             }
+        }
+    }
+
+    Ok(())
+}
+
+#[derive(Serialize)]
+struct ReleasedEntry {
+    version: String,
+    description: String,
+    priority: Priority,
+    tags: Vec<String>,
+    commit: Option<String>,
+}
+
+fn cmd_list_released(
+    changelog_file: &std::path::Path,
+    project_name: &str,
+    tags: Option<Vec<String>>,
+    priority: Option<Priority>,
+    released_tag: Option<String>,
+    json: bool,
+) -> Result<()> {
+    let changelog = ChangelogStorage::new(changelog_file, project_name)?;
+    let mut entries: Vec<ReleasedEntry> = Vec::new();
+
+    for release in changelog.log().releases.iter().rev() {
+        for group in release.changes_by_priority.values() {
+            for change in group {
+                if let Some(filter_tags) = tags.as_ref()
+                    && !filter_tags.iter().any(|tag| change.tags.contains(tag))
+                {
+                    continue;
+                }
+                if let Some(tag) = released_tag.as_ref()
+                    && !change.tags.contains(tag)
+                {
+                    continue;
+                }
+
+                if let Some(filter_priority) = priority.as_ref()
+                    && &change.priority != filter_priority
+                {
+                    continue;
+                }
+
+                entries.push(ReleasedEntry {
+                    version: release.version.to_string(),
+                    description: change.description.clone(),
+                    priority: change.priority,
+                    tags: change.tags.clone(),
+                    commit: change.commit.clone(),
+                });
+            }
+        }
+    }
+
+    if json {
+        println!("{}", serde_json::to_string_pretty(&entries)?);
+        return Ok(());
+    }
+
+    if entries.is_empty() {
+        println!("No released tasks found.");
+        return Ok(());
+    }
+
+    for (i, entry) in entries.iter().enumerate() {
+        let priority_str = match entry.priority {
+            Priority::High => " (high)",
+            Priority::Medium => "",
+            Priority::Low => " (low)",
+        };
+        let tags_str = if entry.tags.is_empty() {
+            String::new()
+        } else {
+            format!(
+                " {}",
+                entry.tags
+                    .iter()
+                    .map(|t| format!("#{}", t))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            )
+        };
+        println!(
+            "{}. {}{}{} @version {}",
+            i + 1,
+            entry.description,
+            priority_str,
+            tags_str,
+            entry.version
+        );
+        if let Some(commit) = &entry.commit {
+            println!("      @commit {}", commit);
         }
     }
 
