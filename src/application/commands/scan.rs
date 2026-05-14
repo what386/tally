@@ -9,19 +9,21 @@ use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::collections::HashSet;
 
-pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, source_only: bool) -> Result<()> {
+pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
-    let run_git = git || (!git && !source_only);
-    let run_source = source_only || (!git && !source_only);
+    let has_selector = git || todo || done;
+    let run_git = git || !has_selector;
+    let run_todo = todo || !has_selector;
+    let run_done = done || !has_selector;
 
     if run_git {
         run_git_scan(&paths.root, &paths.config_file, &mut storage, auto, dry_run)?;
     }
 
-    if run_source {
-        run_source_scan(&paths.root, &mut storage, dry_run)?;
+    if run_todo || run_done {
+        run_source_scan(&paths.root, &mut storage, dry_run, run_todo, run_done)?;
     }
 
     Ok(())
@@ -114,11 +116,17 @@ fn run_git_scan(
     Ok(())
 }
 
-fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: bool) -> Result<()> {
+fn run_source_scan(
+    root: &std::path::Path,
+    storage: &mut ListStorage,
+    dry_run: bool,
+    include_todo: bool,
+    include_done: bool,
+) -> Result<()> {
     let markers = source::scan_project(root)?;
 
     if markers.is_empty() {
-        println!("No source TODO markers found.");
+        println!("No source TODO/DONE markers found.");
         return Ok(());
     }
 
@@ -138,6 +146,9 @@ fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: b
 
     for todo in markers {
         if todo.kind == source::SourceMarkerKind::Done {
+            if !include_done {
+                continue;
+            }
             let mut best_match: Option<(usize, i64)> = None;
             for (idx, task) in storage.tasks().iter().enumerate() {
                 if task.completed {
@@ -157,6 +168,10 @@ fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: b
                     planned_done.push((todo.location(), idx, todo.text.clone(), score_pct));
                 }
             }
+            continue;
+        }
+
+        if !include_todo {
             continue;
         }
 

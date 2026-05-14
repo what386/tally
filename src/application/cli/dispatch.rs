@@ -56,8 +56,9 @@ impl Cli {
                 auto,
                 dry_run,
                 git,
-                source,
-            } => commands::cmd_scan(auto, dry_run, git, source),
+                todo,
+                done,
+            } => commands::cmd_scan(auto, dry_run, git, todo, done),
         }
     }
 }

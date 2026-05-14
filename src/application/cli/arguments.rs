@@ -131,8 +131,11 @@ pub enum Commands {
         /// Include git commit scanning.
         #[arg(long, default_value_t = false)]
         git: bool,
-        /// Include source TODO/DONE scanning.
+        /// Include source TODO scanning.
         #[arg(long, default_value_t = false)]
-        source: bool,
+        todo: bool,
+        /// Include source DONE scanning.
+        #[arg(long, default_value_t = false)]
+        done: bool,
     },
 }
