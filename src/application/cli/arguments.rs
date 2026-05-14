@@ -62,6 +62,9 @@ pub enum Commands {
         /// Show only completed tasks.
         #[arg(long, default_value_t = false)]
         done: bool,
+        /// List released tasks from CHANGELOG.md; optionally filter by tag.
+        #[arg(short = 'r', long, num_args = 0..=1, default_missing_value = "__all__")]
+        released: Option<String>,
         /// Output results as JSON.
         #[arg(long, default_value_t = false)]
         json: bool,
@@ -92,25 +95,15 @@ pub enum Commands {
         to: Option<String>,
     },
 
-    /// Search released tasks stored in CHANGELOG.md.
-    Released {
-        /// Limit search to a specific version.
-        #[arg(long)]
-        version: Option<String>,
-        /// Optional query text to match against released entries.
-        #[arg(num_args = 1..)]
-        query: Option<Vec<String>>,
-    },
-
-    /// Remove a released changelog entry by fuzzy description match.
-    Unrelease {
-        /// Released task text to match.
+    /// Remove a task by fuzzy description match.
+    Remove {
+        /// Task text to match.
         #[arg(required = true, num_args = 1..)]
         description: Vec<String>,
-        /// Limit removal to a specific version section.
-        #[arg(long)]
-        version: Option<String>,
-        /// Show what would be removed without writing files.
+        /// Remove from CHANGELOG.md instead of TODO.md; optionally filter by tag.
+        #[arg(short = 'r', long, num_args = 0..=1, default_missing_value = "__all__")]
+        released: Option<String>,
+        /// Show what would be removed without writing TODO.md.
         #[arg(long, default_value_t = false)]
         dry_run: bool,
         /// Auto-commit updated files after removal.
@@ -118,15 +111,18 @@ pub enum Commands {
         auto: bool,
     },
 
-    /// Remove a task from TODO.md by fuzzy description match.
-    Remove {
-        /// Task text to match.
+    /// Yank a changelog entry back into TODO as completed and unversioned.
+    Yank {
+        /// Released task text to match.
         #[arg(required = true, num_args = 1..)]
         description: Vec<String>,
-        /// Show what would be removed without writing TODO.md.
+        /// Optional tag filter to narrow released-task matching.
+        #[arg(short, long)]
+        tag: Option<String>,
+        /// Show what would be yanked without writing files.
         #[arg(long, default_value_t = false)]
         dry_run: bool,
-        /// Auto-commit updated files after removal.
+        /// Auto-commit updated files after yank.
         #[arg(long, default_value_t = false)]
         auto: bool,
     },

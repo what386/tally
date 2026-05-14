@@ -26,8 +26,9 @@ impl Cli {
                 tags,
                 priority,
                 done,
+                released,
                 json,
-            } => commands::cmd_list(tags, priority, done, json),
+            } => commands::cmd_list(tags, priority, done, released, json),
 
             Commands::Semver {
                 version,
@@ -38,22 +39,19 @@ impl Cli {
 
             Commands::Remove {
                 description,
+                released,
                 dry_run,
                 auto,
-            } => commands::cmd_remove(join_words(description), dry_run, auto),
+            } => commands::cmd_remove(join_words(description), released, dry_run, auto),
+
+            Commands::Yank {
+                description,
+                tag,
+                dry_run,
+                auto,
+            } => commands::cmd_yank(join_words(description), tag, dry_run, auto),
 
             Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
-
-            Commands::Released { version, query } => {
-                commands::cmd_released(version, query.map(join_words))
-            }
-
-            Commands::Unrelease {
-                description,
-                version,
-                dry_run,
-                auto,
-            } => commands::cmd_unrelease(join_words(description), version, dry_run, auto),
 
             Commands::Scan {
                 auto,
