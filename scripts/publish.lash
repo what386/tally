@@ -19,21 +19,6 @@ end
 
 let version = argv[0]
 
-git checkout dev
-
-tally semver $version
-
-if $(tally released --version ) == ""
-    echo -e $"{RED}No completed tasks for version.{NC}"
-    exit 1
-end
-
-tally changelog > CHANGELOG.md
-
-git add CHANGELOG.md TODO.md
-
-git commit -m "Update changelog"
-
 echo -e $"{BLUE}Pushing dev branch to remotes...{NC}"
 git push github dev
 git push gitea dev
