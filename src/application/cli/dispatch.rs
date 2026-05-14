@@ -51,8 +51,6 @@ impl Cli {
                 auto,
             } => commands::cmd_yank(join_words(description), tag, dry_run, auto),
 
-            Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
-
             Commands::Scan {
                 auto,
                 dry_run,

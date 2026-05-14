@@ -85,16 +85,6 @@ pub enum Commands {
         auto: bool,
     },
 
-    /// Render changelog output, optionally filtered by version range.
-    Changelog {
-        /// Inclusive lower version bound.
-        #[arg(long)]
-        from: Option<String>,
-        /// Inclusive upper version bound.
-        #[arg(long)]
-        to: Option<String>,
-    },
-
     /// Remove a task by fuzzy description match.
     Remove {
         /// Task text to match.
