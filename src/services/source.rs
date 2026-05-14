@@ -115,5 +115,34 @@ pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> 
 }
 
 #[cfg(test)]
-#[path = "../../../tests/services/source_scanner_tests.rs"]
-mod tests;
+mod tests {
+    use super::extract_todos_from_content;
+
+    #[test]
+    fn extracts_single_line_todo() {
+        let content = "// TODO: fix parser\nlet x = 1;\n";
+        let todos = extract_todos_from_content("src/main.rs", content);
+
+        assert_eq!(todos.len(), 1);
+        assert_eq!(todos[0].line, 1);
+        assert_eq!(todos[0].text, "fix parser");
+    }
+
+    #[test]
+    fn multiline_requires_same_indent_and_prefix() {
+        let content = "// TODO: fix this\n// and this too\n   whatever\nfn main() {}\n";
+        let todos = extract_todos_from_content("src/main.rs", content);
+
+        assert_eq!(todos.len(), 1);
+        assert_eq!(todos[0].text, "fix this and this too");
+    }
+
+    #[test]
+    fn does_not_match_without_space_wrapped_marker() {
+        let content = "//TODO: no match\n// TODO: yes\n";
+        let todos = extract_todos_from_content("src/main.rs", content);
+
+        assert_eq!(todos.len(), 1);
+        assert_eq!(todos[0].text, "yes");
+    }
+}
