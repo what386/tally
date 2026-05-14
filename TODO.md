@@ -5,6 +5,10 @@
 
 ## Tasks
 
-- [ ] unify tag filtering
+
+## Completed
+
+- [x] unify tag filtering
       @created 2026-05-14 17:53
+      @completed 2026-05-14 17:53
 
