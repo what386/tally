@@ -14,7 +14,7 @@ impl Cli {
                 tags,
                 dry_run,
                 auto,
-            } => commands::cmd_add(description, priority, tags, dry_run, auto),
+            } => commands::cmd_add(join_words(description), priority, tags, dry_run, auto),
 
             Commands::Done {
                 description,
@@ -22,7 +22,7 @@ impl Cli {
                 version,
                 dry_run,
                 auto,
-            } => commands::cmd_done(description, commit, version, dry_run, auto),
+            } => commands::cmd_done(join_words(description), commit, version, dry_run, auto),
 
             Commands::List {
                 tags,
@@ -42,20 +42,26 @@ impl Cli {
                 description,
                 dry_run,
                 auto,
-            } => commands::cmd_remove(description, dry_run, auto),
+            } => commands::cmd_remove(join_words(description), dry_run, auto),
 
             Commands::Changelog { from, to } => commands::cmd_changelog(from, to),
 
-            Commands::Released { version, query } => commands::cmd_released(version, query),
+            Commands::Released { version, query } => {
+                commands::cmd_released(version, query.map(join_words))
+            }
 
             Commands::Unrelease {
                 description,
                 version,
                 dry_run,
                 auto,
-            } => commands::cmd_unrelease(description, version, dry_run, auto),
+            } => commands::cmd_unrelease(join_words(description), version, dry_run, auto),
 
             Commands::Scan { auto, dry_run } => commands::cmd_scan(auto, dry_run),
         }
     }
+}
+
+fn join_words(words: Vec<String>) -> String {
+    words.join(" ")
 }

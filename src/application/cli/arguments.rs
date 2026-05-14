@@ -16,7 +16,8 @@ pub enum Commands {
     Edit,
 
     Add {
-        description: String,
+        #[arg(required = true, num_args = 1..)]
+        description: Vec<String>,
         #[arg(short, long, value_enum, default_value_t = Priority::Medium)]
         priority: Priority,
         #[arg(short, long, value_delimiter = ',')]
@@ -28,7 +29,8 @@ pub enum Commands {
     },
 
     Done {
-        description: String,
+        #[arg(required = true, num_args = 1..)]
+        description: Vec<String>,
         #[arg(short, long)]
         commit: Option<String>,
         #[arg(short, long)]
@@ -70,11 +72,13 @@ pub enum Commands {
     Released {
         #[arg(long)]
         version: Option<String>,
-        query: Option<String>,
+        #[arg(num_args = 1..)]
+        query: Option<Vec<String>>,
     },
 
     Unrelease {
-        description: String,
+        #[arg(required = true, num_args = 1..)]
+        description: Vec<String>,
         #[arg(long)]
         version: Option<String>,
         #[arg(long, default_value_t = false)]
@@ -84,7 +88,8 @@ pub enum Commands {
     },
 
     Remove {
-        description: String,
+        #[arg(required = true, num_args = 1..)]
+        description: Vec<String>,
         #[arg(long, default_value_t = false)]
         dry_run: bool,
         #[arg(long, default_value_t = false)]
