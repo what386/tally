@@ -5,21 +5,6 @@
 
 ## Tasks
 
-- [ ] add templates #feature
-      @created 2026-02-01 00:05
-
-- [ ] proper unhook support (high) #feature
-      @created 2026-02-02 02:41
-
-- [ ] consider removing dead functions (low) #cleanup
-      @created 2026-02-02 02:42
-
-- [ ] Add --done and --semver filters to tally list (high) #feature #ux
-      @created 2026-04-07 01:58
-
-- [ ] reformat to use CHANGELOG as storage and TODO as scratchpad
-      @created 2026-05-14 01:48
-
 - [ ] add source scanner function
       @created 2026-05-14 01:48
 
@@ -29,64 +14,7 @@
 
 ## Completed
 
-- [x] config support (low) #feature
-      @created 2026-02-01 22:22
-      @completed 2026-02-02 02:15
-      @completed_version 0.4.0
-
-- [x] github doing! (high)
-      @created 2026-02-02 19:18
-      @completed 2026-02-02 19:19
-      @completed_version 0.2.0
-      @completed_commit 9ba2c4a
-
-- [x] Add tally edit command to open TODO.md in configured editor (high) #feature #ux
-      @created 2026-02-22 18:02
-      @completed 2026-02-22 18:15
-      @completed_version 0.6.0
-
-- [x] Add cross-project registry and aggregated project status command (high) #feature #workspace
-      @created 2026-02-22 18:02
-      @completed 2026-02-22 18:16
-      @completed_version 0.6.0
-
-- [x] Fix changelog duplicate entries (high) #bug
-      @created 2026-02-23 20:48
-      @completed 2026-02-23 20:53
-      @completed_version 0.6.0
-
-- [x] Add high-priority regression tests for version/config/scan parsing (high) #test
-      @created 2026-02-23 21:01
-      @completed 2026-02-23 21:03
-      @completed_version 0.6.0
-
-- [x] Add publish script to create git tag from provided version (high) #feature #release
-      @created 2026-02-23 21:28
-      @completed 2026-02-23 21:28
-      @completed_version 0.6.0
-
-- [x] Fix clippy warnings across command, model, and storage modules (high) #cleanup
-      @created 2026-02-24 21:35
-      @completed 2026-02-24 21:38
-      @completed_version 0.6.0
-
-- [x] Remove dead code methods flagged by clippy (high) #cleanup
-      @created 2026-02-24 21:40
-      @completed 2026-02-24 21:42
-      @completed_version 0.6.0
-
-- [x] Add --auto and config auto-commit support to changelog command (high) #feature
-      @created 2026-02-26 18:39
-      @completed 2026-02-26 18:41
-      @completed_version 0.7.0
-
-- [x] Add --done and --semver filters to tally list (high) #feature #ux
-      @created 2026-04-07 01:55
-      @completed 2026-04-07 02:40
-      @completed_version 0.7.0
-
-- [x] trim features
-      @created 2026-04-29 03:04
-      @completed 2026-04-29 03:05
-      @completed_version 0.8.0
+- [x] reformat to use CHANGELOG as storage and TODO as scratchpad
+      @created 2026-05-14 01:48
+      @completed 2026-05-14 01:49
 
