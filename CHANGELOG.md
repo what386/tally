@@ -2,6 +2,14 @@
 
 *Generated on 2026-05-14*
 
+## 0.10.0 — 2026-05-14
+
+### Changes
+
+- feat: scan for ' DONE: ' to complete tasks in source code
+- remove more subcommands
+
+
 ## 0.9.0 — 2026-05-14
 
 ### Changes
