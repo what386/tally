@@ -112,7 +112,12 @@ impl ChangelogStorage {
             .collect()
     }
 
-    pub fn remove_change(&mut self, query: &str, version: Option<&Version>) -> Option<(Version, Change)> {
+    pub fn remove_change(
+        &mut self,
+        query: &str,
+        version: Option<&Version>,
+        tag_filter: Option<&str>,
+    ) -> Option<(Version, Change)> {
         use fuzzy_matcher::skim::SkimMatcherV2;
         use fuzzy_matcher::FuzzyMatcher;
 
@@ -133,6 +138,11 @@ impl ChangelogStorage {
                 .collect();
 
             for (ci, change) in changes.iter().enumerate() {
+                if let Some(tag) = tag_filter
+                    && !change.tags.iter().any(|t| t == tag)
+                {
+                    continue;
+                }
                 if let Some(score) = matcher.fuzzy_match(&change.description, query) {
                     let better = best.as_ref().map(|b| score > b.2).unwrap_or(true);
                     if better {
