@@ -6,8 +6,6 @@ use crate::application::commands;
 impl Cli {
     pub fn run(self) -> Result<()> {
         match self.command {
-            Commands::Edit => commands::cmd_edit(),
-
             Commands::Add {
                 description,
                 priority,

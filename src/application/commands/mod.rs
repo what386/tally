@@ -1,7 +1,6 @@
 pub mod add;
 pub mod changelog;
 pub mod done;
-pub mod edit;
 pub mod list;
 pub mod released;
 pub mod remove;
@@ -12,7 +11,6 @@ pub mod unrelease;
 pub use add::cmd_add;
 pub use changelog::cmd_changelog;
 pub use done::cmd_done;
-pub use edit::cmd_edit;
 pub use list::cmd_list;
 pub use released::cmd_released;
 pub use remove::cmd_remove;
