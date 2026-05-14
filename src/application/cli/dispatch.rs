@@ -57,7 +57,12 @@ impl Cli {
                 auto,
             } => commands::cmd_unrelease(join_words(description), version, dry_run, auto),
 
-            Commands::Scan { auto, dry_run } => commands::cmd_scan(auto, dry_run),
+            Commands::Scan {
+                auto,
+                dry_run,
+                git,
+                source,
+            } => commands::cmd_scan(auto, dry_run, git, source),
         }
     }
 }

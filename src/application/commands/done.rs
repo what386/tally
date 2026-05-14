@@ -1,5 +1,5 @@
 use crate::models::common::Version;
-use crate::services::git::commits;
+use crate::services::git;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;

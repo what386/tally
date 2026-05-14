@@ -1,3 +1,6 @@
+use crate::models::common::Priority;
+use crate::models::tasks::Task;
+use crate::services::source;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
@@ -5,6 +8,7 @@ use anyhow::Result;
 use chrono::{DateTime, TimeZone, Utc};
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
+use std::collections::HashSet;
 use std::process::Command;
 
 #[derive(Debug)]
@@ -14,16 +18,37 @@ struct Commit {
     date: DateTime<Utc>,
 }
 
-pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
+pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, source_only: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
-    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let run_git = git || (!git && !source_only);
+    let run_source = source_only || (!git && !source_only);
+
+    if run_git {
+        run_git_scan(&paths.root, &paths.config_file, &mut storage, auto, dry_run)?;
+    }
+
+    if run_source {
+        run_source_scan(&paths.root, &mut storage, dry_run)?;
+    }
+
+    Ok(())
+}
+
+fn run_git_scan(
+    root: &std::path::Path,
+    config_file: &std::path::Path,
+    storage: &mut ListStorage,
+    auto: bool,
+    dry_run: bool,
+) -> Result<()> {
+    let config_storage = ConfigStorage::new(config_file)?;
     let config = config_storage.get_config();
 
     let output = Command::new("git")
         .args(["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
-        .current_dir(&paths.root)
+        .current_dir(root)
         .output()?;
 
     if !output.status.success() {
@@ -102,9 +127,66 @@ pub fn cmd_scan(auto: bool, dry_run: bool) -> Result<()> {
     storage.save_list()?;
 
     if matches_found == 0 {
-        println!("No matches found.");
+        println!("No git commit matches found.");
     }
 
+    Ok(())
+}
+
+fn run_source_scan(root: &std::path::Path, storage: &mut ListStorage, dry_run: bool) -> Result<()> {
+    let todos = source::scan_project(root)?;
+
+    if todos.is_empty() {
+        println!("No source TODO markers found.");
+        return Ok(());
+    }
+
+    let mut existing = HashSet::new();
+    let mut done_descriptions = HashSet::new();
+    for task in storage.tasks() {
+        existing.insert(task.description.clone());
+        if task.completed {
+            done_descriptions.insert(task.description.clone());
+        }
+    }
+
+    let mut planned = Vec::new();
+    let mut seen_new = HashSet::new();
+
+    for todo in todos {
+        let desc = todo.description();
+        if existing.contains(&desc) || seen_new.contains(&desc) {
+            if done_descriptions.contains(&desc) {
+                println!(
+                    "{} - This seems like it's already done",
+                    todo.location()
+                );
+            }
+            continue;
+        }
+
+        seen_new.insert(desc.clone());
+        planned.push((todo.location(), desc));
+    }
+
+    if planned.is_empty() {
+        println!("No new source TODO tasks to add.");
+        return Ok(());
+    }
+
+    if dry_run {
+        println!("Would add {} source TODO task(s):", planned.len());
+        for (_, desc) in &planned {
+            println!("  [ ] {}", desc);
+        }
+        return Ok(());
+    }
+
+    for (_, desc) in &planned {
+        storage.add_task(Task::new(desc.clone(), Priority::Medium, vec![]))?;
+    }
+
+    println!("Added {} source TODO task(s)", planned.len());
     Ok(())
 }
 

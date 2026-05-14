@@ -101,5 +101,9 @@ pub enum Commands {
         auto: bool,
         #[arg(long, default_value_t = false)]
         dry_run: bool,
+        #[arg(long, default_value_t = false)]
+        git: bool,
+        #[arg(long, default_value_t = false)]
+        source: bool,
     },
 }
