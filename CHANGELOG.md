@@ -2,6 +2,14 @@
 
 *Generated on 2026-05-14*
 
+## 0.12.0 — 2026-05-14
+
+### Changes
+
+- unify tag filtering
+- seperate scan flags
+
+
 ## 0.10.0 — 2026-05-14
 
 ### Changes
