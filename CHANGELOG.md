@@ -1,6 +1,15 @@
 # Changelog — tally
 
-*Generated on 2026-04-29*
+*Generated on 2026-05-14*
+
+## 0.9.0 — 2026-05-14
+
+### Changes
+
+- reformat to use CHANGELOG as storage and TODO as scratchpad
+- add source scanner function
+- remove some commands
+
 
 ## 0.8.0 — 2026-04-29
 
@@ -79,6 +88,5 @@
 ### Minor Changes
 
 - modify changelog to use history.json instead of parsing TODO.md
-
 
 
