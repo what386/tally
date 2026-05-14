@@ -5,13 +5,14 @@
 
 ## Tasks
 
-- [ ] remove more subcommands
-      @created 2026-05-14 17:16
-
 
 ## Completed
 
 - [x] feat: scan for ' DONE: ' to complete tasks in source code
+      @created 2026-05-14 17:16
+      @completed 2026-05-14 17:16
+
+- [x] remove more subcommands
       @created 2026-05-14 17:16
       @completed 2026-05-14 17:16
 
