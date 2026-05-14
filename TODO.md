@@ -5,6 +5,9 @@
 
 ## Tasks
 
+- [ ] seperate scan flags
+      @created 2026-05-14 18:05
+
 
 ## Completed
 
