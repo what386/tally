@@ -10,7 +10,7 @@ use fuzzy_matcher::skim::SkimMatcherV2;
 use std::collections::HashSet;
 
 pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) -> Result<()> {
-    let paths = ProjectPaths::get_paths()?;
+    let paths = ProjectPaths::get_paths().or_else(|_| ProjectPaths::for_current_dir())?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
 
     let has_selector = git || todo || done;
