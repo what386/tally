@@ -5,10 +5,3 @@
 
 ## Tasks
 
-
-## Completed
-
-- [x] make scan able to init tally
-      @created 2026-05-23 02:43
-      @completed 2026-05-23 02:43
-

@@ -1,6 +1,13 @@
 # Changelog — tally
 
-*Generated on 2026-05-14*
+*Generated on 2026-05-23*
+
+## 0.13.0 — 2026-05-23
+
+### Changes
+
+- make scan able to init tally
+
 
 ## 0.12.0 — 2026-05-14
 
