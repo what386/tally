@@ -266,6 +266,14 @@ Source scan looks at git-tracked files and ignores `TODO.md` / `CHANGELOG.md`. B
 // DONE: remove old parser workaround
 ```
 
+Source `TODO:` markers can include the same inline priority and tags as `tally add`:
+
+```rust
+// TODO: Implement a new backend (high) #backend #improvement
+```
+
+Inline metadata on source `DONE:` markers is ignored for matching, so tags can be left in comments without lowering match quality.
+
 Configured source markers can include alternatives such as `FIXME:` or `SHIPPED:`.
 
 ---

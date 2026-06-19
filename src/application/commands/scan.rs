@@ -1,11 +1,12 @@
+use crate::models::AppConfig;
 use crate::models::tasks::Task;
-use crate::models::{AppConfig, common::Priority};
 use crate::output;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::{git, source};
 use crate::utils::matching::{score_passes, score_percent};
 use crate::utils::project_paths::ProjectPaths;
+use crate::utils::task_input::parse_task_input;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
@@ -163,13 +164,14 @@ fn run_source_scan(
             if !include_done {
                 continue;
             }
+            let match_text = parsed_source_marker_text(&todo.text);
             let mut best_match: Option<(usize, i64)> = None;
             for (idx, task) in storage.tasks().iter().enumerate() {
                 if task.completed {
                     continue;
                 }
 
-                if let Some(score) = matcher.fuzzy_match(&task.description, &todo.text)
+                if let Some(score) = matcher.fuzzy_match(&task.description, &match_text)
                     && (best_match.is_none() || score > best_match.unwrap().1)
                 {
                     best_match = Some((idx, score));
@@ -189,16 +191,16 @@ fn run_source_scan(
             continue;
         }
 
-        let desc = todo.description();
-        if existing.contains(&desc) || seen_new.contains(&desc) {
-            if done_descriptions.contains(&desc) {
+        let task = task_from_source_todo(&todo)?;
+        if existing.contains(&task.description) || seen_new.contains(&task.description) {
+            if done_descriptions.contains(&task.description) {
                 println!("{} - This seems like it's already done", todo.location());
             }
             continue;
         }
 
-        seen_new.insert(desc.clone());
-        planned.push((todo.location(), desc));
+        seen_new.insert(task.description.clone());
+        planned.push(task);
     }
 
     if planned.is_empty() {
@@ -212,8 +214,8 @@ fn run_source_scan(
         let mut output = String::new();
         if !planned.is_empty() {
             writeln!(output, "Would add {} source TODO task(s):", planned.len())?;
-            for (_, desc) in &planned {
-                writeln!(output, "  [ ] {}", desc)?;
+            for task in &planned {
+                write_task_line(&mut output, task)?;
             }
         }
         if !planned_done.is_empty() {
@@ -240,8 +242,8 @@ fn run_source_scan(
         return Ok(());
     }
 
-    for (_, desc) in &planned {
-        storage.add_task(Task::new(desc.clone(), Priority::Medium, vec![]))?;
+    for task in &planned {
+        storage.add_task(task.clone())?;
     }
 
     for (_, idx, _, _) in &planned_done {
@@ -258,4 +260,70 @@ fn run_source_scan(
         );
     }
     Ok(())
+}
+
+fn parsed_source_marker_text(text: &str) -> String {
+    parse_task_input(text, None, None)
+        .map(|input| input.description)
+        .unwrap_or_else(|_| text.to_string())
+}
+
+fn task_from_source_todo(todo: &source::SourceTodo) -> Result<Task> {
+    let parsed = parse_task_input(&todo.text, None, None)?;
+    let description = format!("{} - {}", todo.location(), parsed.description);
+    Ok(Task::new(description, parsed.priority, parsed.tags))
+}
+
+fn write_task_line(output: &mut String, task: &Task) -> Result<()> {
+    let priority = match task.priority {
+        crate::models::common::Priority::High => " (high)",
+        crate::models::common::Priority::Medium => "",
+        crate::models::common::Priority::Low => " (low)",
+    };
+
+    let tags = if task.tags.is_empty() {
+        String::new()
+    } else {
+        format!(
+            " {}",
+            task.tags
+                .iter()
+                .map(|tag| format!("#{tag}"))
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
+    };
+
+    writeln!(output, "  [ ] {}{}{}", task.description, priority, tags)?;
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::common::Priority;
+
+    #[test]
+    fn source_todo_metadata_becomes_task_metadata() {
+        let marker = source::SourceTodo {
+            path: "src/main.rs".to_string(),
+            line: 12,
+            text: "Implement a new backend (high) #backend #improvement".to_string(),
+            kind: source::SourceMarkerKind::Todo,
+        };
+
+        let task = task_from_source_todo(&marker).unwrap();
+
+        assert_eq!(task.description, "src/main.rs:12 - Implement a new backend");
+        assert_eq!(task.priority, Priority::High);
+        assert_eq!(task.tags, vec!["backend", "improvement"]);
+    }
+
+    #[test]
+    fn source_done_matching_text_ignores_metadata() {
+        assert_eq!(
+            parsed_source_marker_text("Implement a new backend (high) #backend"),
+            "Implement a new backend"
+        );
+    }
 }

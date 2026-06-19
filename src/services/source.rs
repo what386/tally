@@ -23,10 +23,6 @@ pub struct SourceTodo {
 }
 
 impl SourceTodo {
-    pub fn description(&self) -> String {
-        format!("{}:{} - {}", self.path, self.line, self.text)
-    }
-
     pub fn location(&self) -> String {
         format!("{}:{}", self.path, self.line)
     }
