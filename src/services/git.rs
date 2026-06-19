@@ -1,5 +1,6 @@
+use crate::output;
 use crate::utils::project_paths::ProjectPaths;
-use anyhow::{Result, anyhow};
+use anyhow::{Result, anyhow, bail};
 use chrono::{DateTime, TimeZone, Utc};
 use std::path::Path;
 use std::process::Command;
@@ -19,6 +20,8 @@ pub fn commit_tally_files(message: &str) -> Result<()> {
         files.push("CHANGELOG.md");
     }
 
+    track_untracked_tally_files(&paths.root, &files)?;
+
     let mut args = vec!["commit", "-m", message, "--"];
     args.extend(files.iter().copied());
 
@@ -37,6 +40,49 @@ pub fn commit_tally_files(message: &str) -> Result<()> {
     println!("Committed {}", files.join(" and "));
 
     Ok(())
+}
+
+fn track_untracked_tally_files(root: &Path, files: &[&str]) -> Result<()> {
+    let untracked = untracked_files(root, files)?;
+    if untracked.is_empty() {
+        return Ok(());
+    }
+
+    let file_list = untracked.join(", ");
+    let prompt = format!("Track newly created tally file(s) with git: {file_list}?");
+    if !output::confirm(prompt, true)? {
+        bail!("Cannot auto-commit untracked tally file(s): {file_list}");
+    }
+
+    let mut args = vec!["add", "--"];
+    args.extend(untracked.iter().map(String::as_str));
+
+    let output = Command::new("git").args(args).current_dir(root).output()?;
+    if !output.status.success() {
+        return Err(anyhow!(
+            "Failed to track tally file(s): {}",
+            String::from_utf8_lossy(&output.stderr)
+        ));
+    }
+
+    Ok(())
+}
+
+fn untracked_files(root: &Path, files: &[&str]) -> Result<Vec<String>> {
+    let mut untracked = Vec::new();
+
+    for file in files {
+        let output = Command::new("git")
+            .args(["ls-files", "--error-unmatch", "--", file])
+            .current_dir(root)
+            .output()?;
+
+        if !output.status.success() {
+            untracked.push((*file).to_string());
+        }
+    }
+
+    Ok(untracked)
 }
 
 pub fn scan_recent_commits(root: &Path, done_marker: &str) -> Result<Vec<CommitEntry>> {
