@@ -16,10 +16,10 @@ test:
 
 
 run *args:
-    cargo run --bin "tally" -- %{{args}}%
+    cargo run --bin "tally" -- {{args}}
 
 prepare version:
-    scripts/release/prepare.sh %{{version}}%
+    scripts/release/prepare.sh {{version}}
 
 promote:
     just lint
@@ -27,5 +27,5 @@ promote:
     scripts/release/promote.sh
 
 publish version:
-    scripts/release/publish.sh %{{version}}%
+    scripts/release/publish.sh {{version}}
     git switch dev
