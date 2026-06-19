@@ -184,23 +184,14 @@ fn extract_tags(text: &str) -> (String, Vec<String>) {
     let mut description = text.trim().to_string();
     let mut tags = Vec::new();
 
-    loop {
-        if !description.ends_with('`') {
-            break;
-        }
-
-        let Some(start) = description[..description.len() - 1].rfind(" `") else {
-            break;
-        };
-
+    if description.ends_with('`')
+        && let Some(start) = description[..description.len() - 1].rfind(" `")
+    {
         let candidate = &description[start + 2..description.len() - 1];
-        if candidate.is_empty() || !candidate.split(", ").all(|t| !t.is_empty()) {
-            break;
+        if !candidate.is_empty() && candidate.split(", ").all(|t| !t.is_empty()) {
+            tags = candidate.split(", ").map(|s| s.to_string()).collect();
+            description = description[..start].trim_end().to_string();
         }
-
-        tags = candidate.split(", ").map(|s| s.to_string()).collect();
-        description = description[..start].trim_end().to_string();
-        break;
     }
 
     (description, tags)

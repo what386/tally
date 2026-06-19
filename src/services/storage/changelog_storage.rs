@@ -94,27 +94,6 @@ impl ChangelogStorage {
         inserted
     }
 
-    pub fn filtered_releases(&self, from: Option<&Version>, to: Option<&Version>) -> Vec<Release> {
-        self.changelog
-            .releases
-            .iter()
-            .filter(|release| {
-                if let Some(from_v) = from
-                    && release.version < *from_v
-                {
-                    return false;
-                }
-                if let Some(to_v) = to
-                    && release.version > *to_v
-                {
-                    return false;
-                }
-                true
-            })
-            .cloned()
-            .collect()
-    }
-
     pub fn remove_change(
         &mut self,
         query: &str,

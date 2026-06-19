@@ -269,7 +269,7 @@ done_prefix = "DONE:"
         assert!(storage.get_config().preferences.auto_commit_todo);
         assert_eq!(storage.get_config().git.done_prefix, "DONE:");
         assert_eq!(storage.get_config().scan.git_log_limit, 50);
-        assert_eq!(storage.get_config().auto_commit.done, false);
+        assert!(!storage.get_config().auto_commit.done);
         assert_eq!(storage.get_config().matching.released_min_score, 50.0);
 
         cleanup(&path);
