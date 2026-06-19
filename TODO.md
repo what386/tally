@@ -5,6 +5,9 @@
 
 ## Tasks
 
+- [ ] feat: more config options
+      @created 2026-06-19 22:03
+
 
 ## Completed
 
