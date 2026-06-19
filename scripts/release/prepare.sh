@@ -30,9 +30,4 @@ if [[ "$(tally list --released "${version}")" == "No released tasks found." ]]; 
     exit 1
 fi
 
-just gen-completions
-
-git add ./completions
-git commit -m "Release ${version}: Update shell completions" || true
-
 echo -e "${GREEN}Release ${version} prepared.${NC}"

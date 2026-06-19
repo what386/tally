@@ -1,6 +1,16 @@
 # Changelog — tally
 
-*Generated on 2026-05-23*
+*Generated on 2026-06-19*
+
+## 1.14.0 — 2026-06-19
+
+### Changes
+
+- feat: pagination for long command outputs
+- feat: yank now supports semver matching
+- feat: more config options
+- feat: natural tag/priority processing from input
+
 
 ## 0.13.0 — 2026-05-23
 
