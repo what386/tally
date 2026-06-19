@@ -24,7 +24,9 @@ impl ListStorage {
     pub fn load_list(&mut self) -> Result<()> {
         if !self.list_file.exists() {
             // Create a default list if file doesn't exist
-            let project_name = self.list_file.parent()
+            let project_name = self
+                .list_file
+                .parent()
                 .and_then(|p| p.file_name())
                 .and_then(|n| n.to_str())
                 .unwrap_or("Untitled");

@@ -156,7 +156,8 @@ fn cmd_list_released(
         } else {
             format!(
                 " {}",
-                entry.tags
+                entry
+                    .tags
                     .iter()
                     .map(|t| format!("#{}", t))
                     .collect::<Vec<_>>()

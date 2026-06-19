@@ -29,5 +29,4 @@ impl List {
         self.tasks.push(task);
         self.modified_at = Utc::now();
     }
-
 }

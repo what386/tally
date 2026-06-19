@@ -237,7 +237,9 @@ pub fn normalize(log: &mut Log) {
             .or_default()
             .extend(changes);
 
-        let entry = date_map.entry(release.version.clone()).or_insert(release.date);
+        let entry = date_map
+            .entry(release.version.clone())
+            .or_insert(release.date);
         if release.date > *entry {
             *entry = release.date;
         }
@@ -247,7 +249,11 @@ pub fn normalize(log: &mut Log) {
         .into_iter()
         .map(|(version, changes)| {
             let refs: Vec<&Change> = changes.iter().collect();
-            Release::from_changes(version.clone(), *date_map.get(&version).unwrap_or(&Utc::now()), refs)
+            Release::from_changes(
+                version.clone(),
+                *date_map.get(&version).unwrap_or(&Utc::now()),
+                refs,
+            )
         })
         .collect();
 
