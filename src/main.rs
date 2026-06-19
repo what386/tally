@@ -1,5 +1,6 @@
 mod application;
 mod models;
+mod output;
 mod services;
 mod utils;
 

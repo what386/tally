@@ -1,11 +1,13 @@
 use anyhow::Result;
 
 use crate::models::common::Version;
+use crate::output;
 use crate::services::git;
 use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
+use std::fmt::Write as _;
 
 pub fn cmd_semver(version_str: String, dry_run: bool, summary: bool, auto: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
@@ -30,14 +32,17 @@ pub fn cmd_semver(version_str: String, dry_run: bool, summary: bool, auto: bool)
     }
 
     if dry_run {
-        println!(
+        let mut output = String::new();
+        writeln!(
+            output,
             "Would assign version {} and move {} task(s) to CHANGELOG.md:",
             version,
             unversioned_indices.len()
-        );
+        )?;
         for idx in &unversioned_indices {
-            println!("  [x] {}", storage.tasks()[*idx].description);
+            writeln!(output, "  [x] {}", storage.tasks()[*idx].description)?;
         }
+        output::page_text(None, &output)?;
         return Ok(());
     }
 
@@ -72,11 +77,13 @@ pub fn cmd_semver(version_str: String, dry_run: bool, summary: bool, auto: bool)
     );
 
     if summary {
-        println!();
-        println!("Tasks moved into {}:", version);
+        let mut output = String::new();
+        writeln!(output)?;
+        writeln!(output, "Tasks moved into {}:", version)?;
         for task in versioned_tasks {
-            println!("  • {}", task.description);
+            writeln!(output, "  • {}", task.description)?;
         }
+        output::page_text(None, &output)?;
     }
 
     if auto || config.preferences.auto_commit_todo {

@@ -1,5 +1,6 @@
 use crate::models::common::Priority;
 use crate::models::tasks::Task;
+use crate::output;
 use crate::services::{git, source};
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
@@ -8,6 +9,7 @@ use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::collections::HashSet;
+use std::fmt::Write as _;
 
 pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths().or_else(|_| ProjectPaths::for_current_dir())?;
@@ -198,24 +200,34 @@ fn run_source_scan(
     }
 
     if dry_run {
+        let mut output = String::new();
         if !planned.is_empty() {
-            println!("Would add {} source TODO task(s):", planned.len());
+            writeln!(output, "Would add {} source TODO task(s):", planned.len())?;
             for (_, desc) in &planned {
-                println!("  [ ] {}", desc);
+                writeln!(output, "  [ ] {}", desc)?;
             }
         }
         if !planned_done.is_empty() {
-            println!("Would mark {} task(s) as done from source DONE markers:", planned_done.len());
+            if !output.is_empty() {
+                writeln!(output)?;
+            }
+            writeln!(
+                output,
+                "Would mark {} task(s) as done from source DONE markers:",
+                planned_done.len()
+            )?;
             for (location, idx, text, score) in &planned_done {
-                println!(
+                writeln!(
+                    output,
                     "  {} -> {} (match: {:.0}%)",
                     location,
                     storage.tasks()[*idx].description,
                     score
-                );
-                println!("      DONE: {}", text);
+                )?;
+                writeln!(output, "      DONE: {}", text)?;
             }
         }
+        output::page_text(None, &output)?;
         return Ok(());
     }
 

@@ -1,10 +1,12 @@
 use crate::models::common::{Priority, Version};
 use crate::models::tasks::Task;
+use crate::output;
 use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use serde::Serialize;
+use std::fmt::Write as _;
 
 pub fn cmd_list(
     tags: Option<Vec<String>>,
@@ -31,13 +33,14 @@ pub fn cmd_list(
 
     if json {
         let task_list: Vec<_> = tasks.iter().map(|(_, task)| task).collect();
-        println!("{}", serde_json::to_string_pretty(&task_list)?);
+        page_output(serde_json::to_string_pretty(&task_list)?)?;
     } else {
         if tasks.is_empty() {
             println!("No tasks found.");
             return Ok(());
         }
 
+        let mut output = String::new();
         for (i, task) in tasks {
             let checkbox = if task.completed { "x" } else { " " };
             let priority_str = match task.priority {
@@ -58,24 +61,26 @@ pub fn cmd_list(
                 )
             };
 
-            println!(
+            writeln!(
+                output,
                 "{}. [{}] {}{}{}",
                 i + 1,
                 checkbox,
                 task.description,
                 priority_str,
                 tags_str
-            );
+            )?;
 
             if task.completed {
                 if let Some(ref commit) = task.completed_at_commit {
-                    println!("      @commit {}", commit);
+                    writeln!(output, "      @commit {}", commit)?;
                 }
                 if let Some(ref version) = task.completed_at_version {
-                    println!("      @version {}", version);
+                    writeln!(output, "      @version {}", version)?;
                 }
             }
         }
+        output::page_text(None, &output)?;
     }
 
     Ok(())
@@ -130,7 +135,7 @@ fn cmd_list_released(
     }
 
     if json {
-        println!("{}", serde_json::to_string_pretty(&entries)?);
+        page_output(serde_json::to_string_pretty(&entries)?)?;
         return Ok(());
     }
 
@@ -139,6 +144,7 @@ fn cmd_list_released(
         return Ok(());
     }
 
+    let mut output = String::new();
     for (i, entry) in entries.iter().enumerate() {
         let priority_str = match entry.priority {
             Priority::High => " (high)",
@@ -157,20 +163,27 @@ fn cmd_list_released(
                     .join(" ")
             )
         };
-        println!(
+        writeln!(
+            output,
             "{}. {}{}{} @version {}",
             i + 1,
             entry.description,
             priority_str,
             tags_str,
             entry.version
-        );
+        )?;
         if let Some(commit) = &entry.commit {
-            println!("      @commit {}", commit);
+            writeln!(output, "      @commit {}", commit)?;
         }
     }
+    output::page_text(None, &output)?;
 
     Ok(())
+}
+
+fn page_output(mut output: String) -> Result<()> {
+    output.push('\n');
+    output::page_text(None, &output)
 }
 
 fn filter_tasks<'a>(
