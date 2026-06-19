@@ -20,3 +20,7 @@
       @created 2026-06-19 22:03
       @completed 2026-06-19 22:03
 
+- [x] feat: natural tag/priority processing from input
+      @created 2026-06-19 22:34
+      @completed 2026-06-19 22:34
+
