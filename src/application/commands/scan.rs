@@ -203,11 +203,9 @@ fn run_source_scan(
         planned.push(task);
     }
 
-    if planned.is_empty() {
-        if planned_done.is_empty() {
-            println!("No new source TODO tasks to add.");
-            return Ok(());
-        }
+    if planned.is_empty() && planned_done.is_empty() {
+        println!("No new source TODO tasks to add.");
+        return Ok(());
     }
 
     if dry_run {
