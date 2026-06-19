@@ -19,8 +19,8 @@ pub enum Commands {
         #[arg(required = true, num_args = 1..)]
         description: Vec<String>,
         /// Priority for the new task.
-        #[arg(short, long, value_enum, default_value_t = Priority::Medium)]
-        priority: Priority,
+        #[arg(short, long, value_enum)]
+        priority: Option<Priority>,
         /// Comma-separated tags to attach.
         #[arg(short, long, value_delimiter = ',')]
         tags: Option<Vec<String>>,

@@ -80,6 +80,18 @@ Set priority and tags:
 tally add "Implement parser recovery" --priority high --tags parser,feature
 ```
 
+You can also include TODO-style priority and tags in the task text:
+
+```bash
+tally add "Implement a new backend (high) #backend #improvement"
+```
+
+Explicit flags override metadata parsed from the task text:
+
+```bash
+tally add "Implement a new backend (low) #backend" --priority high --tags api
+```
+
 Preview without writing:
 
 ```bash
