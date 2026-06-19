@@ -5,9 +5,6 @@
 
 ## Tasks
 
-- [ ] feat: more config options
-      @created 2026-06-19 22:03
-
 
 ## Completed
 
@@ -18,4 +15,8 @@
 - [x] feat: yank now supports semver matching
       @created 2026-06-19 21:54
       @completed 2026-06-19 21:56
+
+- [x] feat: more config options
+      @created 2026-06-19 22:03
+      @completed 2026-06-19 22:03
 
