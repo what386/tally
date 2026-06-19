@@ -2,6 +2,7 @@ use crate::models::common::Version;
 use crate::services::git;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
+use crate::utils::matching::score_percent;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
@@ -39,9 +40,18 @@ pub fn cmd_done(
     match best_match {
         Some((index, score)) => {
             let task = &tasks[index];
+            let score_pct = score_percent(score);
+
+            if score_pct < config.matching.task_min_score {
+                return Err(anyhow::anyhow!(
+                    "Best match too low ({:.0}%): '{}'",
+                    score_pct,
+                    task.description
+                ));
+            }
 
             if dry_run {
-                println!("Would mark as done (score: {:.0}):", score);
+                println!("Would mark as done (score: {:.0}%):", score_pct);
                 println!("  [x] {}", task.description);
                 if let Some(ref commit_hash) = commit {
                     println!("      @completed_commit {}", commit_hash);
@@ -71,8 +81,7 @@ pub fn cmd_done(
 
             storage.complete_task(index, version_obj)?;
 
-
-            if auto || config.preferences.auto_commit_todo {
+            if auto || config.auto_commit_done() {
                 git::commit_tally_files("update TODO: complete task")?;
             }
 

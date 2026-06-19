@@ -43,6 +43,12 @@ impl ConfigStorage {
         let toml = toml::to_string_pretty(&self.config)
             .map_err(|e| io::Error::other(format!("Failed to serialize config: {}", e)))?;
 
+        if let Some(parent) = self.config_file.parent() {
+            fs::create_dir_all(parent).map_err(|e| {
+                io::Error::other(format!("Failed to create config directory: {}", e))
+            })?;
+        }
+
         fs::write(&self.config_file, toml)
             .map_err(|e| io::Error::other(format!("Failed to save config: {}", e)))?;
 
@@ -214,6 +220,57 @@ mod tests {
         assert!(path.exists());
         assert_eq!(storage.get_config().git.done_prefix, "done:");
         assert!(!storage.get_config().preferences.auto_commit_todo);
+        assert_eq!(storage.get_config().scan.git_log_limit, 50);
+        assert_eq!(storage.get_config().scan.todo_markers, vec!["TODO:"]);
+        assert_eq!(storage.get_config().scan.done_markers, vec!["DONE:"]);
+        assert_eq!(storage.get_config().matching.task_min_score, 50.0);
+
+        cleanup(&path);
+    }
+
+    #[test]
+    fn new_creates_missing_config_parent_directory() {
+        let path = std::env::temp_dir()
+            .join(format!(
+                "tally-config-tests-missing-parent-{}",
+                SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .unwrap()
+                    .as_nanos()
+            ))
+            .join("nested")
+            .join("config.toml");
+
+        let storage = ConfigStorage::new(&path).unwrap();
+
+        assert!(path.exists());
+        assert_eq!(storage.get_config().git.done_prefix, "done:");
+
+        cleanup(&path);
+    }
+
+    #[test]
+    fn load_config_defaults_new_sections_for_existing_config_files() {
+        let path = temp_config_path("partial-existing");
+        fs::write(
+            &path,
+            r#"
+[preferences]
+auto_commit_todo = true
+
+[git]
+done_prefix = "DONE:"
+"#,
+        )
+        .unwrap();
+
+        let storage = ConfigStorage::new(&path).unwrap();
+
+        assert!(storage.get_config().preferences.auto_commit_todo);
+        assert_eq!(storage.get_config().git.done_prefix, "DONE:");
+        assert_eq!(storage.get_config().scan.git_log_limit, 50);
+        assert_eq!(storage.get_config().auto_commit.done, false);
+        assert_eq!(storage.get_config().matching.released_min_score, 50.0);
 
         cleanup(&path);
     }
@@ -229,18 +286,26 @@ mod tests {
         storage
             .try_set_value("git.done_prefix", "\"DONE:\"")
             .unwrap();
+        storage.try_set_value("auto_commit.done", "true").unwrap();
+        storage.try_set_value("scan.git_log_limit", "100").unwrap();
 
         let auto_commit: bool = storage
             .try_get_value("preferences.auto_commit_todo")
             .unwrap();
         let done_prefix: String = storage.try_get_value("git.done_prefix").unwrap();
+        let done_auto_commit: bool = storage.try_get_value("auto_commit.done").unwrap();
+        let git_log_limit: usize = storage.try_get_value("scan.git_log_limit").unwrap();
 
         assert!(auto_commit);
         assert_eq!(done_prefix, "DONE:");
+        assert!(done_auto_commit);
+        assert_eq!(git_log_limit, 100);
 
         let reloaded = ConfigStorage::new(&path).unwrap();
         assert!(reloaded.get_config().preferences.auto_commit_todo);
         assert_eq!(reloaded.get_config().git.done_prefix, "DONE:");
+        assert!(reloaded.get_config().auto_commit.done);
+        assert_eq!(reloaded.get_config().scan.git_log_limit, 100);
 
         cleanup(&path);
     }

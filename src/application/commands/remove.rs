@@ -1,10 +1,11 @@
+use crate::models::common::Version;
 use crate::services::git;
 use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
+use crate::utils::matching::score_percent;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
-use crate::models::common::Version;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 
@@ -44,9 +45,9 @@ pub fn cmd_remove(
 
     match best_match {
         Some((index, score)) => {
-            let score_pct = (score as f64).min(100.0);
+            let score_pct = score_percent(score);
 
-            if score_pct < 50.0 {
+            if score_pct < config.matching.task_min_score {
                 return Err(anyhow::anyhow!(
                     "Best match too low ({:.0}%): '{}'",
                     score_pct,
@@ -69,7 +70,7 @@ pub fn cmd_remove(
                 println!("✓ Removed (match: {:.0}%): {}", score_pct, task.description);
             }
 
-            if auto || config.preferences.auto_commit_todo {
+            if auto || config.auto_commit_remove() {
                 git::commit_tally_files("update TODO: remove task")?;
             }
 
@@ -96,8 +97,12 @@ fn cmd_remove_released(
     let config = config_storage.get_config();
 
     if dry_run {
-        if let Some((v, change)) = changelog.remove_change(&description, Some(&released_version), tags.as_deref())
-        {
+        if let Some((v, change)) = changelog.remove_change(
+            &description,
+            Some(&released_version),
+            tags.as_deref(),
+            config.matching.released_min_score,
+        ) {
             println!("Would remove from {}: {}", v, change.description);
         } else {
             println!("No matching released task found.");
@@ -109,11 +114,11 @@ fn cmd_remove_released(
         &description,
         Some(&released_version),
         tags.as_deref(),
-    )
-    {
+        config.matching.released_min_score,
+    ) {
         changelog.save()?;
         println!("Removed from {}: {}", v, change.description);
-        if auto || config.preferences.auto_commit_todo {
+        if auto || config.auto_commit_remove() {
             git::commit_tally_files("update CHANGELOG: remove released task")?;
         }
         Ok(())

@@ -373,6 +373,31 @@ Configuration is stored in:
 
 Edit these files directly to update preferences.
 
+Example:
+
+```toml
+[auto_commit]
+add = false
+done = true
+remove = false
+semver = true
+yank = true
+
+[git]
+done_prefix = "done:"
+track_created_files = "prompt" # prompt | always | never
+
+[scan]
+git_log_limit = 100
+todo_markers = ["TODO:", "FIXME:"]
+done_markers = ["DONE:"]
+
+[matching]
+task_min_score = 50.0
+source_done_min_score = 50.0
+released_min_score = 50.0
+```
+
 ---
 
 ## Storage Format

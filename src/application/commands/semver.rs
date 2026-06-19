@@ -86,7 +86,7 @@ pub fn cmd_semver(version_str: String, dry_run: bool, summary: bool, auto: bool)
         output::page_text(None, &output)?;
     }
 
-    if auto || config.preferences.auto_commit_todo {
+    if auto || config.auto_commit_semver() {
         git::commit_tally_files("update TODO/CHANGELOG: set semver")?;
     }
 

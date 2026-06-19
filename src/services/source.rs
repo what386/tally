@@ -3,8 +3,10 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-const TODO_MARKER: &str = " TODO: ";
-const DONE_MARKER: &str = " DONE: ";
+#[cfg(test)]
+const DEFAULT_TODO_MARKER: &str = "TODO:";
+#[cfg(test)]
+const DEFAULT_DONE_MARKER: &str = "DONE:";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SourceMarkerKind {
@@ -30,7 +32,11 @@ impl SourceTodo {
     }
 }
 
-pub fn scan_project(root: &Path) -> Result<Vec<SourceTodo>> {
+pub fn scan_project(
+    root: &Path,
+    todo_markers: &[String],
+    done_markers: &[String],
+) -> Result<Vec<SourceTodo>> {
     let output = Command::new("git")
         .args(["ls-files"])
         .current_dir(root)
@@ -58,25 +64,37 @@ pub fn scan_project(root: &Path) -> Result<Vec<SourceTodo>> {
             Err(_) => continue,
         };
 
-        todos.extend(extract_todos_from_content(rel_path, &content));
+        todos.extend(extract_todos_from_content_with_markers(
+            rel_path,
+            &content,
+            todo_markers,
+            done_markers,
+        ));
     }
 
     Ok(todos)
 }
 
+#[cfg(test)]
 pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> {
+    let todo_markers = vec![DEFAULT_TODO_MARKER.to_string()];
+    let done_markers = vec![DEFAULT_DONE_MARKER.to_string()];
+    extract_todos_from_content_with_markers(path, content, &todo_markers, &done_markers)
+}
+
+pub fn extract_todos_from_content_with_markers(
+    path: &str,
+    content: &str,
+    todo_markers: &[String],
+    done_markers: &[String],
+) -> Vec<SourceTodo> {
     let lines: Vec<&str> = content.lines().collect();
     let mut result = Vec::new();
     let mut i = 0;
 
     while i < lines.len() {
         let line = lines[i];
-        let marker = if let Some(idx) = line.find(TODO_MARKER) {
-            Some((idx, TODO_MARKER, SourceMarkerKind::Todo))
-        } else {
-            line.find(DONE_MARKER)
-                .map(|idx| (idx, DONE_MARKER, SourceMarkerKind::Done))
-        };
+        let marker = find_marker(line, todo_markers, done_markers);
         let Some((marker_idx, marker_text, marker_kind)) = marker else {
             i += 1;
             continue;
@@ -104,6 +122,9 @@ pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> 
             if !next.starts_with(&base) {
                 break;
             }
+            if find_marker(next, todo_markers, done_markers).is_some() {
+                break;
+            }
 
             let continuation = next[base.len()..].trim();
             if continuation.is_empty() {
@@ -129,9 +150,48 @@ pub fn extract_todos_from_content(path: &str, content: &str) -> Vec<SourceTodo> 
     result
 }
 
+fn find_marker<'a>(
+    line: &str,
+    todo_markers: &'a [String],
+    done_markers: &'a [String],
+) -> Option<(usize, &'a str, SourceMarkerKind)> {
+    todo_markers
+        .iter()
+        .filter_map(|marker| {
+            find_marker_index(line, marker)
+                .map(|idx| (idx, marker.as_str(), SourceMarkerKind::Todo))
+        })
+        .chain(done_markers.iter().filter_map(|marker| {
+            find_marker_index(line, marker)
+                .map(|idx| (idx, marker.as_str(), SourceMarkerKind::Done))
+        }))
+        .min_by_key(|(idx, _, _)| *idx)
+}
+
+fn find_marker_index(line: &str, marker: &str) -> Option<usize> {
+    let marker = marker.trim();
+    if marker.is_empty() {
+        return None;
+    }
+
+    line.match_indices(marker)
+        .find(|(idx, _)| marker_has_leading_boundary(line, *idx))
+        .map(|(idx, _)| idx)
+}
+
+fn marker_has_leading_boundary(line: &str, marker_idx: usize) -> bool {
+    line[..marker_idx]
+        .chars()
+        .next_back()
+        .map(char::is_whitespace)
+        .unwrap_or(false)
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{SourceMarkerKind, extract_todos_from_content};
+    use super::{
+        SourceMarkerKind, extract_todos_from_content, extract_todos_from_content_with_markers,
+    };
 
     #[test]
     fn extracts_single_line_todo() {
@@ -172,5 +232,22 @@ mod tests {
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].text, "finish parser cleanup");
         assert_eq!(todos[0].kind, SourceMarkerKind::Done);
+    }
+
+    #[test]
+    fn extracts_configured_markers() {
+        let content = "// FIXME: repair parser\n// SHIPPED: remove parser workaround\n";
+        let todos = extract_todos_from_content_with_markers(
+            "src/main.rs",
+            content,
+            &["FIXME:".to_string()],
+            &["SHIPPED:".to_string()],
+        );
+
+        assert_eq!(todos.len(), 2);
+        assert_eq!(todos[0].text, "repair parser");
+        assert_eq!(todos[0].kind, SourceMarkerKind::Todo);
+        assert_eq!(todos[1].text, "remove parser workaround");
+        assert_eq!(todos[1].kind, SourceMarkerKind::Done);
     }
 }

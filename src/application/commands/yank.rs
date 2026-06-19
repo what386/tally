@@ -20,7 +20,12 @@ pub fn cmd_yank(
     let config = config_storage.get_config();
 
     if dry_run {
-        if let Some((version, change)) = changelog.remove_change(&description, None, tags.as_deref()) {
+        if let Some((version, change)) = changelog.remove_change(
+            &description,
+            None,
+            tags.as_deref(),
+            config.matching.released_min_score,
+        ) {
             println!(
                 "Would yank from {} into TODO: {}",
                 version, change.description
@@ -31,7 +36,12 @@ pub fn cmd_yank(
         return Ok(());
     }
 
-    if let Some((version, change)) = changelog.remove_change(&description, None, tags.as_deref()) {
+    if let Some((version, change)) = changelog.remove_change(
+        &description,
+        None,
+        tags.as_deref(),
+        config.matching.released_min_score,
+    ) {
         let task = Task {
             description: change.description.clone(),
             priority: change.priority,
@@ -53,7 +63,7 @@ pub fn cmd_yank(
             version, change.description
         );
 
-        if auto || config.preferences.auto_commit_todo {
+        if auto || config.auto_commit_yank() {
             git::commit_tally_files("update TODO/CHANGELOG: yank released task")?;
         }
 

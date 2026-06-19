@@ -1,6 +1,7 @@
 use crate::models::changes::{Change, Log, Release};
 use crate::models::common::Version;
 use crate::services::serializers::changelog_serializer;
+use crate::utils::matching::score_passes;
 use anyhow::Result;
 use chrono::Utc;
 use std::fs;
@@ -87,7 +88,9 @@ impl ChangelogStorage {
                 .push(Release::from_changes(version.clone(), Utc::now(), refs));
         }
 
-        self.changelog.releases.sort_by(|a, b| b.version.cmp(&a.version));
+        self.changelog
+            .releases
+            .sort_by(|a, b| b.version.cmp(&a.version));
         inserted
     }
 
@@ -117,9 +120,10 @@ impl ChangelogStorage {
         query: &str,
         version: Option<&Version>,
         tag_filter: Option<&[String]>,
+        min_score: f64,
     ) -> Option<(Version, Change)> {
-        use fuzzy_matcher::skim::SkimMatcherV2;
         use fuzzy_matcher::FuzzyMatcher;
+        use fuzzy_matcher::skim::SkimMatcherV2;
 
         let matcher = SkimMatcherV2::default();
         let mut best: Option<(usize, usize, i64, Version, Change)> = None;
@@ -151,6 +155,9 @@ impl ChangelogStorage {
                 } else {
                     matcher.fuzzy_match(&change.description, query)?
                 };
+                if !score_passes(score, min_score) {
+                    continue;
+                }
 
                 {
                     let better = best.as_ref().map(|b| score > b.2).unwrap_or(true);
@@ -289,7 +296,7 @@ mod tests {
         ]);
 
         let (version, removed) = storage
-            .remove_change("v2.0.0 fix parser", None, None)
+            .remove_change("v2.0.0 fix parser", None, None, 50.0)
             .expect("tagged release match");
 
         assert_eq!(version, v2);
@@ -308,7 +315,7 @@ mod tests {
         )]);
 
         let (removed_version, removed) = storage
-            .remove_change("v1.2.3", None, None)
+            .remove_change("v1.2.3", None, None, 50.0)
             .expect("single release entry");
 
         assert_eq!(removed_version, version);
@@ -325,7 +332,20 @@ mod tests {
             vec![&change("first task", &[]), &change("second task", &[])],
         )]);
 
-        assert!(storage.remove_change("v1.2.3", None, None).is_none());
+        assert!(storage.remove_change("v1.2.3", None, None, 50.0).is_none());
+        assert_eq!(storage.changelog.releases.len(), 1);
+    }
+
+    #[test]
+    fn remove_change_respects_released_min_score() {
+        let version = Version::new(1, 2, 3, false);
+        let mut storage = storage_with_releases(vec![Release::from_changes(
+            version,
+            Utc::now(),
+            vec![&change("parser", &[])],
+        )]);
+
+        assert!(storage.remove_change("parser", None, None, 101.0).is_none());
         assert_eq!(storage.changelog.releases.len(), 1);
     }
 }

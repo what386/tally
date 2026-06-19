@@ -1,9 +1,10 @@
-use crate::models::common::Priority;
 use crate::models::tasks::Task;
+use crate::models::{AppConfig, common::Priority};
 use crate::output;
-use crate::services::{git, source};
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
+use crate::services::{git, source};
+use crate::utils::matching::{score_passes, score_percent};
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
@@ -14,6 +15,8 @@ use std::fmt::Write as _;
 pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths().or_else(|_| ProjectPaths::for_current_dir())?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
+    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let config = config_storage.get_config();
 
     let has_selector = git || todo || done;
     let run_git = git || !has_selector;
@@ -21,11 +24,18 @@ pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) ->
     let run_done = done || !has_selector;
 
     if run_git {
-        run_git_scan(&paths.root, &paths.config_file, &mut storage, auto, dry_run)?;
+        run_git_scan(&paths.root, &mut storage, config, auto, dry_run)?;
     }
 
     if run_todo || run_done {
-        run_source_scan(&paths.root, &mut storage, dry_run, run_todo, run_done)?;
+        run_source_scan(
+            &paths.root,
+            &mut storage,
+            config,
+            dry_run,
+            run_todo,
+            run_done,
+        )?;
     }
 
     Ok(())
@@ -33,15 +43,13 @@ pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) ->
 
 fn run_git_scan(
     root: &std::path::Path,
-    config_file: &std::path::Path,
     storage: &mut ListStorage,
+    config: &AppConfig,
     auto: bool,
     dry_run: bool,
 ) -> Result<()> {
-    let config_storage = ConfigStorage::new(config_file)?;
-    let config = config_storage.get_config();
-
-    let commits = git::scan_recent_commits(root, &config.git.done_prefix)?;
+    let commits =
+        git::scan_recent_commits(root, &config.git.done_prefix, config.scan.git_log_limit)?;
     let matcher = SkimMatcherV2::default();
     let mut matches_found = 0;
     let mut completed = Vec::new();
@@ -60,6 +68,9 @@ fn run_git_scan(
 
             for done in &commit.done_items {
                 if let Some(score) = matcher.fuzzy_match(&task.description, done) {
+                    if !score_passes(score, config.matching.task_min_score) {
+                        continue;
+                    }
                     let is_better = best_match
                         .as_ref()
                         .map(|(_, best, _)| score > *best)
@@ -121,11 +132,12 @@ fn run_git_scan(
 fn run_source_scan(
     root: &std::path::Path,
     storage: &mut ListStorage,
+    config: &AppConfig,
     dry_run: bool,
     include_todo: bool,
     include_done: bool,
 ) -> Result<()> {
-    let markers = source::scan_project(root)?;
+    let markers = source::scan_project(root, &config.scan.todo_markers, &config.scan.done_markers)?;
 
     if markers.is_empty() {
         println!("No source TODO/DONE markers found.");
@@ -165,8 +177,8 @@ fn run_source_scan(
             }
 
             if let Some((idx, score)) = best_match {
-                let score_pct = (score as f64).min(100.0);
-                if score_pct >= 50.0 {
+                let score_pct = score_percent(score);
+                if score_pct >= config.matching.source_done_min_score {
                     planned_done.push((todo.location(), idx, todo.text.clone(), score_pct));
                 }
             }
@@ -180,10 +192,7 @@ fn run_source_scan(
         let desc = todo.description();
         if existing.contains(&desc) || seen_new.contains(&desc) {
             if done_descriptions.contains(&desc) {
-                println!(
-                    "{} - This seems like it's already done",
-                    todo.location()
-                );
+                println!("{} - This seems like it's already done", todo.location());
             }
             continue;
         }

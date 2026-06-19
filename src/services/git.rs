@@ -1,4 +1,6 @@
+use crate::models::app_config::TrackCreatedFiles;
 use crate::output;
+use crate::services::storage::config_storage::ConfigStorage;
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::{Result, anyhow, bail};
 use chrono::{DateTime, TimeZone, Utc};
@@ -14,13 +16,15 @@ pub struct CommitEntry {
 
 pub fn commit_tally_files(message: &str) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
+    let config_storage = ConfigStorage::new(&paths.config_file)?;
+    let config = config_storage.get_config();
 
     let mut files = vec!["TODO.md"];
     if paths.changelog_file.exists() {
         files.push("CHANGELOG.md");
     }
 
-    track_untracked_tally_files(&paths.root, &files)?;
+    track_untracked_tally_files(&paths.root, &files, config.git.track_created_files)?;
 
     let mut args = vec!["commit", "-m", message, "--"];
     args.extend(files.iter().copied());
@@ -42,16 +46,28 @@ pub fn commit_tally_files(message: &str) -> Result<()> {
     Ok(())
 }
 
-fn track_untracked_tally_files(root: &Path, files: &[&str]) -> Result<()> {
+fn track_untracked_tally_files(
+    root: &Path,
+    files: &[&str],
+    policy: TrackCreatedFiles,
+) -> Result<()> {
     let untracked = untracked_files(root, files)?;
     if untracked.is_empty() {
         return Ok(());
     }
 
     let file_list = untracked.join(", ");
-    let prompt = format!("Track newly created tally file(s) with git: {file_list}?");
-    if !output::confirm(prompt, true)? {
-        bail!("Cannot auto-commit untracked tally file(s): {file_list}");
+    match policy {
+        TrackCreatedFiles::Always => {}
+        TrackCreatedFiles::Never => {
+            bail!("Cannot auto-commit untracked tally file(s): {file_list}");
+        }
+        TrackCreatedFiles::Prompt => {
+            let prompt = format!("Track newly created tally file(s) with git: {file_list}?");
+            if !output::confirm(prompt, true)? {
+                bail!("Cannot auto-commit untracked tally file(s): {file_list}");
+            }
+        }
     }
 
     let mut args = vec!["add", "--"];
@@ -85,9 +101,14 @@ fn untracked_files(root: &Path, files: &[&str]) -> Result<Vec<String>> {
     Ok(untracked)
 }
 
-pub fn scan_recent_commits(root: &Path, done_marker: &str) -> Result<Vec<CommitEntry>> {
+pub fn scan_recent_commits(
+    root: &Path,
+    done_marker: &str,
+    git_log_limit: usize,
+) -> Result<Vec<CommitEntry>> {
+    let limit = git_log_limit.to_string();
     let output = Command::new("git")
-        .args(["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", "50"])
+        .args(["log", "--pretty=format:%h%x1f%ct%x1f%B%x1e", "-n", &limit])
         .current_dir(root)
         .output()?;
 
