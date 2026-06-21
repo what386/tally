@@ -56,26 +56,6 @@ impl Version {
 
         Ok(Version::new(major, minor, patch, false))
     }
-
-    pub fn cmp(&self, other: &Version) -> std::cmp::Ordering {
-        match self.major.cmp(&other.major) {
-            std::cmp::Ordering::Equal => {}
-            ord => return ord,
-        }
-        match self.minor.cmp(&other.minor) {
-            std::cmp::Ordering::Equal => {}
-            ord => return ord,
-        }
-        match self.patch.cmp(&other.patch) {
-            std::cmp::Ordering::Equal => {}
-            ord => return ord,
-        }
-        match (self.is_prerelease, other.is_prerelease) {
-            (false, true) => std::cmp::Ordering::Greater,
-            (true, false) => std::cmp::Ordering::Less,
-            _ => std::cmp::Ordering::Equal,
-        }
-    }
 }
 
 impl fmt::Display for Version {
@@ -96,7 +76,23 @@ impl PartialOrd for Version {
 
 impl Ord for Version {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        Version::cmp(self, other)
+        match self.major.cmp(&other.major) {
+            std::cmp::Ordering::Equal => {}
+            ord => return ord,
+        }
+        match self.minor.cmp(&other.minor) {
+            std::cmp::Ordering::Equal => {}
+            ord => return ord,
+        }
+        match self.patch.cmp(&other.patch) {
+            std::cmp::Ordering::Equal => {}
+            ord => return ord,
+        }
+        match (self.is_prerelease, other.is_prerelease) {
+            (false, true) => std::cmp::Ordering::Greater,
+            (true, false) => std::cmp::Ordering::Less,
+            _ => std::cmp::Ordering::Equal,
+        }
     }
 }
 

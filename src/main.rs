@@ -1,14 +1,8 @@
-mod application;
-mod models;
-mod output;
-mod services;
-mod utils;
-
 use console::style;
 
 use clap::Parser;
 
-use application::cli::arguments::Cli;
+use tally_todo::application::cli::arguments::Cli;
 
 fn main() {
     let cli = Cli::parse();
