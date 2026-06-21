@@ -2,13 +2,6 @@
 
 *Generated on 2026-06-21*
 
-## 0.14.0 — 2026-06-21
-
-### Changes
-
-- feat: natural tag/priority processing from input
-
-
 ## 0.13.0 — 2026-05-23
 
 ### Changes
