@@ -1,0 +1,128 @@
+
+use builtin;
+use str;
+
+set edit:completion:arg-completer[tally] = {|@words|
+    fn spaces {|n|
+        builtin:repeat $n ' ' | str:join ''
+    }
+    fn cand {|text desc|
+        edit:complex-candidate $text &display=$text' '(spaces (- 14 (wcswidth $text)))$desc
+    }
+    var command = 'tally'
+    for word $words[1..-1] {
+        if (str:has-prefix $word '-') {
+            break
+        }
+        set command = $command';'$word
+    }
+    var completions = [
+        &'tally'= {
+            cand -h 'Print help'
+            cand --help 'Print help'
+            cand -V 'Print version'
+            cand --version 'Print version'
+            cand add 'Add a new task to TODO.md'
+            cand done 'Mark a task as completed using fuzzy description matching'
+            cand list 'List tasks with optional filters'
+            cand semver 'Move completed unversioned tasks into CHANGELOG.md under a version'
+            cand remove 'Remove a task by fuzzy description match from TODO.md or a released entry'
+            cand yank 'Yank a changelog entry back into TODO as completed and unversioned'
+            cand scan 'Scan for task updates from git commits and/or source TODO markers'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'tally;add'= {
+            cand -p 'Priority for the new task'
+            cand --priority 'Priority for the new task'
+            cand -t 'Comma-separated tags to attach'
+            cand --tags 'Comma-separated tags to attach'
+            cand --dry-run 'Show what would be added without writing TODO.md'
+            cand --auto 'Auto-commit updated files after adding'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tally;done'= {
+            cand -c 'Commit hash to associate with completion'
+            cand --commit 'Commit hash to associate with completion'
+            cand -v 'Release version to attach at completion time'
+            cand --version 'Release version to attach at completion time'
+            cand --dry-run 'Show what would be changed without writing TODO.md'
+            cand --auto 'Auto-commit updated files after completion'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tally;list'= {
+            cand -t 'Filter by one or more comma-separated tags'
+            cand --tags 'Filter by one or more comma-separated tags'
+            cand -p 'Filter by priority'
+            cand --priority 'Filter by priority'
+            cand -r 'List released tasks from CHANGELOG.md for a specific version'
+            cand --released 'List released tasks from CHANGELOG.md for a specific version'
+            cand --done 'Show only completed tasks'
+            cand --json 'Output results as JSON'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tally;semver'= {
+            cand --dry-run 'Show what would be moved without writing files'
+            cand --summary 'Print a summary of tasks moved for this version'
+            cand --auto 'Auto-commit updated files after semver move'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tally;remove'= {
+            cand -r 'Remove from CHANGELOG.md in a specific version instead of TODO.md'
+            cand --released 'Remove from CHANGELOG.md in a specific version instead of TODO.md'
+            cand -t 'Filter candidate tasks by one or more comma-separated tags before matching'
+            cand --tags 'Filter candidate tasks by one or more comma-separated tags before matching'
+            cand --dry-run 'Show what would be removed without writing TODO.md'
+            cand --auto 'Auto-commit updated files after removal'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tally;yank'= {
+            cand -t 'Optional tag filter to narrow released-task matching'
+            cand --tags 'Optional tag filter to narrow released-task matching'
+            cand --dry-run 'Show what would be yanked without writing files'
+            cand --auto 'Auto-commit updated files after yank'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tally;scan'= {
+            cand --auto 'Auto-accept git-based done matches without prompting'
+            cand --dry-run 'Show what would change without writing files'
+            cand --git 'Include git commit scanning'
+            cand --todo 'Include source TODO scanning'
+            cand --done 'Include source DONE scanning'
+            cand -h 'Print help'
+            cand --help 'Print help'
+        }
+        &'tally;help'= {
+            cand add 'Add a new task to TODO.md'
+            cand done 'Mark a task as completed using fuzzy description matching'
+            cand list 'List tasks with optional filters'
+            cand semver 'Move completed unversioned tasks into CHANGELOG.md under a version'
+            cand remove 'Remove a task by fuzzy description match from TODO.md or a released entry'
+            cand yank 'Yank a changelog entry back into TODO as completed and unversioned'
+            cand scan 'Scan for task updates from git commits and/or source TODO markers'
+            cand help 'Print this message or the help of the given subcommand(s)'
+        }
+        &'tally;help;add'= {
+        }
+        &'tally;help;done'= {
+        }
+        &'tally;help;list'= {
+        }
+        &'tally;help;semver'= {
+        }
+        &'tally;help;remove'= {
+        }
+        &'tally;help;yank'= {
+        }
+        &'tally;help;scan'= {
+        }
+        &'tally;help;help'= {
+        }
+    ]
+    $completions[$command]
+}
