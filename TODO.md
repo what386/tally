@@ -1,7 +1,14 @@
 # TODO — tally
 
 @created: 2026-01-31
-@modified: 2026-06-19
+@modified: 2026-06-21
 
 ## Tasks
+
+
+## Completed
+
+- [x] feat: pagination for long command outputs
+      @created 2026-06-21 03:01
+      @completed 2026-06-21 03:01
 
