@@ -12,3 +12,7 @@
       @created 2026-06-21 03:01
       @completed 2026-06-21 03:01
 
+- [x] feat: yank now supports semver matching
+      @created 2026-06-21 03:01
+      @completed 2026-06-21 03:01
+

@@ -6,7 +6,6 @@
 
 ### Changes
 
-- feat: yank now supports semver matching
 - feat: more config options
 - feat: natural tag/priority processing from input
 
