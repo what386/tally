@@ -173,6 +173,82 @@ impl ChangelogStorage {
 
         Some((version, removed))
     }
+
+    pub fn remove_changes(
+        &mut self,
+        query: &str,
+        version: Option<&Version>,
+        tag_filter: Option<&[String]>,
+        min_score: f64,
+    ) -> Vec<(Version, Change)> {
+        let query_match = ReleaseQuery::from_query(query);
+        let query_text = query_match.text.as_str();
+        let version = version.or(query_match.version.as_ref());
+
+        if query_text.is_empty()
+            && let Some(version) = version
+        {
+            return self.remove_release_changes(version, tag_filter);
+        }
+
+        self.remove_change(query, version, tag_filter, min_score)
+            .into_iter()
+            .collect()
+    }
+
+    fn remove_release_changes(
+        &mut self,
+        version: &Version,
+        tag_filter: Option<&[String]>,
+    ) -> Vec<(Version, Change)> {
+        let Some(ri) = self
+            .changelog
+            .releases
+            .iter()
+            .position(|release| &release.version == version)
+        else {
+            return Vec::new();
+        };
+
+        let changes = ordered_changes(&self.changelog.releases[ri]);
+        let (removed, remaining): (Vec<_>, Vec<_>) = changes
+            .into_iter()
+            .partition(|change| tag_matches(change, tag_filter));
+
+        if removed.is_empty() {
+            return Vec::new();
+        }
+
+        if remaining.is_empty() {
+            self.changelog.releases.remove(ri);
+        } else {
+            let refs: Vec<&Change> = remaining.iter().collect();
+            self.changelog.releases[ri] = Release::from_changes(version.clone(), Utc::now(), refs);
+        }
+
+        removed
+            .into_iter()
+            .map(|change| (version.clone(), change))
+            .collect()
+    }
+}
+
+fn ordered_changes(release: &Release) -> Vec<Change> {
+    [
+        crate::models::common::Priority::High,
+        crate::models::common::Priority::Medium,
+        crate::models::common::Priority::Low,
+    ]
+    .into_iter()
+    .filter_map(|priority| release.changes_by_priority.get(&priority))
+    .flat_map(|changes| changes.iter().cloned())
+    .collect()
+}
+
+fn tag_matches(change: &Change, tag_filter: Option<&[String]>) -> bool {
+    tag_filter
+        .map(|tags| tags.iter().any(|tag| change.tags.contains(tag)))
+        .unwrap_or(true)
 }
 
 fn release_match_score(
@@ -379,6 +455,51 @@ mod tests {
         assert_eq!(removed_version, version);
         assert_eq!(removed.description, "first released task");
         assert_eq!(storage.changelog.releases.len(), 1);
+    }
+
+    #[test]
+    fn remove_changes_with_semver_tag_removes_whole_release() {
+        let version = Version::new(1, 2, 3, false);
+        let mut storage = storage_with_releases(vec![Release::from_changes(
+            version.clone(),
+            Utc::now(),
+            vec![
+                &change("first released task", &[]),
+                &change("second released task", &[]),
+            ],
+        )]);
+
+        let removed = storage.remove_changes("v1.2.3", None, None, 50.0);
+
+        assert_eq!(removed.len(), 2);
+        assert_eq!(removed[0].0, version);
+        assert_eq!(removed[0].1.description, "first released task");
+        assert_eq!(removed[1].1.description, "second released task");
+        assert!(storage.changelog.releases.is_empty());
+    }
+
+    #[test]
+    fn remove_changes_with_semver_tag_respects_tag_filter() {
+        let version = Version::new(1, 2, 3, false);
+        let mut storage = storage_with_releases(vec![Release::from_changes(
+            version.clone(),
+            Utc::now(),
+            vec![
+                &change("first released task", &["feature"]),
+                &change("second released task", &["bug"]),
+            ],
+        )]);
+        let tags = vec!["feature".to_string()];
+
+        let removed = storage.remove_changes("v1.2.3", None, Some(&tags), 50.0);
+
+        assert_eq!(removed.len(), 1);
+        assert_eq!(removed[0].0, version);
+        assert_eq!(removed[0].1.description, "first released task");
+
+        let remaining = ordered_changes(&storage.changelog.releases[0]);
+        assert_eq!(remaining.len(), 1);
+        assert_eq!(remaining[0].description, "second released task");
     }
 
     #[test]

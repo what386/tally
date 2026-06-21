@@ -65,6 +65,14 @@ impl ListStorage {
         self.save_list()
     }
 
+    /// Add multiple tasks and save once
+    pub fn add_tasks(&mut self, tasks: Vec<Task>) -> Result<()> {
+        for task in tasks {
+            self.todo_list.add_task(task);
+        }
+        self.save_list()
+    }
+
     /// Get all tasks
     pub fn tasks(&self) -> &[Task] {
         &self.todo_list.tasks
