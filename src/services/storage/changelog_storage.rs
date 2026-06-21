@@ -4,6 +4,7 @@ use crate::services::serializers::changelog_serializer;
 use crate::utils::matching::score_passes;
 use anyhow::Result;
 use chrono::Utc;
+use fuzzy_matcher::FuzzyMatcher;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -101,7 +102,6 @@ impl ChangelogStorage {
         tag_filter: Option<&[String]>,
         min_score: f64,
     ) -> Option<(Version, Change)> {
-        use fuzzy_matcher::FuzzyMatcher;
         use fuzzy_matcher::skim::SkimMatcherV2;
 
         let matcher = SkimMatcherV2::default();
@@ -109,6 +109,7 @@ impl ChangelogStorage {
         let query_match = ReleaseQuery::from_query(query);
         let query = query_match.text.as_str();
         let version = version.or(query_match.version.as_ref());
+        let version_only_query = query.is_empty() && version.is_some();
 
         for (ri, release) in self.changelog.releases.iter().enumerate() {
             if let Some(v) = version
@@ -129,11 +130,15 @@ impl ChangelogStorage {
                 {
                     continue;
                 }
-                let score = if query.is_empty() {
-                    exact_release_query_score(&changes, tag_filter)?
+                let maybe_score = if query.is_empty() {
+                    version_only_query.then_some(i64::MAX)
                 } else {
-                    matcher.fuzzy_match(&change.description, query)?
+                    release_match_score(&matcher, &change.description, query)
                 };
+                let Some(score) = maybe_score else {
+                    continue;
+                };
+
                 if !score_passes(score, min_score) {
                     continue;
                 }
@@ -170,18 +175,19 @@ impl ChangelogStorage {
     }
 }
 
-fn exact_release_query_score(changes: &[Change], tag_filter: Option<&[String]>) -> Option<i64> {
-    let matching_count = changes
-        .iter()
-        .filter(|change| {
-            tag_filter
-                .map(|tags| tags.iter().any(|tag| change.tags.contains(tag)))
-                .unwrap_or(true)
-        })
-        .take(2)
-        .count();
+fn release_match_score(
+    matcher: &fuzzy_matcher::skim::SkimMatcherV2,
+    description: &str,
+    query: &str,
+) -> Option<i64> {
+    if description
+        .to_lowercase()
+        .contains(query.to_lowercase().as_str())
+    {
+        return Some(i64::MAX);
+    }
 
-    (matching_count == 1).then_some(i64::MAX)
+    matcher.fuzzy_match(description, query)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -266,6 +272,14 @@ mod tests {
     }
 
     #[test]
+    fn release_query_keeps_colon_prefixed_task_text() {
+        let query = ReleaseQuery::from_query("feat:");
+
+        assert_eq!(query.version, None);
+        assert_eq!(query.text, "feat:");
+    }
+
+    #[test]
     fn remove_change_uses_semver_tag_as_release_filter() {
         let v1 = Version::new(1, 0, 0, false);
         let v2 = Version::new(2, 0, 0, false);
@@ -285,25 +299,90 @@ mod tests {
     }
 
     #[test]
-    fn remove_change_can_match_single_entry_by_semver_tag_only() {
+    fn remove_change_matches_literal_prefix_at_default_score() {
+        let version = Version::new(1, 14, 0, false);
+        let mut storage = storage_with_releases(vec![Release::from_changes(
+            version.clone(),
+            Utc::now(),
+            vec![
+                &change("feat: pagination for long command outputs", &[]),
+                &change("feat: yank now supports semver matching", &[]),
+            ],
+        )]);
+
+        let (removed_version, removed) = storage
+            .remove_change("feat:", None, None, 50.0)
+            .expect("literal prefix match");
+
+        assert_eq!(removed_version, version);
+        assert_eq!(
+            removed.description,
+            "feat: pagination for long command outputs"
+        );
+        assert_eq!(storage.changelog.releases.len(), 1);
+    }
+
+    #[test]
+    fn remove_change_matches_literal_prefix_after_markdown_parse() {
+        let log = changelog_serializer::from_markdown(
+            r#"# Changelog — tally
+
+*Generated on 2026-06-19*
+
+## 1.14.0 — 2026-06-19
+
+### Changes
+
+- feat: pagination for long command outputs
+- feat: yank now supports semver matching
+
+## 0.13.0 — 2026-05-23
+
+### Changes
+
+- make scan able to init tally
+"#,
+        )
+        .expect("parsed changelog");
+        let mut storage = ChangelogStorage {
+            changelog: log,
+            changelog_file: PathBuf::from("CHANGELOG.md"),
+        };
+
+        let (removed_version, removed) = storage
+            .remove_change("feat:", None, None, 90.0)
+            .expect("literal prefix match from parsed markdown");
+
+        assert_eq!(removed_version, Version::new(1, 14, 0, false));
+        assert_eq!(
+            removed.description,
+            "feat: pagination for long command outputs"
+        );
+    }
+
+    #[test]
+    fn remove_change_can_match_first_entry_by_semver_tag_only() {
         let version = Version::new(1, 2, 3, false);
         let mut storage = storage_with_releases(vec![Release::from_changes(
             version.clone(),
             Utc::now(),
-            vec![&change("single released task", &[])],
+            vec![
+                &change("first released task", &[]),
+                &change("second released task", &[]),
+            ],
         )]);
 
         let (removed_version, removed) = storage
             .remove_change("v1.2.3", None, None, 50.0)
-            .expect("single release entry");
+            .expect("first release entry");
 
         assert_eq!(removed_version, version);
-        assert_eq!(removed.description, "single released task");
-        assert!(storage.changelog.releases.is_empty());
+        assert_eq!(removed.description, "first released task");
+        assert_eq!(storage.changelog.releases.len(), 1);
     }
 
     #[test]
-    fn semver_tag_only_does_not_pick_from_multi_entry_release() {
+    fn empty_query_without_release_filter_does_not_match() {
         let version = Version::new(1, 2, 3, false);
         let mut storage = storage_with_releases(vec![Release::from_changes(
             version,
@@ -311,7 +390,7 @@ mod tests {
             vec![&change("first task", &[]), &change("second task", &[])],
         )]);
 
-        assert!(storage.remove_change("v1.2.3", None, None, 50.0).is_none());
+        assert!(storage.remove_change("", None, None, 50.0).is_none());
         assert_eq!(storage.changelog.releases.len(), 1);
     }
 
