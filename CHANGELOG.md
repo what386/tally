@@ -2,6 +2,20 @@
 
 *Generated on 2026-06-21*
 
+## 0.14.0 — 2026-06-21
+
+### Changes
+
+- feat: pagination for long command outputs
+- feat: natural tag/priority processing from input
+- feat: source scan imports TODO markers as tasks
+- feat: source DONE markers complete matching tasks
+- feat: configurable scan markers and git log limit
+- feat: configurable matching thresholds
+- feat: command-specific auto-commit settings
+- fix: yank literal release prefixes and full semver releases
+
+
 ## 0.13.0 — 2026-05-23
 
 ### Changes
