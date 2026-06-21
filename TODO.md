@@ -16,3 +16,7 @@
       @created 2026-06-21 03:01
       @completed 2026-06-21 03:01
 
+- [x] feat: more config options
+      @created 2026-06-21 03:01
+      @completed 2026-06-21 03:01
+

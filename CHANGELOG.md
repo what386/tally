@@ -6,7 +6,6 @@
 
 ### Changes
 
-- feat: more config options
 - feat: natural tag/priority processing from input
 
 
