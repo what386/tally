@@ -8,3 +8,6 @@
 - [ ] feat: emit json for more commands
       @created 2026-06-28 17:59
 
+- [ ] feat: make fuzzy match stricter
+      @created 2026-06-28 17:59
+
