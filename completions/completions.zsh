@@ -36,6 +36,7 @@ _arguments "${_arguments_options[@]}" : \
 '*--tags=[Comma-separated tags to attach]:TAGS:_default' \
 '--dry-run[Show what would be added without writing TODO.md]' \
 '--auto[Auto-commit updated files after adding]' \
+'--json[Output result as JSON]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '*::description -- Task text to add:_default' \
@@ -49,6 +50,7 @@ _arguments "${_arguments_options[@]}" : \
 '--version=[Release version to attach at completion time]:VERSION:_default' \
 '--dry-run[Show what would be changed without writing TODO.md]' \
 '--auto[Auto-commit updated files after completion]' \
+'--json[Output result as JSON]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '*::description -- Task text to match:_default' \
@@ -73,6 +75,7 @@ _arguments "${_arguments_options[@]}" : \
 '--dry-run[Show what would be moved without writing files]' \
 '--summary[Print a summary of tasks moved for this version]' \
 '--auto[Auto-commit updated files after semver move]' \
+'--json[Output result as JSON]' \
 '-h[Print help]' \
 '--help[Print help]' \
 ':version -- Version to assign (for example\: 1.2.3 or v1.2.3):_default' \
@@ -86,6 +89,7 @@ _arguments "${_arguments_options[@]}" : \
 '*--tags=[Filter candidate tasks by one or more comma-separated tags before matching]:TAGS:_default' \
 '--dry-run[Show what would be removed without writing TODO.md]' \
 '--auto[Auto-commit updated files after removal]' \
+'--json[Output result as JSON]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '*::description -- Task text to match:_default' \
@@ -97,6 +101,7 @@ _arguments "${_arguments_options[@]}" : \
 '*--tags=[Optional tag filter to narrow released-task matching]:TAGS:_default' \
 '--dry-run[Show what would be yanked without writing files]' \
 '--auto[Auto-commit updated files after yank]' \
+'--json[Output result as JSON]' \
 '-h[Print help]' \
 '--help[Print help]' \
 '*::description -- Released task text to match:_default' \
@@ -109,6 +114,7 @@ _arguments "${_arguments_options[@]}" : \
 '--git[Include git commit scanning]' \
 '--todo[Include source TODO scanning]' \
 '--done[Include source DONE scanning]' \
+'--json[Output result as JSON]' \
 '-h[Print help]' \
 '--help[Print help]' \
 && ret=0

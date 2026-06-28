@@ -42,6 +42,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--tags', '--tags', [CompletionResultType]::ParameterName, 'Comma-separated tags to attach')
             [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Show what would be added without writing TODO.md')
             [CompletionResult]::new('--auto', '--auto', [CompletionResultType]::ParameterName, 'Auto-commit updated files after adding')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -53,6 +54,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--version', '--version', [CompletionResultType]::ParameterName, 'Release version to attach at completion time')
             [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Show what would be changed without writing TODO.md')
             [CompletionResult]::new('--auto', '--auto', [CompletionResultType]::ParameterName, 'Auto-commit updated files after completion')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -74,6 +76,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Show what would be moved without writing files')
             [CompletionResult]::new('--summary', '--summary', [CompletionResultType]::ParameterName, 'Print a summary of tasks moved for this version')
             [CompletionResult]::new('--auto', '--auto', [CompletionResultType]::ParameterName, 'Auto-commit updated files after semver move')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -85,6 +88,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--tags', '--tags', [CompletionResultType]::ParameterName, 'Filter candidate tasks by one or more comma-separated tags before matching')
             [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Show what would be removed without writing TODO.md')
             [CompletionResult]::new('--auto', '--auto', [CompletionResultType]::ParameterName, 'Auto-commit updated files after removal')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -94,6 +98,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--tags', '--tags', [CompletionResultType]::ParameterName, 'Optional tag filter to narrow released-task matching')
             [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Show what would be yanked without writing files')
             [CompletionResult]::new('--auto', '--auto', [CompletionResultType]::ParameterName, 'Auto-commit updated files after yank')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break
@@ -104,6 +109,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--git', '--git', [CompletionResultType]::ParameterName, 'Include git commit scanning')
             [CompletionResult]::new('--todo', '--todo', [CompletionResultType]::ParameterName, 'Include source TODO scanning')
             [CompletionResult]::new('--done', '--done', [CompletionResultType]::ParameterName, 'Include source DONE scanning')
+            [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
             [CompletionResult]::new('--help', '--help', [CompletionResultType]::ParameterName, 'Print help')
             break

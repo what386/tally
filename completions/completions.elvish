@@ -38,6 +38,7 @@ set edit:completion:arg-completer[tally] = {|@words|
             cand --tags 'Comma-separated tags to attach'
             cand --dry-run 'Show what would be added without writing TODO.md'
             cand --auto 'Auto-commit updated files after adding'
+            cand --json 'Output result as JSON'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -48,6 +49,7 @@ set edit:completion:arg-completer[tally] = {|@words|
             cand --version 'Release version to attach at completion time'
             cand --dry-run 'Show what would be changed without writing TODO.md'
             cand --auto 'Auto-commit updated files after completion'
+            cand --json 'Output result as JSON'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -67,6 +69,7 @@ set edit:completion:arg-completer[tally] = {|@words|
             cand --dry-run 'Show what would be moved without writing files'
             cand --summary 'Print a summary of tasks moved for this version'
             cand --auto 'Auto-commit updated files after semver move'
+            cand --json 'Output result as JSON'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -77,6 +80,7 @@ set edit:completion:arg-completer[tally] = {|@words|
             cand --tags 'Filter candidate tasks by one or more comma-separated tags before matching'
             cand --dry-run 'Show what would be removed without writing TODO.md'
             cand --auto 'Auto-commit updated files after removal'
+            cand --json 'Output result as JSON'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -85,6 +89,7 @@ set edit:completion:arg-completer[tally] = {|@words|
             cand --tags 'Optional tag filter to narrow released-task matching'
             cand --dry-run 'Show what would be yanked without writing files'
             cand --auto 'Auto-commit updated files after yank'
+            cand --json 'Output result as JSON'
             cand -h 'Print help'
             cand --help 'Print help'
         }
@@ -94,6 +99,7 @@ set edit:completion:arg-completer[tally] = {|@words|
             cand --git 'Include git commit scanning'
             cand --todo 'Include source TODO scanning'
             cand --done 'Include source DONE scanning'
+            cand --json 'Output result as JSON'
             cand -h 'Print help'
             cand --help 'Print help'
         }

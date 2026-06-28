@@ -40,11 +40,13 @@ high\t''"
 complete -c tally -n "__fish_tally_using_subcommand add" -s t -l tags -d 'Comma-separated tags to attach' -r
 complete -c tally -n "__fish_tally_using_subcommand add" -l dry-run -d 'Show what would be added without writing TODO.md'
 complete -c tally -n "__fish_tally_using_subcommand add" -l auto -d 'Auto-commit updated files after adding'
+complete -c tally -n "__fish_tally_using_subcommand add" -l json -d 'Output result as JSON'
 complete -c tally -n "__fish_tally_using_subcommand add" -s h -l help -d 'Print help'
 complete -c tally -n "__fish_tally_using_subcommand done" -s c -l commit -d 'Commit hash to associate with completion' -r
 complete -c tally -n "__fish_tally_using_subcommand done" -s v -l version -d 'Release version to attach at completion time' -r
 complete -c tally -n "__fish_tally_using_subcommand done" -l dry-run -d 'Show what would be changed without writing TODO.md'
 complete -c tally -n "__fish_tally_using_subcommand done" -l auto -d 'Auto-commit updated files after completion'
+complete -c tally -n "__fish_tally_using_subcommand done" -l json -d 'Output result as JSON'
 complete -c tally -n "__fish_tally_using_subcommand done" -s h -l help -d 'Print help'
 complete -c tally -n "__fish_tally_using_subcommand list" -s t -l tags -d 'Filter by one or more comma-separated tags' -r
 complete -c tally -n "__fish_tally_using_subcommand list" -s p -l priority -d 'Filter by priority' -r -f -a "low\t''
@@ -57,21 +59,25 @@ complete -c tally -n "__fish_tally_using_subcommand list" -s h -l help -d 'Print
 complete -c tally -n "__fish_tally_using_subcommand semver" -l dry-run -d 'Show what would be moved without writing files'
 complete -c tally -n "__fish_tally_using_subcommand semver" -l summary -d 'Print a summary of tasks moved for this version'
 complete -c tally -n "__fish_tally_using_subcommand semver" -l auto -d 'Auto-commit updated files after semver move'
+complete -c tally -n "__fish_tally_using_subcommand semver" -l json -d 'Output result as JSON'
 complete -c tally -n "__fish_tally_using_subcommand semver" -s h -l help -d 'Print help'
 complete -c tally -n "__fish_tally_using_subcommand remove" -s r -l released -d 'Remove from CHANGELOG.md in a specific version instead of TODO.md' -r
 complete -c tally -n "__fish_tally_using_subcommand remove" -s t -l tags -d 'Filter candidate tasks by one or more comma-separated tags before matching' -r
 complete -c tally -n "__fish_tally_using_subcommand remove" -l dry-run -d 'Show what would be removed without writing TODO.md'
 complete -c tally -n "__fish_tally_using_subcommand remove" -l auto -d 'Auto-commit updated files after removal'
+complete -c tally -n "__fish_tally_using_subcommand remove" -l json -d 'Output result as JSON'
 complete -c tally -n "__fish_tally_using_subcommand remove" -s h -l help -d 'Print help'
 complete -c tally -n "__fish_tally_using_subcommand yank" -s t -l tags -d 'Optional tag filter to narrow released-task matching' -r
 complete -c tally -n "__fish_tally_using_subcommand yank" -l dry-run -d 'Show what would be yanked without writing files'
 complete -c tally -n "__fish_tally_using_subcommand yank" -l auto -d 'Auto-commit updated files after yank'
+complete -c tally -n "__fish_tally_using_subcommand yank" -l json -d 'Output result as JSON'
 complete -c tally -n "__fish_tally_using_subcommand yank" -s h -l help -d 'Print help'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l auto -d 'Auto-accept git-based done matches without prompting'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l dry-run -d 'Show what would change without writing files'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l git -d 'Include git commit scanning'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l todo -d 'Include source TODO scanning'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l done -d 'Include source DONE scanning'
+complete -c tally -n "__fish_tally_using_subcommand scan" -l json -d 'Output result as JSON'
 complete -c tally -n "__fish_tally_using_subcommand scan" -s h -l help -d 'Print help'
 complete -c tally -n "__fish_tally_using_subcommand help; and not __fish_seen_subcommand_from add done list semver remove yank scan help" -f -a "add" -d 'Add a new task to TODO.md'
 complete -c tally -n "__fish_tally_using_subcommand help; and not __fish_seen_subcommand_from add done list semver remove yank scan help" -f -a "done" -d 'Mark a task as completed using fuzzy description matching'
