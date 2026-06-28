@@ -1,6 +1,15 @@
 # Changelog — tally
 
-*Generated on 2026-06-21*
+*Generated on 2026-06-28*
+
+## 0.15.0 — 2026-06-28
+
+### Changes
+
+- feat: emit json for more commands
+- feat: make fuzzy match stricter
+- feat: try to preserve manual changelog sections
+
 
 ## 0.14.0 — 2026-06-21
 

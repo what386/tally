@@ -5,18 +5,3 @@
 
 ## Tasks
 
-
-## Completed
-
-- [x] feat: emit json for more commands
-      @created 2026-06-28 17:59
-      @completed 2026-06-28 18:02
-
-- [x] feat: make fuzzy match stricter
-      @created 2026-06-28 17:59
-      @completed 2026-06-28 18:02
-
-- [x] feat: try to preserve manual changelog sections
-      @created 2026-06-28 18:02
-      @completed 2026-06-28 18:02
-
