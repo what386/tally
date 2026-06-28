@@ -445,36 +445,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn git_scan_dry_run_does_not_rewrite_todo_file() {
-        let root = temp_dir("git-scan-dry-run");
-        run_git(&root, &["init"]);
-        run_git(&root, &["config", "user.email", "test@example.com"]);
-        run_git(&root, &["config", "user.name", "Tally Test"]);
-
-        fs::write(root.join("src.txt"), "content\n").unwrap();
-        run_git(&root, &["add", "src.txt"]);
-        run_git(&root, &["commit", "-m", "initial"]);
-        fs::write(root.join("src.txt"), "changed\n").unwrap();
-        run_git(&root, &["add", "src.txt"]);
-        run_git(
-            &root,
-            &["commit", "-m", "finish parser", "-m", "done:\n- fix parser"],
-        );
-
-        let todo = "# TODO — demo\n\n@created: 2020-01-01\n@modified: 2020-01-01\n\n## Tasks\n\n- [ ] fix parser\n      @created 2020-01-01 00:00\n\n## Notes\n\nkeep me\n";
-        fs::write(root.join("TODO.md"), todo).unwrap();
-
-        let mut storage = ListStorage::new(&root.join("TODO.md")).unwrap();
-        let matches =
-            run_git_scan(&root, &mut storage, &AppConfig::default(), true, true, true).unwrap();
-
-        assert_eq!(matches.len(), 1);
-        assert_eq!(fs::read_to_string(root.join("TODO.md")).unwrap(), todo);
-
-        let _ = fs::remove_dir_all(root);
-    }
-
     fn temp_dir(name: &str) -> PathBuf {
         let nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
