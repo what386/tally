@@ -30,6 +30,9 @@ pub enum Commands {
         /// Auto-commit updated files after adding.
         #[arg(long, default_value_t = false)]
         auto: bool,
+        /// Output result as JSON.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 
     /// Mark a task as completed using fuzzy description matching.
@@ -49,6 +52,9 @@ pub enum Commands {
         /// Auto-commit updated files after completion.
         #[arg(long, default_value_t = false)]
         auto: bool,
+        /// Output result as JSON.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 
     /// List tasks with optional filters.
@@ -83,6 +89,9 @@ pub enum Commands {
         /// Auto-commit updated files after semver move.
         #[arg(long, default_value_t = false)]
         auto: bool,
+        /// Output result as JSON.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 
     /// Remove a task by fuzzy description match from TODO.md or a released entry.
@@ -102,6 +111,9 @@ pub enum Commands {
         /// Auto-commit updated files after removal.
         #[arg(long, default_value_t = false)]
         auto: bool,
+        /// Output result as JSON.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 
     /// Yank a changelog entry back into TODO as completed and unversioned.
@@ -118,6 +130,9 @@ pub enum Commands {
         /// Auto-commit updated files after yank.
         #[arg(long, default_value_t = false)]
         auto: bool,
+        /// Output result as JSON.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 
     /// Scan for task updates from git commits and/or source TODO markers.
@@ -137,5 +152,8 @@ pub enum Commands {
         /// Include source DONE scanning.
         #[arg(long, default_value_t = false)]
         done: bool,
+        /// Output result as JSON.
+        #[arg(long, default_value_t = false)]
+        json: bool,
     },
 }

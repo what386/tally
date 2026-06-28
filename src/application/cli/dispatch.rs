@@ -12,7 +12,8 @@ impl Cli {
                 tags,
                 dry_run,
                 auto,
-            } => commands::cmd_add(join_words(description), priority, tags, dry_run, auto),
+                json,
+            } => commands::cmd_add(join_words(description), priority, tags, dry_run, auto, json),
 
             Commands::Done {
                 description,
@@ -20,7 +21,15 @@ impl Cli {
                 version,
                 dry_run,
                 auto,
-            } => commands::cmd_done(join_words(description), commit, version, dry_run, auto),
+                json,
+            } => commands::cmd_done(
+                join_words(description),
+                commit,
+                version,
+                dry_run,
+                auto,
+                json,
+            ),
 
             Commands::List {
                 tags,
@@ -35,7 +44,8 @@ impl Cli {
                 dry_run,
                 summary,
                 auto,
-            } => commands::cmd_semver(version, dry_run, summary, auto),
+                json,
+            } => commands::cmd_semver(version, dry_run, summary, auto, json),
 
             Commands::Remove {
                 description,
@@ -43,14 +53,16 @@ impl Cli {
                 tags,
                 dry_run,
                 auto,
-            } => commands::cmd_remove(join_words(description), released, tags, dry_run, auto),
+                json,
+            } => commands::cmd_remove(join_words(description), released, tags, dry_run, auto, json),
 
             Commands::Yank {
                 description,
                 tags,
                 dry_run,
                 auto,
-            } => commands::cmd_yank(join_words(description), tags, dry_run, auto),
+                json,
+            } => commands::cmd_yank(join_words(description), tags, dry_run, auto, json),
 
             Commands::Scan {
                 auto,
@@ -58,7 +70,8 @@ impl Cli {
                 git,
                 todo,
                 done,
-            } => commands::cmd_scan(auto, dry_run, git, todo, done),
+                json,
+            } => commands::cmd_scan(auto, dry_run, git, todo, done, json),
         }
     }
 }

@@ -33,7 +33,7 @@ pub fn cmd_list(
 
     if json {
         let task_list: Vec<_> = tasks.iter().map(|(_, task)| task).collect();
-        page_output(serde_json::to_string_pretty(&task_list)?)?;
+        output::print_json(&task_list)?;
     } else {
         if tasks.is_empty() {
             println!("No tasks found.");
@@ -135,7 +135,7 @@ fn cmd_list_released(
     }
 
     if json {
-        page_output(serde_json::to_string_pretty(&entries)?)?;
+        output::print_json(&entries)?;
         return Ok(());
     }
 
@@ -180,11 +180,6 @@ fn cmd_list_released(
     output::page_text(None, &output)?;
 
     Ok(())
-}
-
-fn page_output(mut output: String) -> Result<()> {
-    output.push('\n');
-    output::page_text(None, &output)
 }
 
 fn filter_tasks<'a>(

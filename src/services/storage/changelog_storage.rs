@@ -1,7 +1,7 @@
 use crate::models::changes::{Change, Log, Release};
 use crate::models::common::Version;
 use crate::services::serializers::changelog_serializer;
-use crate::utils::matching::score_passes;
+use crate::utils::matching::{MatchCandidate, select_unambiguous};
 use anyhow::Result;
 use chrono::Utc;
 use fuzzy_matcher::FuzzyMatcher;
@@ -39,7 +39,9 @@ impl ChangelogStorage {
             fs::create_dir_all(parent)?;
         }
         self.changelog.generated_at = Utc::now();
-        let markdown = changelog_serializer::to_markdown(&self.changelog);
+        let previous = fs::read_to_string(&self.changelog_file).ok();
+        let markdown =
+            changelog_serializer::to_markdown_preserving(&self.changelog, previous.as_deref());
         fs::write(&self.changelog_file, markdown)?;
         Ok(())
     }
@@ -101,11 +103,11 @@ impl ChangelogStorage {
         version: Option<&Version>,
         tag_filter: Option<&[String]>,
         min_score: f64,
-    ) -> Option<(Version, Change)> {
+    ) -> Result<Option<(Version, Change)>> {
         use fuzzy_matcher::skim::SkimMatcherV2;
 
         let matcher = SkimMatcherV2::default();
-        let mut best: Option<(usize, usize, i64, Version, Change)> = None;
+        let mut candidates = Vec::new();
         let query_match = ReleaseQuery::from_query(query);
         let query = query_match.text.as_str();
         let version = version.or(query_match.version.as_ref());
@@ -139,20 +141,19 @@ impl ChangelogStorage {
                     continue;
                 };
 
-                if !score_passes(score, min_score) {
-                    continue;
-                }
-
-                {
-                    let better = best.as_ref().map(|b| score > b.2).unwrap_or(true);
-                    if better {
-                        best = Some((ri, ci, score, release.version.clone(), change.clone()));
-                    }
-                }
+                candidates.push(MatchCandidate {
+                    value: (ri, ci, release.version.clone(), change.clone()),
+                    score,
+                    label: format!("{} {}", release.version, change.description),
+                    exact: change.description.eq_ignore_ascii_case(query),
+                });
             }
         }
 
-        let (ri, ci, _, version, removed) = best?;
+        let Some(best) = select_unambiguous(candidates, min_score, query)? else {
+            return Ok(None);
+        };
+        let (ri, ci, version, removed) = best.value;
 
         let mut changes: Vec<Change> = self.changelog.releases[ri]
             .changes_by_priority
@@ -160,7 +161,7 @@ impl ChangelogStorage {
             .flat_map(|v| v.iter().cloned())
             .collect();
         if ci >= changes.len() {
-            return None;
+            return Ok(None);
         }
         changes.remove(ci);
 
@@ -171,7 +172,7 @@ impl ChangelogStorage {
             self.changelog.releases[ri] = Release::from_changes(version.clone(), Utc::now(), refs);
         }
 
-        Some((version, removed))
+        Ok(Some((version, removed)))
     }
 
     pub fn remove_changes(
@@ -180,7 +181,7 @@ impl ChangelogStorage {
         version: Option<&Version>,
         tag_filter: Option<&[String]>,
         min_score: f64,
-    ) -> Vec<(Version, Change)> {
+    ) -> Result<Vec<(Version, Change)>> {
         let query_match = ReleaseQuery::from_query(query);
         let query_text = query_match.text.as_str();
         let version = version.or(query_match.version.as_ref());
@@ -188,12 +189,13 @@ impl ChangelogStorage {
         if query_text.is_empty()
             && let Some(version) = version
         {
-            return self.remove_release_changes(version, tag_filter);
+            return Ok(self.remove_release_changes(version, tag_filter));
         }
 
-        self.remove_change(query, version, tag_filter, min_score)
+        Ok(self
+            .remove_change(query, version, tag_filter, min_score)?
             .into_iter()
-            .collect()
+            .collect())
     }
 
     fn remove_release_changes(
@@ -366,6 +368,7 @@ mod tests {
 
         let (version, removed) = storage
             .remove_change("v2.0.0 fix parser", None, None, 50.0)
+            .unwrap()
             .expect("tagged release match");
 
         assert_eq!(version, v2);
@@ -375,7 +378,7 @@ mod tests {
     }
 
     #[test]
-    fn remove_change_matches_literal_prefix_at_default_score() {
+    fn remove_change_rejects_ambiguous_literal_prefix() {
         let version = Version::new(1, 14, 0, false);
         let mut storage = storage_with_releases(vec![Release::from_changes(
             version.clone(),
@@ -386,20 +389,16 @@ mod tests {
             ],
         )]);
 
-        let (removed_version, removed) = storage
+        let err = storage
             .remove_change("feat:", None, None, 50.0)
-            .expect("literal prefix match");
+            .unwrap_err();
 
-        assert_eq!(removed_version, version);
-        assert_eq!(
-            removed.description,
-            "feat: pagination for long command outputs"
-        );
-        assert_eq!(storage.changelog.releases.len(), 1);
+        assert!(err.to_string().contains("Ambiguous match"));
+        assert_eq!(storage.changelog.releases[0].version, version);
     }
 
     #[test]
-    fn remove_change_matches_literal_prefix_after_markdown_parse() {
+    fn remove_change_rejects_ambiguous_literal_prefix_after_markdown_parse() {
         let log = changelog_serializer::from_markdown(
             r#"# Changelog — tally
 
@@ -425,19 +424,15 @@ mod tests {
             changelog_file: PathBuf::from("CHANGELOG.md"),
         };
 
-        let (removed_version, removed) = storage
+        let err = storage
             .remove_change("feat:", None, None, 90.0)
-            .expect("literal prefix match from parsed markdown");
+            .unwrap_err();
 
-        assert_eq!(removed_version, Version::new(1, 14, 0, false));
-        assert_eq!(
-            removed.description,
-            "feat: pagination for long command outputs"
-        );
+        assert!(err.to_string().contains("Ambiguous match"));
     }
 
     #[test]
-    fn remove_change_can_match_first_entry_by_semver_tag_only() {
+    fn remove_change_rejects_ambiguous_version_only_query() {
         let version = Version::new(1, 2, 3, false);
         let mut storage = storage_with_releases(vec![Release::from_changes(
             version.clone(),
@@ -448,13 +443,12 @@ mod tests {
             ],
         )]);
 
-        let (removed_version, removed) = storage
+        let err = storage
             .remove_change("v1.2.3", None, None, 50.0)
-            .expect("first release entry");
+            .unwrap_err();
 
-        assert_eq!(removed_version, version);
-        assert_eq!(removed.description, "first released task");
-        assert_eq!(storage.changelog.releases.len(), 1);
+        assert!(err.to_string().contains("Ambiguous match"));
+        assert_eq!(storage.changelog.releases[0].version, version);
     }
 
     #[test]
@@ -469,7 +463,7 @@ mod tests {
             ],
         )]);
 
-        let removed = storage.remove_changes("v1.2.3", None, None, 50.0);
+        let removed = storage.remove_changes("v1.2.3", None, None, 50.0).unwrap();
 
         assert_eq!(removed.len(), 2);
         assert_eq!(removed[0].0, version);
@@ -491,7 +485,9 @@ mod tests {
         )]);
         let tags = vec!["feature".to_string()];
 
-        let removed = storage.remove_changes("v1.2.3", None, Some(&tags), 50.0);
+        let removed = storage
+            .remove_changes("v1.2.3", None, Some(&tags), 50.0)
+            .unwrap();
 
         assert_eq!(removed.len(), 1);
         assert_eq!(removed[0].0, version);
@@ -511,7 +507,12 @@ mod tests {
             vec![&change("first task", &[]), &change("second task", &[])],
         )]);
 
-        assert!(storage.remove_change("", None, None, 50.0).is_none());
+        assert!(
+            storage
+                .remove_change("", None, None, 50.0)
+                .unwrap()
+                .is_none()
+        );
         assert_eq!(storage.changelog.releases.len(), 1);
     }
 
@@ -524,7 +525,12 @@ mod tests {
             vec![&change("parser", &[])],
         )]);
 
-        assert!(storage.remove_change("parser", None, None, 101.0).is_none());
+        assert!(
+            storage
+                .remove_change("parser", None, None, 101.0)
+                .unwrap()
+                .is_none()
+        );
         assert_eq!(storage.changelog.releases.len(), 1);
     }
 }

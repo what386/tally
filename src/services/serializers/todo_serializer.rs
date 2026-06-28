@@ -16,12 +16,53 @@ struct TaskMetadata {
 }
 
 pub fn serialize(list: &List) -> String {
+    let mut output = render_header(list);
+    output.push_str(&render_task_sections(list));
+    output
+}
+
+pub fn serialize_preserving(list: &List, previous: Option<&str>) -> String {
+    let Some(previous) = previous else {
+        return serialize(list);
+    };
+
+    let mut output = String::new();
+    output.push_str(&render_header(list));
+
+    let preserved = preserved_todo_sections(previous);
+    if !preserved.preface.trim().is_empty() {
+        output.push_str(preserved.preface.trim());
+        output.push_str("\n\n");
+    }
+
+    output.push_str(&render_task_sections(list));
+
+    if !preserved.sections.is_empty() {
+        if !output.ends_with("\n\n") {
+            output.push('\n');
+        }
+        output.push_str(&preserved.sections.join("\n"));
+        if !output.ends_with('\n') {
+            output.push('\n');
+        }
+    }
+
+    output
+}
+
+fn render_header(list: &List) -> String {
     let mut output = String::new();
 
     writeln!(&mut output, "# TODO — {}\n", list.project_name).unwrap();
-
     writeln!(&mut output, "@created: {}", format_date(&list.created_at)).unwrap();
     writeln!(&mut output, "@modified: {}", format_date(&list.modified_at)).unwrap();
+    output.push('\n');
+
+    output
+}
+
+fn render_task_sections(list: &List) -> String {
+    let mut output = String::new();
 
     let mut incomplete_tasks: Vec<_> = list.tasks.iter().filter(|t| !t.completed).collect();
     let mut completed_tasks: Vec<_> = list.tasks.iter().filter(|t| t.completed).collect();
@@ -46,25 +87,83 @@ pub fn serialize(list: &List) -> String {
     output
 }
 
-pub fn deserialize(content: &str) -> Result<List> {
-    let mut lines = content.lines().peekable();
+#[derive(Debug, Default)]
+struct PreservedTodoSections {
+    preface: String,
+    sections: Vec<String>,
+}
 
-    let header = lines.next().context("Empty TODO file")?;
+fn preserved_todo_sections(content: &str) -> PreservedTodoSections {
+    let lines: Vec<&str> = content.lines().collect();
+    let mut i = 0;
+
+    if lines
+        .first()
+        .is_some_and(|line| line.trim_start().starts_with("# TODO"))
+    {
+        i += 1;
+    }
+
+    while i < lines.len() {
+        let trimmed = lines[i].trim();
+        if trimmed.starts_with("@created:")
+            || trimmed.starts_with("@modified:")
+            || trimmed.is_empty()
+        {
+            i += 1;
+            continue;
+        }
+        break;
+    }
+
+    let mut preface = Vec::new();
+    while i < lines.len() && !lines[i].starts_with("## ") {
+        preface.push(lines[i]);
+        i += 1;
+    }
+
+    let mut sections = Vec::new();
+    while i < lines.len() {
+        let start = i;
+        i += 1;
+        while i < lines.len() && !lines[i].starts_with("## ") {
+            i += 1;
+        }
+
+        let heading = lines[start].trim();
+        if heading != "## Tasks" && heading != "## Completed" {
+            sections.push(lines[start..i].join("\n").trim().to_string());
+        }
+    }
+
+    PreservedTodoSections {
+        preface: preface.join("\n"),
+        sections: sections
+            .into_iter()
+            .filter(|section| !section.is_empty())
+            .collect(),
+    }
+}
+
+pub fn deserialize(content: &str) -> Result<List> {
+    let lines: Vec<&str> = content.lines().collect();
+
+    let header = lines.first().context("Empty TODO file")?;
     let project_name = parse_header(header)?;
 
     let mut created_at = None;
     let mut modified_at = None;
+    let mut idx = 1;
 
-    while let Some(line) = lines.peek() {
+    while let Some(line) = lines.get(idx) {
         if line.starts_with("@created:") {
-            created_at = Some(parse_date_line(lines.next().unwrap())?);
+            created_at = Some(parse_date_line(line)?);
         } else if line.starts_with("@modified:") {
-            modified_at = Some(parse_date_line(lines.next().unwrap())?);
+            modified_at = Some(parse_date_line(line)?);
         } else if !line.trim().is_empty() {
             break;
-        } else {
-            lines.next();
         }
+        idx += 1;
     }
 
     let created_at = created_at.context("Missing @created metadata")?;
@@ -72,13 +171,17 @@ pub fn deserialize(content: &str) -> Result<List> {
 
     let mut tasks = Vec::new();
 
-    while let Some(line) = lines.next() {
-        match line.trim() {
-            "## Tasks" | "## Completed" => {
-                let section_tasks = parse_tasks(&mut lines)?;
-                tasks.extend(section_tasks);
+    while idx < lines.len() {
+        let line = lines[idx].trim();
+        if line == "## Tasks" || line == "## Completed" {
+            idx += 1;
+            let start = idx;
+            while idx < lines.len() && !lines[idx].starts_with("## ") {
+                idx += 1;
             }
-            _ => {}
+            tasks.extend(parse_tasks(lines[start..idx].iter().copied())?);
+        } else {
+            idx += 1;
         }
     }
 
@@ -442,5 +545,36 @@ mod tests {
 
         let err = deserialize(content).unwrap_err();
         assert!(err.to_string().contains("Missing @created metadata"));
+    }
+
+    #[test]
+    fn serialize_preserving_keeps_unmanaged_sections() {
+        let mut list = List {
+            project_name: "demo".to_string(),
+            project_version: Version::new(0, 1, 0, false),
+            created_at: Utc.with_ymd_and_hms(2026, 2, 20, 0, 0, 0).unwrap(),
+            modified_at: Utc.with_ymd_and_hms(2026, 2, 21, 0, 0, 0).unwrap(),
+            tasks: vec![],
+        };
+        list.tasks.push(Task {
+            description: "managed task".to_string(),
+            priority: Priority::Medium,
+            tags: vec![],
+            completed: false,
+            created_at_time: Utc.with_ymd_and_hms(2026, 2, 20, 8, 15, 0).unwrap(),
+            created_at_version: None,
+            created_at_commit: None,
+            completed_at_time: None,
+            completed_at_version: None,
+            completed_at_commit: None,
+        });
+        let previous = "# TODO — demo\n\n@created: 2026-02-20\n@modified: 2026-02-20\n\nProject notes stay here.\n\n## Tasks\n\n- [ ] old task\n      @created 2026-02-20 08:00\n\n## Notes\n\n- arbitrary markdown\n";
+
+        let rendered = serialize_preserving(&list, Some(previous));
+
+        assert!(rendered.contains("Project notes stay here."));
+        assert!(rendered.contains("## Notes\n\n- arbitrary markdown"));
+        assert!(rendered.contains("managed task"));
+        assert!(!rendered.contains("old task"));
     }
 }

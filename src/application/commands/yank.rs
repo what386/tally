@@ -1,5 +1,6 @@
 use crate::models::changes::Change;
 use crate::models::tasks::Task;
+use crate::output;
 use crate::services::git;
 use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::config_storage::ConfigStorage;
@@ -13,6 +14,7 @@ pub fn cmd_yank(
     tags: Option<Vec<String>>,
     dry_run: bool,
     auto: bool,
+    json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
@@ -26,7 +28,14 @@ pub fn cmd_yank(
             None,
             tags.as_deref(),
             config.matching.released_min_score,
-        );
+        )?;
+        if json {
+            return output::print_json(&serde_json::json!({
+                "status": if changes.is_empty() { "not_found" } else { "would_yank" },
+                "dry_run": true,
+                "changes": changes,
+            }));
+        }
         if changes.is_empty() {
             println!("No matching released task found.");
         } else if changes.len() == 1 {
@@ -53,17 +62,32 @@ pub fn cmd_yank(
         None,
         tags.as_deref(),
         config.matching.released_min_score,
-    );
+    )?;
 
     if !changes.is_empty() {
-        let tasks = changes
+        let tasks: Vec<Task> = changes
             .iter()
             .map(|(_, change)| task_from_change(change))
             .collect();
-        storage.add_tasks(tasks)?;
+        storage.add_tasks(tasks.clone())?;
         changelog.save()?;
 
-        if changes.len() == 1 {
+        if auto || config.auto_commit_yank() {
+            if json {
+                git::commit_tally_files_quiet("update TODO/CHANGELOG: yank released task")?;
+            } else {
+                git::commit_tally_files("update TODO/CHANGELOG: yank released task")?;
+            }
+        }
+
+        if json {
+            output::print_json(&serde_json::json!({
+                "status": "yanked",
+                "dry_run": false,
+                "changes": changes,
+                "tasks": tasks,
+            }))?;
+        } else if changes.len() == 1 {
             let (version, change) = &changes[0];
             println!(
                 "Yanked from {} into TODO (semver cleared): {}",
@@ -75,10 +99,6 @@ pub fn cmd_yank(
                 changes.len(),
                 changes[0].0
             );
-        }
-
-        if auto || config.auto_commit_yank() {
-            git::commit_tally_files("update TODO/CHANGELOG: yank released task")?;
         }
 
         Ok(())

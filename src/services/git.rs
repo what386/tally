@@ -15,6 +15,14 @@ pub struct CommitEntry {
 }
 
 pub fn commit_tally_files(message: &str) -> Result<()> {
+    commit_tally_files_with_options(message, false)
+}
+
+pub fn commit_tally_files_quiet(message: &str) -> Result<()> {
+    commit_tally_files_with_options(message, true)
+}
+
+fn commit_tally_files_with_options(message: &str, quiet: bool) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();
@@ -41,7 +49,9 @@ pub fn commit_tally_files(message: &str) -> Result<()> {
         ));
     }
 
-    println!("Committed {}", files.join(" and "));
+    if !quiet {
+        println!("Committed {}", files.join(" and "));
+    }
 
     Ok(())
 }

@@ -34,7 +34,13 @@ impl ConfigStorage {
         let toml_str = fs::read_to_string(&self.config_file)
             .map_err(|e| io::Error::other(format!("Failed to load config: {}", e)))?;
 
-        self.config = toml::from_str(&toml_str).unwrap_or_default();
+        self.config = toml::from_str(&toml_str).map_err(|e| {
+            io::Error::other(format!(
+                "Failed to parse config {}: {}",
+                self.config_file.display(),
+                e
+            ))
+        })?;
         Ok(())
     }
 
@@ -271,6 +277,21 @@ done_prefix = "DONE:"
         assert_eq!(storage.get_config().scan.git_log_limit, 50);
         assert!(!storage.get_config().auto_commit.done);
         assert_eq!(storage.get_config().matching.released_min_score, 50.0);
+
+        cleanup(&path);
+    }
+
+    #[test]
+    fn load_config_errors_on_invalid_toml() {
+        let path = temp_config_path("invalid-toml");
+        fs::write(&path, "not valid = [").unwrap();
+
+        let err = match ConfigStorage::new(&path) {
+            Ok(_) => panic!("invalid config should fail"),
+            Err(err) => err,
+        };
+
+        assert!(err.to_string().contains("Failed to parse config"));
 
         cleanup(&path);
     }

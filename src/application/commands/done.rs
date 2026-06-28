@@ -1,8 +1,9 @@
 use crate::models::common::Version;
+use crate::output;
 use crate::services::git;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
-use crate::utils::matching::score_percent;
+use crate::utils::matching::{MatchCandidate, score_percent, select_unambiguous};
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
@@ -14,6 +15,7 @@ pub fn cmd_done(
     version: Option<String>,
     dry_run: bool,
     auto: bool,
+    json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
@@ -23,34 +25,45 @@ pub fn cmd_done(
     // Fuzzy match the description
     let matcher = SkimMatcherV2::default();
     let tasks = storage.tasks();
-    let mut best_match: Option<(usize, i64)> = None;
+    let mut candidates = Vec::new();
 
     for (i, task) in tasks.iter().enumerate() {
         if task.completed {
             continue;
         }
 
-        if let Some(score) = matcher.fuzzy_match(&task.description, &description)
-            && (best_match.is_none() || score > best_match.unwrap().1)
+        let exact = task.description.eq_ignore_ascii_case(&description);
+        if let Some(score) = matcher
+            .fuzzy_match(&task.description, &description)
+            .or(exact.then_some(i64::MAX))
         {
-            best_match = Some((i, score));
+            candidates.push(MatchCandidate {
+                value: i,
+                score,
+                label: task.description.clone(),
+                exact,
+            });
         }
     }
 
-    match best_match {
-        Some((index, score)) => {
+    match select_unambiguous(candidates, config.matching.task_min_score, &description)? {
+        Some(best_match) => {
+            let index = best_match.value;
+            let score = best_match.score;
             let task = &tasks[index];
             let score_pct = score_percent(score);
 
-            if score_pct < config.matching.task_min_score {
-                return Err(anyhow::anyhow!(
-                    "Best match too low ({:.0}%): '{}'",
-                    score_pct,
-                    task.description
-                ));
-            }
-
             if dry_run {
+                if json {
+                    return output::print_json(&serde_json::json!({
+                        "status": "would_complete",
+                        "dry_run": true,
+                        "match_score": score_pct,
+                        "task": task,
+                        "completed_commit": commit,
+                        "completed_version": version,
+                    }));
+                }
                 println!("Would mark as done (score: {:.0}%):", score_pct);
                 println!("  [x] {}", task.description);
                 if let Some(ref commit_hash) = commit {
@@ -68,8 +81,7 @@ pub fn cmd_done(
                 None
             };
 
-            // occurs early because evil borrow semantics
-            println!("Marked as done: {}", task.description);
+            let description = task.description.clone();
 
             // Add commit hash if provided
             if let Some(commit_hash) = commit {
@@ -80,9 +92,25 @@ pub fn cmd_done(
             }
 
             storage.complete_task(index, version_obj)?;
+            let completed_task = storage.tasks()[index].clone();
 
             if auto || config.auto_commit_done() {
-                git::commit_tally_files("update TODO: complete task")?;
+                if json {
+                    git::commit_tally_files_quiet("update TODO: complete task")?;
+                } else {
+                    git::commit_tally_files("update TODO: complete task")?;
+                }
+            }
+
+            if json {
+                output::print_json(&serde_json::json!({
+                    "status": "completed",
+                    "dry_run": false,
+                    "match_score": score_pct,
+                    "task": completed_task,
+                }))?;
+            } else {
+                println!("Marked as done: {}", description);
             }
 
             Ok(())

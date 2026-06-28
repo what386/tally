@@ -8,12 +8,7 @@ use std::collections::BTreeMap;
 
 pub fn to_markdown(changelog: &Log) -> String {
     let mut output = String::new();
-
-    output.push_str(&format!("# Changelog — {}\n\n", changelog.project_name));
-    output.push_str(&format!(
-        "*Generated on {}*\n\n",
-        changelog.generated_at.format("%Y-%m-%d")
-    ));
+    output.push_str(&render_changelog_header(changelog));
 
     for release in &changelog.releases {
         output.push_str(&release_to_markdown(release));
@@ -23,6 +18,47 @@ pub fn to_markdown(changelog: &Log) -> String {
     output
 }
 
+pub fn to_markdown_preserving(changelog: &Log, previous: Option<&str>) -> String {
+    let Some(previous) = previous else {
+        return to_markdown(changelog);
+    };
+
+    let preserved = preserved_changelog_sections(previous);
+    let mut output = String::new();
+    output.push_str(&render_changelog_header(changelog));
+
+    if !preserved.intro.trim().is_empty() {
+        output.push_str(preserved.intro.trim());
+        output.push_str("\n\n");
+    }
+
+    for release in &changelog.releases {
+        output.push_str(&release_to_markdown(release));
+        if let Some(extra) = preserved.release_extras.get(&release.version)
+            && !extra.trim().is_empty()
+        {
+            output.push_str(extra.trim());
+            output.push_str("\n\n");
+        }
+        output.push('\n');
+    }
+
+    if !preserved.top_level_sections.is_empty() {
+        output.push_str(&preserved.top_level_sections.join("\n\n"));
+        output.push('\n');
+    }
+
+    output
+}
+
+fn render_changelog_header(changelog: &Log) -> String {
+    format!(
+        "# Changelog — {}\n\n*Generated on {}*\n\n",
+        changelog.project_name,
+        changelog.generated_at.format("%Y-%m-%d")
+    )
+}
+
 pub fn from_markdown(content: &str) -> Result<Log> {
     let mut project_name = "Untitled".to_string();
     let mut generated_at = Utc::now();
@@ -30,7 +66,7 @@ pub fn from_markdown(content: &str) -> Result<Log> {
 
     let mut current_version: Option<Version> = None;
     let mut current_date = Utc::now();
-    let mut current_priority = Priority::Medium;
+    let mut current_priority = None;
     let mut current_changes: Vec<Change> = Vec::new();
 
     for line in content.lines() {
@@ -62,16 +98,22 @@ pub fn from_markdown(content: &str) -> Result<Log> {
             }
             current_version = Some(release.0);
             current_date = release.1;
-            current_priority = Priority::Medium;
+            current_priority = None;
             continue;
         }
 
         if let Some(priority) = parse_priority_header(trimmed) {
-            current_priority = priority;
+            current_priority = Some(priority);
             continue;
         }
 
-        if let Some(change) = parse_bullet_change(trimmed, current_priority)
+        if trimmed.starts_with("### ") {
+            current_priority = None;
+            continue;
+        }
+
+        if let Some(priority) = current_priority
+            && let Some(change) = parse_bullet_change(trimmed, priority)
             && current_version.is_some()
         {
             current_changes.push(change);
@@ -88,6 +130,100 @@ pub fn from_markdown(content: &str) -> Result<Log> {
         releases,
         generated_at,
     })
+}
+
+#[derive(Debug, Default)]
+struct PreservedChangelogSections {
+    intro: String,
+    top_level_sections: Vec<String>,
+    release_extras: BTreeMap<Version, String>,
+}
+
+fn preserved_changelog_sections(content: &str) -> PreservedChangelogSections {
+    let lines: Vec<&str> = content.lines().collect();
+    let mut i = 0;
+
+    if lines
+        .first()
+        .is_some_and(|line| line.trim_start().starts_with("# Changelog"))
+    {
+        i += 1;
+    }
+
+    while i < lines.len() {
+        let trimmed = lines[i].trim();
+        if trimmed.starts_with("*Generated on ") || trimmed.is_empty() {
+            i += 1;
+            continue;
+        }
+        break;
+    }
+
+    let mut intro = Vec::new();
+    while i < lines.len() && !lines[i].starts_with("## ") {
+        intro.push(lines[i]);
+        i += 1;
+    }
+
+    let mut top_level_sections = Vec::new();
+    let mut release_extras = BTreeMap::new();
+    while i < lines.len() {
+        let start = i;
+        i += 1;
+        while i < lines.len() && !lines[i].starts_with("## ") {
+            i += 1;
+        }
+
+        let block = &lines[start..i];
+        if let Some((version, _)) = parse_release_header(block[0].trim()) {
+            let extra = preserved_release_extra(block);
+            if !extra.trim().is_empty() {
+                release_extras.insert(version, extra);
+            }
+        } else {
+            let section = block.join("\n").trim().to_string();
+            if !section.is_empty() {
+                top_level_sections.push(section);
+            }
+        }
+    }
+
+    PreservedChangelogSections {
+        intro: intro.join("\n"),
+        top_level_sections,
+        release_extras,
+    }
+}
+
+fn preserved_release_extra(block: &[&str]) -> String {
+    let mut extra = Vec::new();
+    let mut i = 1;
+
+    while i < block.len() {
+        if parse_priority_header(block[i].trim()).is_some() {
+            i += 1;
+            while i < block.len() && !block[i].starts_with("### ") {
+                i += 1;
+            }
+            continue;
+        }
+
+        let start = i;
+        i += 1;
+        while i < block.len()
+            && !block[i].starts_with("### ")
+            && parse_priority_header(block[i].trim()).is_none()
+        {
+            i += 1;
+        }
+
+        let section = block[start..i].join("\n").trim().to_string();
+        if !section.is_empty() {
+            extra.push(section);
+        }
+    }
+
+    extra.join("\n\n")
 }
 
 fn release_to_markdown(release: &Release) -> String {
@@ -333,5 +469,29 @@ mod tests {
 
         assert_eq!(value["project_name"], "tally");
         assert_eq!(value["releases"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn to_markdown_preserving_keeps_custom_release_notes_and_sections() {
+        let version = Version::new(1, 2, 3, false);
+        let release = Release::from_changes(
+            version,
+            Utc.with_ymd_and_hms(2026, 2, 21, 0, 0, 0).unwrap(),
+            vec![&change("Managed change", Priority::Medium, &[], None)],
+        );
+        let log = Log {
+            project_name: "tally".to_string(),
+            releases: vec![release],
+            generated_at: Utc.with_ymd_and_hms(2026, 2, 23, 0, 0, 0).unwrap(),
+        };
+        let previous = "# Changelog — tally\n\n*Generated on 2026-02-22*\n\nIntro note.\n\n## 1.2.3 — 2026-02-21\n\n### Changes\n\n- Old generated change\n\n### Notes\n\nKeep this note.\n\n## Appendix\n\nKeep this too.\n";
+
+        let rendered = to_markdown_preserving(&log, Some(previous));
+
+        assert!(rendered.contains("Intro note."));
+        assert!(rendered.contains("### Notes\n\nKeep this note."));
+        assert!(rendered.contains("## Appendix\n\nKeep this too."));
+        assert!(rendered.contains("- Managed change"));
+        assert!(!rendered.contains("Old generated change"));
     }
 }

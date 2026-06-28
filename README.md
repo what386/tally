@@ -1,390 +1,213 @@
-# tally
-
-**tally** is a lightweight, Git-friendly task manager for projects that live in a `TODO.md` file.
-
-It tracks tasks, marks them complete, associates completions with git commits or release versions, moves released work into `CHANGELOG.md`, and can scan source files or git history for task updates.
-
+---
+name: tally
+description: Manage project work tracked in repository TODO.md and CHANGELOG.md files using the tally CLI. Use when adding tasks, completing tasks, removing tasks, releasing completed work, yanking changelog entries back into TODO.md, scanning git/source markers, reviewing pending/completed/released work, or safely previewing changes before writes.
 ---
 
-## Features
+# Tally
 
-- Plain-text `TODO.md` task storage
-- Plain-text `CHANGELOG.md` release storage
-- Fuzzy task matching for `done`, `remove`, `scan`, and `yank`
-- Tags and priorities
-- Git commit scanning from configurable `done:` sections
-- Source scanning from configurable `TODO:` / `DONE:` markers
-- Release management with `semver`
-- Yank released changelog entries back into TODO
-- Optional auto-commit per command
-- Prompt, always, or never policy for tracking newly created tally files with git
-- Pager support for large command output
+Use this skill to drive task tracking in repos that use `tally`, `TODO.md`, and optionally `CHANGELOG.md`.
 
----
+`tally` is a Git-friendly task manager for plain-text project task files. It supports active tasks, completed-but-unreleased tasks, released changelog entries, fuzzy matching, tags, priorities, source/git scanning, JSON output, and optional auto-commits.
 
-## Installation
+## Quick Workflow
 
-Install from crates.io:
+1. Add work items with clear descriptions and metadata.
+2. Review active/completed/released work with `tally list`.
+3. Complete work items with fuzzy matching and optional commit/version linkage.
+4. Move completed unreleased work into `CHANGELOG.md` with `tally semver`.
+5. Use `--dry-run` before broad, fuzzy, destructive, or low-confidence operations.
+6. After any write action, verify with `tally list`, `tally list --done`, or `tally list --released VERSION`.
 
-```bash
-cargo install tally-todo
-```
+## Add Tasks
 
-Update an existing install:
-
-```bash
-cargo install --force tally-todo
-```
-
-Build from source:
-
-```bash
-git clone https://github.com/what386/tally.git
-cd tally
-cargo build --release
-```
-
-The built binary is:
-
-```text
-target/release/tally
-```
-
----
-
-## Getting Started
-
-Create the first task in a project directory:
+Prefer short, action-oriented descriptions. Prefer explicit flags for metadata when possible.
 
 ```bash
 tally add "Fix parsing error"
-```
-
-If `TODO.md` does not exist, tally creates it in the current directory. Release operations create `CHANGELOG.md` when needed.
-
-When auto-commit is enabled and tally creates `TODO.md` or `CHANGELOG.md`, it can prompt to `git add` those files before committing. This behavior is controlled by `git.track_created_files`.
-
----
-
-## Commands
-
-### Add Tasks
-
-```bash
-tally add "Fix parsing error"
-```
-
-Set priority and tags:
-
-```bash
 tally add "Implement parser recovery" --priority high --tags parser,feature
-```
-
-You can also include TODO-style priority and tags in the task text:
-
-```bash
-tally add "Implement a new backend (high) #backend #improvement"
-```
-
-Explicit flags override metadata parsed from the task text:
-
-```bash
-tally add "Implement a new backend (low) #backend" --priority high --tags api
-```
-
-Preview without writing:
-
-```bash
 tally add "Update docs" --dry-run
+tally add "Update docs" --dry-run --json
 ```
 
-Auto-commit this add regardless of config:
+Inline metadata is also supported:
 
 ```bash
-tally add "Update docs" --auto
+tally add "Implement feature flag (high) #feature #backend"
 ```
 
-### List Tasks
+Guidance:
+
+* Prefer `--priority low|medium|high` over inline priority when generating commands.
+* Prefer `--tags tag1,tag2` over inline hashtags when generating commands.
+* Use inline `(priority)` and `#tags` when preserving user-provided task wording.
+* Use `--dry-run` before adding many tasks or when unsure how metadata will be parsed.
+* Use `--json` when another tool or script will consume the result.
+* Use `--auto` only when the user wants tally to auto-commit the change.
+
+## List and Inspect Tasks
+
+Use `tally list` to verify repository task state.
 
 ```bash
 tally list
-```
-
-Filter active TODO entries:
-
-```bash
+tally list --done
 tally list --tags bug,parser
 tally list --priority high
-tally list --done
-```
-
-List released changelog entries for an exact version:
-
-```bash
 tally list --released v0.6.0
-```
-
-Output JSON:
-
-```bash
 tally list --json
-tally list --released v0.6.0 --json
 ```
 
-Large list output is paged automatically when stdout is an interactive terminal.
+Guidance:
 
-### Complete Tasks
+* Use `tally list` for active TODO entries.
+* Use `tally list --done` for completed-but-unreleased entries.
+* Use `tally list --released VERSION` for entries already moved to `CHANGELOG.md`.
+* Use `--json` when exact structured output is needed.
 
-Mark a task complete using fuzzy matching:
+## Mark Tasks Done
+
+Use fuzzy matching on existing task text. Start with the most specific recognizable phrase available.
 
 ```bash
-tally done "Fix parsing"
+tally done "Fix parsing error"
+tally done "Fix parsing error" --commit abc123f
+tally done "Fix parsing error" --version v0.2.3
+tally done "Fix parsing error" --dry-run
+tally done "Fix parsing error" --dry-run --json
 ```
 
-Attach completion metadata:
+Guidance:
 
-```bash
-tally done "Fix parsing" --commit abc123f
-tally done "Fix parsing" --version v0.2.3
-```
+* Prefer exact or near-exact task wording to reduce ambiguous matches.
+* Use `--commit` when completion corresponds to a known git commit.
+* Use `--version` when completion belongs directly to a release.
+* Use `--dry-run` when match confidence may be low.
+* If multiple tasks may match, inspect first with `tally list` or use a more specific phrase.
+* After writing, verify with `tally list --done`.
 
-Preview:
+## Release Completed Work
 
-```bash
-tally done "Fix parsing" --dry-run
-```
-
-`matching.task_min_score` controls how confident a fuzzy match must be for task commands.
-
-### Release Completed Work
-
-Move completed, unversioned tasks into `CHANGELOG.md`:
+Use `semver` to move completed, unversioned tasks from `TODO.md` into `CHANGELOG.md` under a release version.
 
 ```bash
 tally semver v0.2.3
-```
-
-Preview or print the moved task summary:
-
-```bash
 tally semver v0.2.3 --dry-run
 tally semver v0.2.3 --summary
+tally semver v0.2.3 --json
 ```
 
-### Remove Tasks
+Guidance:
 
-Remove a TODO entry by fuzzy match:
+* Run `tally list --done` before release operations when reviewing what will move.
+* Prefer `tally semver VERSION --dry-run` before writing a release.
+* Use `--summary` when the user wants a release summary.
+* Use `--auto` only when the user wants tally to auto-commit the release-file changes.
+* Verify released entries with `tally list --released VERSION`.
+
+## Remove Tasks
+
+Use `remove` to delete a task by fuzzy match from `TODO.md`, or from a released changelog version.
 
 ```bash
 tally remove "Old task"
-```
-
-Remove a released changelog entry from a specific version:
-
-```bash
-tally remove "Old task" --released v0.2.3
-```
-
-Narrow candidates by tag:
-
-```bash
 tally remove "Old task" --tags cleanup
-```
-
-Preview:
-
-```bash
+tally remove "Old task" --released v0.2.3
 tally remove "Old task" --dry-run
 ```
 
-### Yank Released Entries
+Guidance:
 
-Move a released changelog entry back into `TODO.md` as completed and unversioned:
+* Treat removal as destructive; prefer `--dry-run` first.
+* Use `--tags` to narrow candidates before fuzzy matching.
+* Use `--released VERSION` when removing from `CHANGELOG.md`.
+* Verify with `tally list`, `tally list --done`, or `tally list --released VERSION`.
+
+## Yank Released Entries
+
+Use `yank` to move a released changelog entry back into `TODO.md` as completed and unversioned.
 
 ```bash
 tally yank "Fix parsing"
-```
-
-You can include a release version tag in the match text to restrict the search:
-
-```bash
 tally yank v0.2.3 "Fix parsing"
-```
-
-A version-only yank works when that release has exactly one matching entry:
-
-```bash
 tally yank v0.2.3
-```
-
-Use tags or dry-run:
-
-```bash
 tally yank "Fix parsing" --tags parser
 tally yank v0.2.3 "Fix parsing" --dry-run
 ```
 
-`matching.released_min_score` controls fuzzy matching for released changelog entries.
+Guidance:
 
-### Scan Git and Source
+* Use a version in the match text when the release is known.
+* A version-only yank is safe only when that release has exactly one matching entry.
+* Use `--tags` to narrow released-task matching.
+* Prefer `--dry-run` before yanking.
+* Verify with `tally list --done` and `tally list --released VERSION`.
 
-Scan git commits and tracked source files:
+## Scan Git and Source Markers
+
+Use `scan` to detect task updates from git commits and/or source markers.
 
 ```bash
 tally scan
-```
-
-Limit scan modes:
-
-```bash
 tally scan --git
 tally scan --todo
 tally scan --done
-```
-
-Preview or auto-accept git commit matches:
-
-```bash
 tally scan --dry-run
-tally scan --auto
+tally scan --json --dry-run
 ```
 
-Git scan looks for a configurable `done:` section in recent commit messages:
+Git scan detects completed work from commit messages using the configured done section, usually:
 
 ```text
-implement parser recovery
-
 done:
 - fix parsing error
 - handle quoted strings
 ```
 
-Source scan looks at git-tracked files and ignores `TODO.md` / `CHANGELOG.md`. By default it recognizes comment markers like:
+Source scanning detects configured markers such as:
 
 ```rust
-// TODO: write parser recovery tests
-// DONE: remove old parser workaround
+// TODO: Implement parser recovery (high) #parser
+// DONE: Remove old parser workaround
 ```
 
-Source `TODO:` markers can include the same inline priority and tags as `tally add`:
+Guidance:
 
-```rust
-// TODO: Implement a new backend (high) #backend #improvement
+* Use `tally scan --dry-run` before applying detected changes.
+* Use `--git` to scan commit messages.
+* Use `--todo` to add source TODO markers as tasks.
+* Use `--done` to match source DONE markers against existing tasks.
+* Use `--auto` on `scan` only when the user wants git-based done matches auto-accepted without prompting.
+* Use `--json` when results must be consumed by another tool.
+
+## Auto-Commit Behavior
+
+Many write commands support `--auto`:
+
+```bash
+tally add "Update docs" --auto
+tally done "Fix parsing" --auto
+tally remove "Old task" --auto
+tally semver v0.2.3 --auto
+tally yank "Fix parsing" --auto
 ```
 
-Inline metadata on source `DONE:` markers is ignored for matching, so tags can be left in comments without lowering match quality.
+Guidance:
 
-Configured source markers can include alternatives such as `FIXME:` or `SHIPPED:`.
+* For write commands, `--auto` requests an auto-commit of updated files.
+* For `scan`, `--auto` means auto-accept git-based done matches.
+* Do not add `--auto` unless the user explicitly wants tally to make the related automated action.
+* Be aware that config may also enable auto-commit behavior per command.
 
----
+## Safety Rules
 
-## Configuration
+* Prefer `--dry-run` before destructive, broad, fuzzy, release, yank, remove, or low-confidence operations.
+* Prefer exact recognizable task wording for fuzzy-match commands.
+* Use `--tags` and `--released VERSION` to narrow candidates when possible.
+* Use `--json` for machine-readable inspection or automation.
+* After any write action, run a relevant verification command:
 
-Configuration is stored at:
+  * `tally list`
+  * `tally list --done`
+  * `tally list --released VERSION`
+* Do not silently choose among ambiguous fuzzy matches. Inspect first or use a more specific phrase.
 
-```text
-~/.config/tally/config.toml
-```
-
-Tally creates missing config directories and fills missing sections with defaults, so older config files continue to load.
-
-Example:
-
-```toml
-[preferences]
-auto_commit_todo = false
-auto_complete_tasks = false
-editor = "nvim"
-
-[auto_commit]
-add = false
-done = true
-remove = false
-semver = true
-yank = true
-
-[git]
-done_prefix = "done:"
-track_created_files = "prompt" # prompt | always | never
-
-[scan]
-git_log_limit = 100
-todo_markers = ["TODO:", "FIXME:"]
-done_markers = ["DONE:", "SHIPPED:"]
-
-[matching]
-task_min_score = 50.0
-source_done_min_score = 50.0
-released_min_score = 50.0
-```
-
-### Config Reference
-
-`preferences.auto_commit_todo`
-
-Legacy broad auto-commit switch. When true, all write commands that support commits will auto-commit. The command-specific `[auto_commit]` keys are preferred for new configs.
-
-`preferences.auto_complete_tasks`
-
-Auto-accept git-based scan matches without prompting.
-
-`preferences.editor`
-
-Reserved for editor preference support.
-
-`auto_commit.add`, `auto_commit.done`, `auto_commit.remove`, `auto_commit.semver`, `auto_commit.yank`
-
-Enable auto-commit for individual write commands.
-
-`git.done_prefix`
-
-Commit-message section header used by `tally scan --git`. Default: `done:`.
-
-`git.track_created_files`
-
-Controls what happens when auto-commit sees newly created `TODO.md` or `CHANGELOG.md`:
-
-- `prompt`: ask before `git add`
-- `always`: add them automatically
-- `never`: fail instead of tracking them
-
-`scan.git_log_limit`
-
-Number of recent commits to inspect. Default: `50`.
-
-`scan.todo_markers`, `scan.done_markers`
-
-Markers used by source scanning. Defaults: `["TODO:"]` and `["DONE:"]`.
-
-`matching.task_min_score`
-
-Minimum fuzzy score for task matching in `done`, `remove`, and git scan completion matching.
-
-`matching.source_done_min_score`
-
-Minimum fuzzy score for matching source `DONE:` markers to existing TODO tasks.
-
-`matching.released_min_score`
-
-Minimum fuzzy score for released changelog entry matching in `remove --released` and `yank`.
-
----
-
-## Storage Format
-
-- `TODO.md`: active and completed-but-unreleased tasks
-- `CHANGELOG.md`: released entries grouped by semver
-- `~/.config/tally/config.toml`: user preferences and matching/scan behavior
-
-All project data is human-readable and git-friendly.
-
----
-
-## Philosophy
-
-`tally` is designed to:
-
-- Stay out of your way
-- Work naturally with git
-- Avoid lock-in and opaque formats
-- Keep TODO and changelog history editable as plain text

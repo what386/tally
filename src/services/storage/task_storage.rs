@@ -51,7 +51,8 @@ impl ListStorage {
             fs::create_dir_all(parent).map_err(|e| anyhow!("Failed to create directory: {}", e))?;
         }
 
-        let content = todo_serializer::serialize(&self.todo_list);
+        let previous = fs::read_to_string(&self.list_file).ok();
+        let content = todo_serializer::serialize_preserving(&self.todo_list, previous.as_deref());
 
         fs::write(&self.list_file, content)
             .map_err(|e| anyhow!("Failed to write TODO file: {}", e))?;

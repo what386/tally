@@ -4,16 +4,51 @@ use crate::output;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
 use crate::services::{git, source};
-use crate::utils::matching::{score_passes, score_percent};
+use crate::utils::matching::{MatchCandidate, score_passes, score_percent, select_unambiguous};
 use crate::utils::project_paths::ProjectPaths;
 use crate::utils::task_input::parse_task_input;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
+use serde::Serialize;
 use std::collections::HashSet;
 use std::fmt::Write as _;
 
-pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) -> Result<()> {
+#[derive(Debug, Serialize)]
+struct ScanSummary {
+    dry_run: bool,
+    git_matches: Vec<GitScanMatch>,
+    source_added: Vec<Task>,
+    source_completed: Vec<SourceDoneMatch>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct GitScanMatch {
+    task_index: usize,
+    task: Task,
+    done: String,
+    commit: String,
+    match_score: f64,
+    accepted: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct SourceDoneMatch {
+    location: String,
+    task_index: usize,
+    task: Task,
+    done: String,
+    match_score: f64,
+}
+
+pub fn cmd_scan(
+    auto: bool,
+    dry_run: bool,
+    git: bool,
+    todo: bool,
+    done: bool,
+    json: bool,
+) -> Result<()> {
     let paths = ProjectPaths::get_paths().or_else(|_| ProjectPaths::for_current_dir())?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
@@ -24,19 +59,33 @@ pub fn cmd_scan(auto: bool, dry_run: bool, git: bool, todo: bool, done: bool) ->
     let run_todo = todo || !has_selector;
     let run_done = done || !has_selector;
 
+    let mut summary = ScanSummary {
+        dry_run,
+        git_matches: Vec::new(),
+        source_added: Vec::new(),
+        source_completed: Vec::new(),
+    };
+
     if run_git {
-        run_git_scan(&paths.root, &mut storage, config, auto, dry_run)?;
+        summary.git_matches = run_git_scan(&paths.root, &mut storage, config, auto, dry_run, json)?;
     }
 
     if run_todo || run_done {
-        run_source_scan(
+        let source_summary = run_source_scan(
             &paths.root,
             &mut storage,
             config,
             dry_run,
             run_todo,
             run_done,
+            json,
         )?;
+        summary.source_added = source_summary.source_added;
+        summary.source_completed = source_summary.source_completed;
+    }
+
+    if json {
+        output::print_json(&summary)?;
     }
 
     Ok(())
@@ -48,12 +97,14 @@ fn run_git_scan(
     config: &AppConfig,
     auto: bool,
     dry_run: bool,
-) -> Result<()> {
+    json: bool,
+) -> Result<Vec<GitScanMatch>> {
     let commits =
         git::scan_recent_commits(root, &config.git.done_prefix, config.scan.git_log_limit)?;
     let matcher = SkimMatcherV2::default();
     let mut matches_found = 0;
     let mut completed = Vec::new();
+    let mut summary = Vec::new();
 
     for (idx, task) in storage.tasks().iter().enumerate() {
         if task.completed {
@@ -85,19 +136,35 @@ fn run_git_scan(
 
         if let Some((hash, score, done_line)) = best_match {
             matches_found += 1;
+            let score_pct = score_percent(score);
 
-            println!("Match found (score: {}):", score);
-            println!("  Task: {}", task.description);
-            println!("  Done: {}", done_line);
-            println!("  Commit: {}", hash);
+            if !json {
+                println!("Match found (score: {}):", score);
+                println!("  Task: {}", task.description);
+                println!("  Done: {}", done_line);
+                println!("  Commit: {}", hash);
+            }
 
             if dry_run {
-                println!("  (dry-run: would mark as done)\n");
+                if !json {
+                    println!("  (dry-run: would mark as done)\n");
+                }
+                summary.push(GitScanMatch {
+                    task_index: idx,
+                    task: task.clone(),
+                    done: done_line,
+                    commit: hash,
+                    match_score: score_pct,
+                    accepted: false,
+                });
                 continue;
             }
 
-            if auto || config.preferences.auto_complete_tasks {
-                completed.push((idx, hash));
+            let accepted = if auto || config.preferences.auto_complete_tasks {
+                completed.push((idx, hash.clone()));
+                true
+            } else if json {
+                false
             } else {
                 use std::io::{self, Write};
                 print!("  Mark as done? [y/N]: ");
@@ -105,29 +172,52 @@ fn run_git_scan(
                 let mut input = String::new();
                 io::stdin().read_line(&mut input)?;
                 if input.trim().eq_ignore_ascii_case("y") {
-                    completed.push((idx, hash));
+                    completed.push((idx, hash.clone()));
+                    true
                 } else {
                     println!("  -> Skipped");
+                    false
                 }
+            };
+
+            summary.push(GitScanMatch {
+                task_index: idx,
+                task: task.clone(),
+                done: done_line,
+                commit: hash,
+                match_score: score_pct,
+                accepted,
+            });
+
+            if !json {
+                println!();
             }
-
-            println!();
         }
     }
 
-    for (idx, hash) in &completed {
-        storage.complete_task(*idx, None)?;
-        if let Some(task) = storage.tasks_mut().get_mut(*idx) {
-            task.completed_at_commit = Some(hash.clone());
+    if !dry_run {
+        for (idx, hash) in &completed {
+            storage.complete_task(*idx, None)?;
+            if let Some(task) = storage.tasks_mut().get_mut(*idx) {
+                task.completed_at_commit = Some(hash.clone());
+            }
+        }
+        if !completed.is_empty() {
+            storage.save_list()?;
         }
     }
-    storage.save_list()?;
 
-    if matches_found == 0 {
+    if matches_found == 0 && !json {
         println!("No git commit matches found.");
     }
 
-    Ok(())
+    Ok(summary)
+}
+
+#[derive(Debug, Default)]
+struct SourceScanSummary {
+    source_added: Vec<Task>,
+    source_completed: Vec<SourceDoneMatch>,
 }
 
 fn run_source_scan(
@@ -137,12 +227,15 @@ fn run_source_scan(
     dry_run: bool,
     include_todo: bool,
     include_done: bool,
-) -> Result<()> {
+    json: bool,
+) -> Result<SourceScanSummary> {
     let markers = source::scan_project(root, &config.scan.todo_markers, &config.scan.done_markers)?;
 
     if markers.is_empty() {
-        println!("No source TODO/DONE markers found.");
-        return Ok(());
+        if !json {
+            println!("No source TODO/DONE markers found.");
+        }
+        return Ok(SourceScanSummary::default());
     }
 
     let mut existing = HashSet::new();
@@ -165,24 +258,37 @@ fn run_source_scan(
                 continue;
             }
             let match_text = parsed_source_marker_text(&todo.text);
-            let mut best_match: Option<(usize, i64)> = None;
+            let mut candidates = Vec::new();
             for (idx, task) in storage.tasks().iter().enumerate() {
                 if task.completed {
                     continue;
                 }
 
-                if let Some(score) = matcher.fuzzy_match(&task.description, &match_text)
-                    && (best_match.is_none() || score > best_match.unwrap().1)
-                {
-                    best_match = Some((idx, score));
+                if let Some(score) = matcher.fuzzy_match(&task.description, &match_text) {
+                    candidates.push(MatchCandidate {
+                        value: idx,
+                        score,
+                        label: task.description.clone(),
+                        exact: task.description.eq_ignore_ascii_case(&match_text),
+                    });
                 }
             }
 
-            if let Some((idx, score)) = best_match {
+            if let Some(best_match) = select_unambiguous(
+                candidates,
+                config.matching.source_done_min_score,
+                &match_text,
+            )? {
+                let idx = best_match.value;
+                let score = best_match.score;
                 let score_pct = score_percent(score);
-                if score_pct >= config.matching.source_done_min_score {
-                    planned_done.push((todo.location(), idx, todo.text.clone(), score_pct));
-                }
+                planned_done.push(SourceDoneMatch {
+                    location: todo.location(),
+                    task_index: idx,
+                    task: storage.tasks()[idx].clone(),
+                    done: todo.text.clone(),
+                    match_score: score_pct,
+                });
             }
             continue;
         }
@@ -193,7 +299,7 @@ fn run_source_scan(
 
         let task = task_from_source_todo(&todo)?;
         if existing.contains(&task.description) || seen_new.contains(&task.description) {
-            if done_descriptions.contains(&task.description) {
+            if done_descriptions.contains(&task.description) && !json {
                 println!("{} - This seems like it's already done", todo.location());
             }
             continue;
@@ -204,8 +310,10 @@ fn run_source_scan(
     }
 
     if planned.is_empty() && planned_done.is_empty() {
-        println!("No new source TODO tasks to add.");
-        return Ok(());
+        if !json {
+            println!("No new source TODO tasks to add.");
+        }
+        return Ok(SourceScanSummary::default());
     }
 
     if dry_run {
@@ -225,39 +333,45 @@ fn run_source_scan(
                 "Would mark {} task(s) as done from source DONE markers:",
                 planned_done.len()
             )?;
-            for (location, idx, text, score) in &planned_done {
+            for done_match in &planned_done {
                 writeln!(
                     output,
                     "  {} -> {} (match: {:.0}%)",
-                    location,
-                    storage.tasks()[*idx].description,
-                    score
+                    done_match.location, done_match.task.description, done_match.match_score
                 )?;
-                writeln!(output, "      DONE: {}", text)?;
+                writeln!(output, "      DONE: {}", done_match.done)?;
             }
         }
-        output::page_text(None, &output)?;
-        return Ok(());
-    }
-
-    for task in &planned {
-        storage.add_task(task.clone())?;
-    }
-
-    for (_, idx, _, _) in &planned_done {
-        storage.complete_task(*idx, None)?;
+        if !json {
+            output::page_text(None, &output)?;
+        }
+        return Ok(SourceScanSummary {
+            source_added: planned,
+            source_completed: planned_done,
+        });
     }
 
     if !planned.is_empty() {
+        storage.add_tasks(planned.clone())?;
+    }
+
+    for done_match in &planned_done {
+        storage.complete_task(done_match.task_index, None)?;
+    }
+
+    if !planned.is_empty() && !json {
         println!("Added {} source TODO task(s)", planned.len());
     }
-    if !planned_done.is_empty() {
+    if !planned_done.is_empty() && !json {
         println!(
             "Marked {} task(s) as done from source DONE markers",
             planned_done.len()
         );
     }
-    Ok(())
+    Ok(SourceScanSummary {
+        source_added: planned,
+        source_completed: planned_done,
+    })
 }
 
 fn parsed_source_marker_text(text: &str) -> String {
@@ -299,7 +413,13 @@ fn write_task_line(output: &mut String, task: &Task) -> Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::AppConfig;
     use crate::models::common::Priority;
+    use crate::services::storage::task_storage::ListStorage;
+    use std::fs;
+    use std::path::{Path, PathBuf};
+    use std::process::Command;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn source_todo_metadata_becomes_task_metadata() {
@@ -322,6 +442,60 @@ mod tests {
         assert_eq!(
             parsed_source_marker_text("Implement a new backend (high) #backend"),
             "Implement a new backend"
+        );
+    }
+
+    #[test]
+    fn git_scan_dry_run_does_not_rewrite_todo_file() {
+        let root = temp_dir("git-scan-dry-run");
+        run_git(&root, &["init"]);
+        run_git(&root, &["config", "user.email", "test@example.com"]);
+        run_git(&root, &["config", "user.name", "Tally Test"]);
+
+        fs::write(root.join("src.txt"), "content\n").unwrap();
+        run_git(&root, &["add", "src.txt"]);
+        run_git(&root, &["commit", "-m", "initial"]);
+        fs::write(root.join("src.txt"), "changed\n").unwrap();
+        run_git(&root, &["add", "src.txt"]);
+        run_git(
+            &root,
+            &["commit", "-m", "finish parser", "-m", "done:\n- fix parser"],
+        );
+
+        let todo = "# TODO — demo\n\n@created: 2020-01-01\n@modified: 2020-01-01\n\n## Tasks\n\n- [ ] fix parser\n      @created 2020-01-01 00:00\n\n## Notes\n\nkeep me\n";
+        fs::write(root.join("TODO.md"), todo).unwrap();
+
+        let mut storage = ListStorage::new(&root.join("TODO.md")).unwrap();
+        let matches =
+            run_git_scan(&root, &mut storage, &AppConfig::default(), true, true, true).unwrap();
+
+        assert_eq!(matches.len(), 1);
+        assert_eq!(fs::read_to_string(root.join("TODO.md")).unwrap(), todo);
+
+        let _ = fs::remove_dir_all(root);
+    }
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let nanos = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let dir = std::env::temp_dir().join(format!("tally-{name}-{nanos}"));
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    fn run_git(root: &Path, args: &[&str]) {
+        let output = Command::new("git")
+            .args(args)
+            .current_dir(root)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "git {:?} failed: {}",
+            args,
+            String::from_utf8_lossy(&output.stderr)
         );
     }
 }

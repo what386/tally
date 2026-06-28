@@ -1,5 +1,6 @@
 use crate::models::common::Priority;
 use crate::models::tasks::Task;
+use crate::output;
 use crate::services::git;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
@@ -13,6 +14,7 @@ pub fn cmd_add(
     tags: Option<Vec<String>>,
     dry_run: bool,
     auto: bool,
+    json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths().or_else(|_| ProjectPaths::for_current_dir())?;
     let mut storage = ListStorage::new(&paths.todo_file)?;
@@ -27,19 +29,38 @@ pub fn cmd_add(
     );
 
     if dry_run {
+        if json {
+            return output::print_json(&serde_json::json!({
+                "status": "would_add",
+                "dry_run": true,
+                "task": task,
+            }));
+        }
         println!("Would add task:");
         print_task(&task);
         return Ok(());
     }
 
-    storage.add_task(task)?;
+    storage.add_task(task.clone())?;
 
     if auto || config.auto_commit_add() {
-        git::commit_tally_files("update TODO: add task")?;
+        if json {
+            git::commit_tally_files_quiet("update TODO: add task")?;
+        } else {
+            git::commit_tally_files("update TODO: add task")?;
+        }
     }
 
-    println!("✓ Added task:");
-    print_task_simple(&input.description, &input.priority, &input.tags);
+    if json {
+        output::print_json(&serde_json::json!({
+            "status": "added",
+            "dry_run": false,
+            "task": task,
+        }))?;
+    } else {
+        println!("✓ Added task:");
+        print_task_simple(&input.description, &input.priority, &input.tags);
+    }
 
     Ok(())
 }

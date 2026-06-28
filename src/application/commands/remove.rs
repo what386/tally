@@ -1,9 +1,10 @@
 use crate::models::common::Version;
+use crate::output;
 use crate::services::git;
 use crate::services::storage::changelog_storage::ChangelogStorage;
 use crate::services::storage::config_storage::ConfigStorage;
 use crate::services::storage::task_storage::ListStorage;
-use crate::utils::matching::score_percent;
+use crate::utils::matching::{MatchCandidate, score_percent, select_unambiguous};
 use crate::utils::project_paths::ProjectPaths;
 use anyhow::Result;
 use fuzzy_matcher::FuzzyMatcher;
@@ -15,11 +16,12 @@ pub fn cmd_remove(
     tags: Option<Vec<String>>,
     dry_run: bool,
     auto: bool,
+    json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     if let Some(released_version_str) = released {
         let released_version = Version::parse(&released_version_str)?;
-        return cmd_remove_released(description, released_version, tags, dry_run, auto);
+        return cmd_remove_released(description, released_version, tags, dry_run, auto, json);
     }
 
     let mut storage = ListStorage::new(&paths.todo_file)?;
@@ -28,7 +30,7 @@ pub fn cmd_remove(
 
     let matcher = SkimMatcherV2::default();
     let tasks = storage.tasks();
-    let mut best_match: Option<(usize, i64)> = None;
+    let mut candidates = Vec::new();
 
     for (i, task) in tasks.iter().enumerate() {
         if let Some(filter_tags) = tags.as_ref()
@@ -36,28 +38,37 @@ pub fn cmd_remove(
         {
             continue;
         }
-        if let Some(score) = matcher.fuzzy_match(&task.description, &description)
-            && (best_match.is_none() || score > best_match.unwrap().1)
+        let exact = task.description.eq_ignore_ascii_case(&description);
+        if let Some(score) = matcher
+            .fuzzy_match(&task.description, &description)
+            .or(exact.then_some(i64::MAX))
         {
-            best_match = Some((i, score));
+            candidates.push(MatchCandidate {
+                value: i,
+                score,
+                label: task.description.clone(),
+                exact,
+            });
         }
     }
 
-    match best_match {
-        Some((index, score)) => {
+    match select_unambiguous(candidates, config.matching.task_min_score, &description)? {
+        Some(best_match) => {
+            let index = best_match.value;
+            let score = best_match.score;
             let score_pct = score_percent(score);
-
-            if score_pct < config.matching.task_min_score {
-                return Err(anyhow::anyhow!(
-                    "Best match too low ({:.0}%): '{}'",
-                    score_pct,
-                    tasks[index].description
-                ));
-            }
 
             let task = &tasks[index];
 
             if dry_run {
+                if json {
+                    return output::print_json(&serde_json::json!({
+                        "status": "would_remove",
+                        "dry_run": true,
+                        "match_score": score_pct,
+                        "task": task,
+                    }));
+                }
                 println!("Would remove (match: {:.0}%):", score_pct);
                 let checkbox = if task.completed { "x" } else { " " };
                 println!("  [{}] {}", checkbox, task.description);
@@ -66,12 +77,25 @@ pub fn cmd_remove(
 
             let removed = storage.remove_task(index)?;
 
-            if let Some(task) = removed {
-                println!("✓ Removed (match: {:.0}%): {}", score_pct, task.description);
+            if auto || config.auto_commit_remove() {
+                if json {
+                    git::commit_tally_files_quiet("update TODO: remove task")?;
+                } else {
+                    git::commit_tally_files("update TODO: remove task")?;
+                }
             }
 
-            if auto || config.auto_commit_remove() {
-                git::commit_tally_files("update TODO: remove task")?;
+            if let Some(task) = removed {
+                if json {
+                    output::print_json(&serde_json::json!({
+                        "status": "removed",
+                        "dry_run": false,
+                        "match_score": score_pct,
+                        "task": task,
+                    }))?;
+                } else {
+                    println!("✓ Removed (match: {:.0}%): {}", score_pct, task.description);
+                }
             }
 
             Ok(())
@@ -89,6 +113,7 @@ fn cmd_remove_released(
     tags: Option<Vec<String>>,
     dry_run: bool,
     auto: bool,
+    json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths()?;
     let storage = ListStorage::new(&paths.todo_file)?;
@@ -102,10 +127,27 @@ fn cmd_remove_released(
             Some(&released_version),
             tags.as_deref(),
             config.matching.released_min_score,
-        ) {
-            println!("Would remove from {}: {}", v, change.description);
+        )? {
+            if json {
+                output::print_json(&serde_json::json!({
+                    "status": "would_remove_released",
+                    "dry_run": true,
+                    "version": v,
+                    "change": change,
+                }))?;
+            } else {
+                println!("Would remove from {}: {}", v, change.description);
+            }
         } else {
-            println!("No matching released task found.");
+            if json {
+                output::print_json(&serde_json::json!({
+                    "status": "not_found",
+                    "dry_run": true,
+                    "version": released_version,
+                }))?;
+            } else {
+                println!("No matching released task found.");
+            }
         }
         return Ok(());
     }
@@ -115,11 +157,24 @@ fn cmd_remove_released(
         Some(&released_version),
         tags.as_deref(),
         config.matching.released_min_score,
-    ) {
+    )? {
         changelog.save()?;
-        println!("Removed from {}: {}", v, change.description);
         if auto || config.auto_commit_remove() {
-            git::commit_tally_files("update CHANGELOG: remove released task")?;
+            if json {
+                git::commit_tally_files_quiet("update CHANGELOG: remove released task")?;
+            } else {
+                git::commit_tally_files("update CHANGELOG: remove released task")?;
+            }
+        }
+        if json {
+            output::print_json(&serde_json::json!({
+                "status": "removed_released",
+                "dry_run": false,
+                "version": v,
+                "change": change,
+            }))?;
+        } else {
+            println!("Removed from {}: {}", v, change.description);
         }
         Ok(())
     } else {
