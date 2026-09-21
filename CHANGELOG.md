@@ -2,6 +2,13 @@
 
 *Generated on 2026-09-21*
 
+## 0.16.2 — 2026-09-21
+
+### Changes
+
+- fix issue where text would be cut off
+
+
 ## 0.16.1 — 2026-09-21
 
 ### Changes
