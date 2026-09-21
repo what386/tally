@@ -85,7 +85,7 @@ _tally() {
             return 0
             ;;
         tally__subcmd__add)
-            opts="-p -t -h --priority --tags --dry-run --auto --json --help <DESCRIPTION>..."
+            opts="-p -t -h --priority --tags --dry-run --auto --json --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -115,7 +115,7 @@ _tally() {
             return 0
             ;;
         tally__subcmd__done)
-            opts="-c -v -h --commit --version --dry-run --auto --json --help <DESCRIPTION>..."
+            opts="-c -v -h --commit --version --dry-run --auto --json --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -309,7 +309,7 @@ _tally() {
             return 0
             ;;
         tally__subcmd__remove)
-            opts="-r -t -h --released --tags --dry-run --auto --json --help <DESCRIPTION>..."
+            opts="-r -t -h --released --tags --dry-run --auto --json --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -353,7 +353,7 @@ _tally() {
             return 0
             ;;
         tally__subcmd__semver)
-            opts="-h --dry-run --summary --auto --json --help <VERSION>"
+            opts="-h --dry-run --summary --auto --json --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0
@@ -367,7 +367,7 @@ _tally() {
             return 0
             ;;
         tally__subcmd__yank)
-            opts="-t -h --tags --dry-run --auto --json --help <DESCRIPTION>..."
+            opts="-t -h --tags --dry-run --auto --json --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

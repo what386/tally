@@ -112,7 +112,7 @@ _arguments "${_arguments_options[@]}" : \
 '--auto[Auto-accept git-based done matches without prompting]' \
 '--dry-run[Show what would change without writing files]' \
 '--git[Include git commit scanning]' \
-'--todo[Include source TODO scanning]' \
+'--todo[Include source TODO scanning and import unowned TODO.md entries]' \
 '--done[Include source DONE scanning]' \
 '--json[Output result as JSON]' \
 '-h[Print help]' \
@@ -181,7 +181,7 @@ _tally_commands() {
 'semver:Move completed unversioned tasks into CHANGELOG.md under a version' \
 'remove:Remove a task by fuzzy description match from TODO.md or a released entry' \
 'yank:Yank a changelog entry back into TODO as completed and unversioned' \
-'scan:Scan for task updates from git commits and/or source TODO markers' \
+'scan:Scan for task updates from git commits, source markers, and TODO.md entries' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tally commands' commands "$@"
@@ -205,7 +205,7 @@ _tally__subcmd__help_commands() {
 'semver:Move completed unversioned tasks into CHANGELOG.md under a version' \
 'remove:Remove a task by fuzzy description match from TODO.md or a released entry' \
 'yank:Yank a changelog entry back into TODO as completed and unversioned' \
-'scan:Scan for task updates from git commits and/or source TODO markers' \
+'scan:Scan for task updates from git commits, source markers, and TODO.md entries' \
 'help:Print this message or the help of the given subcommand(s)' \
     )
     _describe -t commands 'tally help commands' commands "$@"

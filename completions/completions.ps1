@@ -31,7 +31,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('semver', 'semver', [CompletionResultType]::ParameterValue, 'Move completed unversioned tasks into CHANGELOG.md under a version')
             [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a task by fuzzy description match from TODO.md or a released entry')
             [CompletionResult]::new('yank', 'yank', [CompletionResultType]::ParameterValue, 'Yank a changelog entry back into TODO as completed and unversioned')
-            [CompletionResult]::new('scan', 'scan', [CompletionResultType]::ParameterValue, 'Scan for task updates from git commits and/or source TODO markers')
+            [CompletionResult]::new('scan', 'scan', [CompletionResultType]::ParameterValue, 'Scan for task updates from git commits, source markers, and TODO.md entries')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
@@ -107,7 +107,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--auto', '--auto', [CompletionResultType]::ParameterName, 'Auto-accept git-based done matches without prompting')
             [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Show what would change without writing files')
             [CompletionResult]::new('--git', '--git', [CompletionResultType]::ParameterName, 'Include git commit scanning')
-            [CompletionResult]::new('--todo', '--todo', [CompletionResultType]::ParameterName, 'Include source TODO scanning')
+            [CompletionResult]::new('--todo', '--todo', [CompletionResultType]::ParameterName, 'Include source TODO scanning and import unowned TODO.md entries')
             [CompletionResult]::new('--done', '--done', [CompletionResultType]::ParameterName, 'Include source DONE scanning')
             [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')
@@ -121,7 +121,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('semver', 'semver', [CompletionResultType]::ParameterValue, 'Move completed unversioned tasks into CHANGELOG.md under a version')
             [CompletionResult]::new('remove', 'remove', [CompletionResultType]::ParameterValue, 'Remove a task by fuzzy description match from TODO.md or a released entry')
             [CompletionResult]::new('yank', 'yank', [CompletionResultType]::ParameterValue, 'Yank a changelog entry back into TODO as completed and unversioned')
-            [CompletionResult]::new('scan', 'scan', [CompletionResultType]::ParameterValue, 'Scan for task updates from git commits and/or source TODO markers')
+            [CompletionResult]::new('scan', 'scan', [CompletionResultType]::ParameterValue, 'Scan for task updates from git commits, source markers, and TODO.md entries')
             [CompletionResult]::new('help', 'help', [CompletionResultType]::ParameterValue, 'Print this message or the help of the given subcommand(s)')
             break
         }
