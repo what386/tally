@@ -1,6 +1,13 @@
 # Changelog — tally
 
-*Generated on 2026-06-28*
+*Generated on 2026-09-21*
+
+## 0.16.0 — 2026-09-21
+
+### Changes
+
+- allow tally to parse unformatted todo entries
+
 
 ## 0.15.0 — 2026-06-28
 
