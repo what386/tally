@@ -242,12 +242,17 @@ fn write_task(output: &mut String, task: &Task) {
         )
     };
 
+    let mut description_lines = task.description.split('\n');
+    let first_line = description_lines.next().unwrap_or_default();
     writeln!(
         output,
         "- [{}] {}{}{}",
-        checkbox, task.description, priority_str, tags_str
+        checkbox, first_line, priority_str, tags_str
     )
     .unwrap();
+    for line in description_lines {
+        writeln!(output, "      {}", line).unwrap();
+    }
 
     write_task_metadata(output, task);
 }
@@ -375,7 +380,20 @@ fn parse_task(lines: &[String]) -> Result<Task> {
         .trim_start_matches(']')
         .trim();
 
-    let (description, priority, tags) = parse_task_content(content)?;
+    let continuation = lines[1..]
+        .iter()
+        .filter(|line| !is_task_metadata_line(line))
+        .map(|line| line.trim())
+        .filter(|line| !line.is_empty())
+        .collect::<Vec<_>>()
+        .join("\n");
+    let content = if continuation.is_empty() {
+        content.to_string()
+    } else {
+        format!("{content}\n{continuation}")
+    };
+
+    let (description, priority, tags) = parse_task_content(&content)?;
 
     let metadata = parse_task_metadata(&lines[1..])?;
 
@@ -395,30 +413,48 @@ fn parse_task(lines: &[String]) -> Result<Task> {
 
 fn parse_task_content(content: &str) -> Result<(String, Priority, Vec<String>)> {
     let mut tags = Vec::new();
-    let mut description_parts = Vec::new();
+    let mut description_lines = Vec::new();
     let mut priority = Priority::Medium;
 
-    for part in content.split_whitespace() {
-        if part.starts_with('#') {
-            tags.push(part.trim_start_matches('#').to_string());
-        } else if part == "(high)" {
-            priority = Priority::High;
-        } else if part == "(low)" {
-            priority = Priority::Low;
-        } else if part == "(medium)" {
-            priority = Priority::Medium;
-        } else {
-            description_parts.push(part);
+    for line in content.lines() {
+        let mut line_parts = Vec::new();
+        for part in line.split_whitespace() {
+            if part.starts_with('#') {
+                tags.push(part.trim_start_matches('#').to_string());
+            } else if part == "(high)" {
+                priority = Priority::High;
+            } else if part == "(low)" {
+                priority = Priority::Low;
+            } else if part == "(medium)" {
+                priority = Priority::Medium;
+            } else {
+                line_parts.push(part);
+            }
         }
+        description_lines.push(line_parts.join(" "));
     }
 
-    let description = description_parts.join(" ");
+    let description = description_lines.join("\n").trim().to_string();
 
     if description.is_empty() {
         anyhow::bail!("Task has no description");
     }
 
     Ok((description, priority, tags))
+}
+
+fn is_task_metadata_line(line: &str) -> bool {
+    let line = line.trim();
+    [
+        "@created ",
+        "@created_version ",
+        "@created_commit ",
+        "@completed ",
+        "@completed_version ",
+        "@completed_commit ",
+    ]
+    .iter()
+    .any(|prefix| line.starts_with(prefix))
 }
 
 fn parse_task_metadata(lines: &[String]) -> Result<TaskMetadata> {
@@ -563,6 +599,18 @@ mod tests {
         assert_eq!(parsed.project_version.to_string(), "0.1.0");
         assert_eq!(parsed.tasks.len(), 1);
         assert_eq!(parsed.tasks[0].description, "keep parser compatibility");
+    }
+
+    #[test]
+    fn serialize_deserialize_preserves_multiline_descriptions() {
+        let mut list = List::new("demo", Version::new(0, 1, 0, false));
+        list.tasks
+            .push(Task::new("task, and\nmore info", Priority::Medium, vec![]));
+
+        let markdown = serialize(&list);
+        assert!(markdown.contains("- [ ] task, and\n      more info"));
+        let parsed = deserialize(&markdown).unwrap();
+        assert_eq!(parsed.tasks[0].description, "task, and\nmore info");
     }
 
     #[test]

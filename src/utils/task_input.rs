@@ -12,25 +12,29 @@ pub fn parse_task_input(
     priority_override: Option<Priority>,
     tags_override: Option<Vec<String>>,
 ) -> Result<ParsedTaskInput> {
-    let mut description_parts = Vec::new();
+    let mut description_lines = Vec::new();
     let mut parsed_priority = None;
     let mut parsed_tags = Vec::new();
 
-    for part in description.as_ref().split_whitespace() {
-        if let Some(tag) = part.strip_prefix('#') {
-            if !tag.is_empty() {
-                parsed_tags.push(tag.to_string());
+    for line in description.as_ref().lines() {
+        let mut line_parts = Vec::new();
+        for part in line.split_whitespace() {
+            if let Some(tag) = part.strip_prefix('#') {
+                if !tag.is_empty() {
+                    parsed_tags.push(tag.to_string());
+                }
+                continue;
             }
-            continue;
-        }
 
-        match parse_priority_marker(part) {
-            Some(priority) => parsed_priority = Some(priority),
-            None => description_parts.push(part),
+            match parse_priority_marker(part) {
+                Some(priority) => parsed_priority = Some(priority),
+                None => line_parts.push(part),
+            }
         }
+        description_lines.push(line_parts.join(" "));
     }
 
-    let description = description_parts.join(" ");
+    let description = description_lines.join("\n").trim().to_string();
 
     if description.is_empty() {
         anyhow::bail!("Task has no description");
@@ -93,5 +97,13 @@ mod tests {
         assert_eq!(input.description, "Update docs");
         assert_eq!(input.priority, Priority::Medium);
         assert_eq!(input.tags, vec!["docs"]);
+    }
+
+    #[test]
+    fn preserves_description_newlines() {
+        let input = parse_task_input("first line\n  second line #details", None, None).unwrap();
+
+        assert_eq!(input.description, "first line\nsecond line");
+        assert_eq!(input.tags, vec!["details"]);
     }
 }

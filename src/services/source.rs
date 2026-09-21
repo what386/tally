@@ -25,6 +25,7 @@ pub struct SourceTodo {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnownedTodo {
     pub line: usize,
+    pub end_line: usize,
     pub text: String,
 }
 
@@ -116,9 +117,27 @@ pub fn scan_unowned_todos(path: &Path) -> Result<Vec<UnownedTodo>> {
             .map(|next| next.trim_start().starts_with("@created "))
             .unwrap_or(false);
         if !owned {
+            let mut parts = vec![text.to_string()];
+            let mut end = index + 1;
+            while let Some(next) = lines.get(end) {
+                let trimmed_next = next.trim();
+                if trimmed_next.is_empty()
+                    || next.trim_start().starts_with("- ")
+                    || next.trim_start().starts_with("## ")
+                    || !next
+                        .chars()
+                        .next()
+                        .is_some_and(|character| character.is_whitespace())
+                {
+                    break;
+                }
+                parts.push(trimmed_next.to_string());
+                end += 1;
+            }
             result.push(UnownedTodo {
                 line: index + 1,
-                text: text.to_string(),
+                end_line: end,
+                text: parts.join("\n"),
             });
         }
     }
@@ -251,7 +270,7 @@ mod tests {
         let path = std::env::temp_dir().join(format!("tally-todo-{}", std::process::id()));
         fs::write(
             &path,
-            "- [ ] new task (high) #parser\n- owned task\n      @created 2026-01-01 00:00\n- [x] done\n",
+            "- [ ] new task (high) #parser\n  with more detail\n- owned task\n      @created 2026-01-01 00:00\n- [x] done\n",
         )
         .unwrap();
 
@@ -260,7 +279,8 @@ mod tests {
 
         assert_eq!(todos.len(), 1);
         assert_eq!(todos[0].line, 1);
-        assert_eq!(todos[0].text, "new task (high) #parser");
+        assert_eq!(todos[0].end_line, 2);
+        assert_eq!(todos[0].text, "new task (high) #parser\nwith more detail");
     }
 
     #[test]

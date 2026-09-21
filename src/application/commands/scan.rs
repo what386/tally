@@ -332,7 +332,7 @@ fn run_source_scan(
             continue;
         }
         seen_new.insert(task.description.clone());
-        planned_todo_lines.push(todo.line);
+        planned_todo_lines.extend(todo.line..=todo.end_line);
         planned_todo.push(task);
     }
 
