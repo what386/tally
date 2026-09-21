@@ -69,9 +69,10 @@ impl Cli {
                 dry_run,
                 git,
                 todo,
+                todo_file,
                 done,
                 json,
-            } => commands::cmd_scan(auto, dry_run, git, todo, done, json),
+            } => commands::cmd_scan(auto, dry_run, git, todo, todo_file, done, json),
         }
     }
 }

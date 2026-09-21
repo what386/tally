@@ -150,6 +150,7 @@ Use `scan` to detect task updates from git commits and/or source markers.
 tally scan
 tally scan --git
 tally scan --todo
+tally scan --todo-file
 tally scan --done
 tally scan --dry-run
 tally scan --json --dry-run
@@ -186,6 +187,7 @@ Guidance:
 * Use `tally scan --dry-run` before applying detected changes.
 * Use `--git` to scan commit messages.
 * Use `--todo` to add source TODO markers as tasks.
+* Use `--todo-file` to import only unowned unchecked markdown entries from `TODO.md`.
 * Use `--done` to match source DONE markers against existing tasks.
 * Use `--auto` on `scan` only when the user wants git-based done matches auto-accepted without prompting.
 * Use `--json` when results must be consumed by another tool.

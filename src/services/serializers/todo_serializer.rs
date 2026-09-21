@@ -194,6 +194,32 @@ pub fn deserialize(content: &str) -> Result<List> {
     })
 }
 
+pub fn deserialize_for_scan(content: &str) -> Result<List> {
+    let lines: Vec<&str> = content.lines().collect();
+    let mut filtered = Vec::with_capacity(lines.len());
+    let mut in_code_block = false;
+
+    for (index, line) in lines.iter().enumerate() {
+        if line.trim_start().starts_with("```") {
+            in_code_block = !in_code_block;
+            filtered.push(*line);
+            continue;
+        }
+
+        let is_bullet = line.trim_start().starts_with("- ");
+        let is_owned = lines
+            .get(index + 1)
+            .map(|next| next.trim_start().starts_with("@created "))
+            .unwrap_or(false);
+        if !in_code_block && is_bullet && !is_owned {
+            continue;
+        }
+        filtered.push(*line);
+    }
+
+    deserialize(&filtered.join("\n"))
+}
+
 fn write_task(output: &mut String, task: &Task) {
     let checkbox = if task.completed { "x" } else { " " };
 
@@ -545,6 +571,15 @@ mod tests {
 
         let err = deserialize(content).unwrap_err();
         assert!(err.to_string().contains("Missing @created metadata"));
+    }
+
+    #[test]
+    fn deserialize_for_scan_ignores_unowned_markdown_tasks() {
+        let content = "# TODO — demo\n\n@created: 2026-02-20\n@modified: 2026-02-21\n\n## Tasks\n\n- [ ] imported task\n- another imported task\n- [ ] owned task\n      @created 2026-02-20 10:00\n";
+
+        let parsed = deserialize_for_scan(content).unwrap();
+        assert_eq!(parsed.tasks.len(), 1);
+        assert_eq!(parsed.tasks[0].description, "owned task");
     }
 
     #[test]

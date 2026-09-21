@@ -47,17 +47,19 @@ pub fn cmd_scan(
     dry_run: bool,
     git: bool,
     todo: bool,
+    todo_file: bool,
     done: bool,
     json: bool,
 ) -> Result<()> {
     let paths = ProjectPaths::get_paths().or_else(|_| ProjectPaths::for_current_dir())?;
-    let mut storage = ListStorage::new(&paths.todo_file)?;
+    let mut storage = ListStorage::new_for_scan(&paths.todo_file)?;
     let config_storage = ConfigStorage::new(&paths.config_file)?;
     let config = config_storage.get_config();
 
-    let has_selector = git || todo || done;
+    let has_selector = git || todo || todo_file || done;
     let run_git = git || !has_selector;
-    let run_todo = todo || !has_selector;
+    let run_source_todo = todo || !has_selector;
+    let run_todo_file = todo_file || !has_selector;
     let run_done = done || !has_selector;
 
     let mut summary = ScanSummary {
@@ -72,13 +74,14 @@ pub fn cmd_scan(
         summary.git_matches = run_git_scan(&paths.root, &mut storage, config, auto, dry_run, json)?;
     }
 
-    if run_todo || run_done {
+    if run_source_todo || run_todo_file || run_done {
         let source_summary = run_source_scan(
             &paths.root,
             &mut storage,
             config,
             dry_run,
-            run_todo,
+            run_source_todo,
+            run_todo_file,
             run_done,
             json,
         )?;
@@ -229,12 +232,13 @@ fn run_source_scan(
     storage: &mut ListStorage,
     config: &AppConfig,
     dry_run: bool,
-    include_todo: bool,
+    include_source_todo: bool,
+    include_todo_file: bool,
     include_done: bool,
     json: bool,
 ) -> Result<SourceScanSummary> {
     let markers = source::scan_project(root, &config.scan.todo_markers, &config.scan.done_markers)?;
-    let unowned_todos = if include_todo {
+    let unowned_todos = if include_todo_file {
         source::scan_unowned_todos(&root.join("TODO.md"))?
     } else {
         Vec::new()
@@ -304,7 +308,7 @@ fn run_source_scan(
             continue;
         }
 
-        if !include_todo {
+        if !include_source_todo {
             continue;
         }
 

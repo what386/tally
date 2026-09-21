@@ -149,6 +149,9 @@ pub enum Commands {
         /// Include source TODO scanning and import unowned TODO.md entries.
         #[arg(long, default_value_t = false)]
         todo: bool,
+        /// Read only unchecked, unowned entries from TODO.md.
+        #[arg(long, default_value_t = false)]
+        todo_file: bool,
         /// Include source DONE scanning.
         #[arg(long, default_value_t = false)]
         done: bool,

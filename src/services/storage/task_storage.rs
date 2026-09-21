@@ -20,6 +20,22 @@ impl ListStorage {
         Ok(storage)
     }
 
+    pub fn new_for_scan(list_file: &Path) -> Result<Self> {
+        let mut storage = Self {
+            todo_list: List::new("", Version::new(0, 1, 0, false)),
+            list_file: list_file.to_path_buf(),
+        };
+        if !list_file.exists() {
+            return Ok(storage);
+        }
+
+        let content = fs::read_to_string(list_file)
+            .map_err(|e| anyhow!("Failed to read TODO file: {}", e))?;
+        storage.todo_list = todo_serializer::deserialize_for_scan(&content)
+            .map_err(|e| anyhow!("Failed to parse TODO file: {}", e))?;
+        Ok(storage)
+    }
+
     /// Load list from the TODO.md file
     pub fn load_list(&mut self) -> Result<()> {
         if !self.list_file.exists() {
