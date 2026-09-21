@@ -2,6 +2,13 @@
 
 *Generated on 2026-09-21*
 
+## 0.16.1 — 2026-09-21
+
+### Changes
+
+- add --todo-file to scan only local todo file
+
+
 ## 0.16.0 — 2026-09-21
 
 ### Changes
