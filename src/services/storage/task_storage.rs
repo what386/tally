@@ -74,6 +74,31 @@ impl ListStorage {
         self.save_list()
     }
 
+    pub fn add_tasks_removing_lines(
+        &mut self,
+        tasks: Vec<Task>,
+        removed_lines: &[usize],
+    ) -> Result<()> {
+        for task in tasks {
+            self.todo_list.add_task(task);
+        }
+
+        let previous = fs::read_to_string(&self.list_file).ok();
+        let previous = previous.map(|content| {
+            content
+                .lines()
+                .enumerate()
+                .filter(|(index, _)| !removed_lines.contains(&(index + 1)))
+                .map(|(_, line)| line)
+                .collect::<Vec<_>>()
+                .join("\n")
+        });
+        let content = todo_serializer::serialize_preserving(&self.todo_list, previous.as_deref());
+        fs::write(&self.list_file, content)
+            .map_err(|e| anyhow!("Failed to write TODO file: {}", e))?;
+        Ok(())
+    }
+
     /// Get all tasks
     pub fn tasks(&self) -> &[Task] {
         &self.todo_list.tasks

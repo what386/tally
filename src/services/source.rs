@@ -22,6 +22,18 @@ pub struct SourceTodo {
     pub kind: SourceMarkerKind,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnownedTodo {
+    pub line: usize,
+    pub text: String,
+}
+
+impl UnownedTodo {
+    pub fn location(&self) -> String {
+        format!("TODO.md:{}", self.line)
+    }
+}
+
 impl SourceTodo {
     pub fn location(&self) -> String {
         format!("{}:{}", self.path, self.line)
@@ -69,6 +81,49 @@ pub fn scan_project(
     }
 
     Ok(todos)
+}
+
+pub fn scan_unowned_todos(path: &Path) -> Result<Vec<UnownedTodo>> {
+    let content = fs::read_to_string(path)?;
+    let lines: Vec<&str> = content.lines().collect();
+    let mut result = Vec::new();
+    let mut in_code_block = false;
+
+    for (index, line) in lines.iter().enumerate() {
+        if line.trim_start().starts_with("```") {
+            in_code_block = !in_code_block;
+            continue;
+        }
+        if in_code_block {
+            continue;
+        }
+
+        let trimmed = line.trim_start();
+        let Some(item) = trimmed.strip_prefix("- ") else {
+            continue;
+        };
+        let text = item
+            .strip_prefix("[ ] ")
+            .or_else(|| item.strip_prefix("[ ]"))
+            .unwrap_or(item)
+            .trim();
+        if text.is_empty() || item.starts_with("[x]") || item.starts_with("[X]") {
+            continue;
+        }
+
+        let owned = lines
+            .get(index + 1)
+            .map(|next| next.trim_start().starts_with("@created "))
+            .unwrap_or(false);
+        if !owned {
+            result.push(UnownedTodo {
+                line: index + 1,
+                text: text.to_string(),
+            });
+        }
+    }
+
+    Ok(result)
 }
 
 #[cfg(test)]
@@ -187,7 +242,26 @@ fn marker_has_leading_boundary(line: &str, marker_idx: usize) -> bool {
 mod tests {
     use super::{
         SourceMarkerKind, extract_todos_from_content, extract_todos_from_content_with_markers,
+        scan_unowned_todos,
     };
+    use std::fs;
+
+    #[test]
+    fn finds_unowned_markdown_tasks_but_not_tally_tasks() {
+        let path = std::env::temp_dir().join(format!("tally-todo-{}", std::process::id()));
+        fs::write(
+            &path,
+            "- [ ] new task (high) #parser\n- owned task\n      @created 2026-01-01 00:00\n- [x] done\n",
+        )
+        .unwrap();
+
+        let todos = scan_unowned_todos(&path).unwrap();
+        fs::remove_file(path).unwrap();
+
+        assert_eq!(todos.len(), 1);
+        assert_eq!(todos[0].line, 1);
+        assert_eq!(todos[0].text, "new task (high) #parser");
+    }
 
     #[test]
     fn extracts_single_line_todo() {

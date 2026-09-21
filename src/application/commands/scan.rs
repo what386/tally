@@ -19,6 +19,7 @@ struct ScanSummary {
     dry_run: bool,
     git_matches: Vec<GitScanMatch>,
     source_added: Vec<Task>,
+    todo_added: Vec<Task>,
     source_completed: Vec<SourceDoneMatch>,
 }
 
@@ -63,6 +64,7 @@ pub fn cmd_scan(
         dry_run,
         git_matches: Vec::new(),
         source_added: Vec::new(),
+        todo_added: Vec::new(),
         source_completed: Vec::new(),
     };
 
@@ -81,6 +83,7 @@ pub fn cmd_scan(
             json,
         )?;
         summary.source_added = source_summary.source_added;
+        summary.todo_added = source_summary.todo_added;
         summary.source_completed = source_summary.source_completed;
     }
 
@@ -217,6 +220,7 @@ fn run_git_scan(
 #[derive(Debug, Default)]
 struct SourceScanSummary {
     source_added: Vec<Task>,
+    todo_added: Vec<Task>,
     source_completed: Vec<SourceDoneMatch>,
 }
 
@@ -230,8 +234,13 @@ fn run_source_scan(
     json: bool,
 ) -> Result<SourceScanSummary> {
     let markers = source::scan_project(root, &config.scan.todo_markers, &config.scan.done_markers)?;
+    let unowned_todos = if include_todo {
+        source::scan_unowned_todos(&root.join("TODO.md"))?
+    } else {
+        Vec::new()
+    };
 
-    if markers.is_empty() {
+    if markers.is_empty() && unowned_todos.is_empty() {
         if !json {
             println!("No source TODO/DONE markers found.");
         }
@@ -248,6 +257,8 @@ fn run_source_scan(
     }
 
     let mut planned = Vec::new();
+    let mut planned_todo = Vec::new();
+    let mut planned_todo_lines = Vec::new();
     let mut planned_done = Vec::new();
     let mut seen_new = HashSet::new();
     let matcher = SkimMatcherV2::default();
@@ -309,7 +320,18 @@ fn run_source_scan(
         planned.push(task);
     }
 
-    if planned.is_empty() && planned_done.is_empty() {
+    for todo in unowned_todos {
+        let parsed = parse_task_input(&todo.text, None, None)?;
+        let task = Task::new(parsed.description, parsed.priority, parsed.tags);
+        if existing.contains(&task.description) || seen_new.contains(&task.description) {
+            continue;
+        }
+        seen_new.insert(task.description.clone());
+        planned_todo_lines.push(todo.line);
+        planned_todo.push(task);
+    }
+
+    if planned.is_empty() && planned_todo.is_empty() && planned_done.is_empty() {
         if !json {
             println!("No new source TODO tasks to add.");
         }
@@ -321,6 +343,19 @@ fn run_source_scan(
         if !planned.is_empty() {
             writeln!(output, "Would add {} source TODO task(s):", planned.len())?;
             for task in &planned {
+                write_task_line(&mut output, task)?;
+            }
+        }
+        if !planned_todo.is_empty() {
+            if !output.is_empty() {
+                writeln!(output)?;
+            }
+            writeln!(
+                output,
+                "Would import {} TODO.md task(s):",
+                planned_todo.len()
+            )?;
+            for task in &planned_todo {
                 write_task_line(&mut output, task)?;
             }
         }
@@ -347,12 +382,19 @@ fn run_source_scan(
         }
         return Ok(SourceScanSummary {
             source_added: planned,
+            todo_added: planned_todo,
             source_completed: planned_done,
         });
     }
 
-    if !planned.is_empty() {
-        storage.add_tasks(planned.clone())?;
+    let mut tasks_to_add = planned.clone();
+    tasks_to_add.extend(planned_todo.clone());
+    if !tasks_to_add.is_empty() {
+        if planned_todo_lines.is_empty() {
+            storage.add_tasks(tasks_to_add)?;
+        } else {
+            storage.add_tasks_removing_lines(tasks_to_add, &planned_todo_lines)?;
+        }
     }
 
     for done_match in &planned_done {
@@ -362,6 +404,9 @@ fn run_source_scan(
     if !planned.is_empty() && !json {
         println!("Added {} source TODO task(s)", planned.len());
     }
+    if !planned_todo.is_empty() && !json {
+        println!("Imported {} TODO.md task(s)", planned_todo.len());
+    }
     if !planned_done.is_empty() && !json {
         println!(
             "Marked {} task(s) as done from source DONE markers",
@@ -370,6 +415,7 @@ fn run_source_scan(
     }
     Ok(SourceScanSummary {
         source_added: planned,
+        todo_added: planned_todo,
         source_completed: planned_done,
     })
 }

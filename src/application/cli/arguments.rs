@@ -135,7 +135,7 @@ pub enum Commands {
         json: bool,
     },
 
-    /// Scan for task updates from git commits and/or source TODO markers.
+    /// Scan for task updates from git commits, source markers, and TODO.md entries.
     Scan {
         /// Auto-accept git-based done matches without prompting.
         #[arg(long, default_value_t = false)]
@@ -146,7 +146,7 @@ pub enum Commands {
         /// Include git commit scanning.
         #[arg(long, default_value_t = false)]
         git: bool,
-        /// Include source TODO scanning.
+        /// Include source TODO scanning and import unowned TODO.md entries.
         #[arg(long, default_value_t = false)]
         todo: bool,
         /// Include source DONE scanning.

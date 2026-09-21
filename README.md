@@ -170,6 +170,17 @@ Source scanning detects configured markers such as:
 // DONE: Remove old parser workaround
 ```
 
+`tally scan --todo` also imports unchecked markdown bullets in `TODO.md` that
+do not already have Tally task metadata:
+
+```markdown
+- [ ] Implement parser recovery (high) #parser
+- Update the task documentation
+```
+
+Those lines are replaced with formatted Tally entries. Existing Tally entries
+are recognized by their `@created` metadata and are not imported again.
+
 Guidance:
 
 * Use `tally scan --dry-run` before applying detected changes.
@@ -210,4 +221,3 @@ Guidance:
   * `tally list --done`
   * `tally list --released VERSION`
 * Do not silently choose among ambiguous fuzzy matches. Inspect first or use a more specific phrase.
-
