@@ -227,6 +227,7 @@ struct SourceScanSummary {
     source_completed: Vec<SourceDoneMatch>,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run_source_scan(
     root: &std::path::Path,
     storage: &mut ListStorage,
