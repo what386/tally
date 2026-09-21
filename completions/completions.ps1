@@ -108,6 +108,7 @@ Register-ArgumentCompleter -Native -CommandName 'tally' -ScriptBlock {
             [CompletionResult]::new('--dry-run', '--dry-run', [CompletionResultType]::ParameterName, 'Show what would change without writing files')
             [CompletionResult]::new('--git', '--git', [CompletionResultType]::ParameterName, 'Include git commit scanning')
             [CompletionResult]::new('--todo', '--todo', [CompletionResultType]::ParameterName, 'Include source TODO scanning and import unowned TODO.md entries')
+            [CompletionResult]::new('--todo-file', '--todo-file', [CompletionResultType]::ParameterName, 'Read only unchecked, unowned entries from TODO.md')
             [CompletionResult]::new('--done', '--done', [CompletionResultType]::ParameterName, 'Include source DONE scanning')
             [CompletionResult]::new('--json', '--json', [CompletionResultType]::ParameterName, 'Output result as JSON')
             [CompletionResult]::new('-h', '-h', [CompletionResultType]::ParameterName, 'Print help')

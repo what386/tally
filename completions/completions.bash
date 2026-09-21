@@ -339,7 +339,7 @@ _tally() {
             return 0
             ;;
         tally__subcmd__scan)
-            opts="-h --auto --dry-run --git --todo --done --json --help"
+            opts="-h --auto --dry-run --git --todo --todo-file --done --json --help"
             if [[ ${cur} == -* || ${COMP_CWORD} -eq 2 ]] ; then
                 COMPREPLY=( $(compgen -W "${opts}" -- "${cur}") )
                 return 0

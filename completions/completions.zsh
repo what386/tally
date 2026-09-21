@@ -113,6 +113,7 @@ _arguments "${_arguments_options[@]}" : \
 '--dry-run[Show what would change without writing files]' \
 '--git[Include git commit scanning]' \
 '--todo[Include source TODO scanning and import unowned TODO.md entries]' \
+'--todo-file[Read only unchecked, unowned entries from TODO.md]' \
 '--done[Include source DONE scanning]' \
 '--json[Output result as JSON]' \
 '-h[Print help]' \

@@ -76,6 +76,7 @@ complete -c tally -n "__fish_tally_using_subcommand scan" -l auto -d 'Auto-accep
 complete -c tally -n "__fish_tally_using_subcommand scan" -l dry-run -d 'Show what would change without writing files'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l git -d 'Include git commit scanning'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l todo -d 'Include source TODO scanning and import unowned TODO.md entries'
+complete -c tally -n "__fish_tally_using_subcommand scan" -l todo-file -d 'Read only unchecked, unowned entries from TODO.md'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l done -d 'Include source DONE scanning'
 complete -c tally -n "__fish_tally_using_subcommand scan" -l json -d 'Output result as JSON'
 complete -c tally -n "__fish_tally_using_subcommand scan" -s h -l help -d 'Print help'

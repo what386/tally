@@ -98,6 +98,7 @@ set edit:completion:arg-completer[tally] = {|@words|
             cand --dry-run 'Show what would change without writing files'
             cand --git 'Include git commit scanning'
             cand --todo 'Include source TODO scanning and import unowned TODO.md entries'
+            cand --todo-file 'Read only unchecked, unowned entries from TODO.md'
             cand --done 'Include source DONE scanning'
             cand --json 'Output result as JSON'
             cand -h 'Print help'
